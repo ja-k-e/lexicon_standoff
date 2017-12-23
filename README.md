@@ -46,6 +46,7 @@ This is about trying to figure out who only knew **one** Topic during their turn
     - **Scoring**: Surviving **Impostors**  receive two points, surviving **Agents** receive one.
     - Players _keep_ their role for the next round so they should not reveal it at this time.
     - Two new Topics are generated and the game will start another **Turns** stage for the survivors.
+    - The next alive Player clockwise of the Host goes first. Rotate this first turn every Round.
   - If the Round is over
     - **Scoring**: If one group wins, all Players on that team receive three points. For example, if two of three **Impostors** survive, all three **Impostors** receive three points, if it is a draw, no one receives the extra points.
     - Identities are revealed
