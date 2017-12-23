@@ -755,8 +755,7 @@ var _Renderers2 = _interopRequireDefault(_Renderers);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var config = __webpack_require__(4),
-    globals = __webpack_require__(29);
+var config = __webpack_require__(4);
 
 console.clear();
 
@@ -765,7 +764,7 @@ AUTH = new _Auth2.default(),
     VERSION = 0.1;
 var NEW_VERSION = false;
 
-console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\nCompiled ' + globals.compiledAt + ' CST\n ', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
+console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n ', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
 AUTH.detectExisting().then(initializeUser).catch(function () {
   AUTH.detectRedirectResult().then(initializeUser).catch(handleNoUser);
@@ -2947,25 +2946,6 @@ var Player = function () {
 }();
 
 exports.default = Player;
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var date = new Date(),
-    compiledAt = date.toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit'
-});
-module.exports = {
-  compiledAt: compiledAt
-};
 
 /***/ })
 /******/ ]);

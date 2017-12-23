@@ -1,5 +1,4 @@
-const config = require('config'),
-  globals = require('globals');
+const config = require('config');
 
 console.clear();
 
@@ -19,7 +18,6 @@ console.info(
 %c© Jake Albaugh ${new Date().getFullYear()}
 https://twitter.com/jake_albaugh
 https://github.com/jakealbaugh/lexicon_standoff
-Compiled ${globals.compiledAt} CST
  `,
   'font-family: sans-serif; font-weight: bold;',
   'font-family: sans-serif; font-weight: normal;'
