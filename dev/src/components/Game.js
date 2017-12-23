@@ -41,22 +41,24 @@ export default class Game {
     let points = {};
     if (roundOver) {
       if (aliveCounts.impostor === 1 && aliveCounts.agent === 1) {
-        // no points
+        // It is a Draw. No points
       } else if (aliveCounts.impostor > 0) {
         // Impostors score three
         for (let playerId in players)
           if (players[playerId]._.role === 'impostor')
-            points[playerId] = Game.survivePoints;
-      } else {
+            points[playerId] = Game.winPoints;
+      } else if (aliveCounts.agent > 0) {
         // Agents score three
         for (let playerId in players)
           if (players[playerId]._.role === 'agent')
-            points[playerId] = Game.survivePoints;
+            points[playerId] = Game.winPoints;
+      } else {
+        // Everyone is dead. No points
       }
     } else {
       // Alive Impostors score two, alive Agents score one
       aliveIds.forEach(playerId => {
-        points[playerId] = Game[`${players[playerId]._.role}Points`];
+        points[playerId] = Game.survivePoints[players[playerId]._.role];
       });
     }
     return points;
@@ -171,15 +173,11 @@ export default class Game {
 
   // Class
 
-  static get agentPoints() {
-    return 1;
-  }
-
-  static get impostorPoints() {
-    return 2;
-  }
-
   static get survivePoints() {
+    return { agent: 1, impostor: 2 };
+  }
+
+  static get winPoints() {
     return 3;
   }
 }

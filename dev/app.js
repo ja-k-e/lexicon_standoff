@@ -564,22 +564,24 @@ var Game = function () {
       var points = {};
       if (roundOver) {
         if (aliveCounts.impostor === 1 && aliveCounts.agent === 1) {
-          // no points
+          // It is a Draw. No points
         } else if (aliveCounts.impostor > 0) {
           // Impostors score three
           for (var playerId in players) {
-            if (players[playerId]._.role === 'impostor') points[playerId] = Game.survivePoints;
+            if (players[playerId]._.role === 'impostor') points[playerId] = Game.winPoints;
           }
-        } else {
+        } else if (aliveCounts.agent > 0) {
           // Agents score three
           for (var _playerId in players) {
-            if (players[_playerId]._.role === 'agent') points[_playerId] = Game.survivePoints;
+            if (players[_playerId]._.role === 'agent') points[_playerId] = Game.winPoints;
           }
+        } else {
+          // Everyone is dead. No points
         }
       } else {
         // Alive Impostors score two, alive Agents score one
         aliveIds.forEach(function (playerId) {
-          points[playerId] = Game[players[playerId]._.role + 'Points'];
+          points[playerId] = Game.survivePoints[players[playerId]._.role];
         });
       }
       return points;
@@ -709,17 +711,12 @@ var Game = function () {
     // Class
 
   }], [{
-    key: 'agentPoints',
-    get: function get() {
-      return 1;
-    }
-  }, {
-    key: 'impostorPoints',
-    get: function get() {
-      return 2;
-    }
-  }, {
     key: 'survivePoints',
+    get: function get() {
+      return { agent: 1, impostor: 2 };
+    }
+  }, {
+    key: 'winPoints',
     get: function get() {
       return 3;
     }
@@ -2782,8 +2779,8 @@ var Results = function (_Renderer) {
       var imposter = _ref3.imposter,
           agent = _ref3.agent;
 
-      if (imposter > 0) return 'All Impostors receive ' + this._points(_Game2.default.survivePoints) + '.';
-      if (agent > 0) return 'All Agents receive ' + this._points(_Game2.default.survivePoints) + '.';
+      if (imposter > 0) return 'All Impostors receive ' + this._points(_Game2.default.winPoints) + '.';
+      if (agent > 0) return 'All Agents receive ' + this._points(_Game2.default.winPoints) + '.';
       return 'No one receives additional points.';
     }
   }, {
@@ -2793,7 +2790,7 @@ var Results = function (_Renderer) {
           scoreRound = _player$_.scoreRound,
           role = _player$_.role,
           alive = _player$_.alive,
-          scoreTurn = alive ? _Game2.default[role + 'Points'] : 0,
+          scoreTurn = alive ? _Game2.default.survivePoints[role] : 0,
           reason = alive ? 'survived' : 'died';
 
       return 'You received ' + this._points(scoreTurn) + ' this Turn because you ' + reason + '\n      and have scored ' + this._points(scoreRound) + ' this Round.';

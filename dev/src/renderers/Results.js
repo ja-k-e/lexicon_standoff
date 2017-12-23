@@ -154,15 +154,14 @@ export default class Results extends Renderer {
 
   _roundPointsText({ imposter, agent }) {
     if (imposter > 0)
-      return `All Impostors receive ${this._points(Game.survivePoints)}.`;
-    if (agent > 0)
-      return `All Agents receive ${this._points(Game.survivePoints)}.`;
+      return `All Impostors receive ${this._points(Game.winPoints)}.`;
+    if (agent > 0) return `All Agents receive ${this._points(Game.winPoints)}.`;
     return 'No one receives additional points.';
   }
 
   _playerPoints() {
     let { scoreRound, role, alive } = this.player._,
-      scoreTurn = alive ? Game[`${role}Points`] : 0,
+      scoreTurn = alive ? Game.survivePoints[role] : 0,
       reason = alive ? 'survived' : 'died';
     return `You received ${this._points(
       scoreTurn
