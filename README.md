@@ -2,8 +2,8 @@
 A real-time party vocabulary game full of deceit and wit.
 
 ## Starting a Game
-- A player (Host) starts a game by visiting [lexiconstandoff.com](https://lexiconstandoff.com) on a phone, tablet, or computer.
-- Host shares the `game-secret` with other players, who join the game by visiting [lexiconstandoff.com](https://lexiconstandoff.com) on their phone, tablet, or computer.
+- A player (Host) starts a game on a phone, tablet, or computer.
+- Host shares the `gamesecret` with other players, who join the game on their phone, tablet, or computer.
 - Once all players are in the lobby, the Host starts the first Round.
 
 ## Gameplay
