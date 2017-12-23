@@ -7,9 +7,9 @@ A real-time party vocabulary game full of deceit and wit.
 - Once all players are in the lobby, the Host starts the first Round.
 
 ## Gameplay
-Players are assigned a role of **Agent** or **Impostor** at the beginning of each Round.
+Players are assigned a role of **Agent** or **Imposter** at the beginning of each Round.
 
-> Role Distribution is as close to **2 Agents** to **1 Impostor** as possible
+> Role Distribution is as close to **2 Agents** to **1 Imposter** as possible
 
 There are four stages of a Round.
 
@@ -18,14 +18,14 @@ There are four stages of a Round.
   - On their turn, a Player must say **one** word they associate with both Topics.
     - A good word for _Goose_ and _Spider_ would be _Web_ since geese have webbed feet and spiders make webs.
     - Words cannot be repeated by other players.
-  - **Agents** will see **both** Topics. **Impostors** will only see **one**.
+  - **Agents** will see **both** Topics. **Imposters** will only see **one**.
   - This round should be completely silent aside from Players saying their word.
   - After every player says their one word, the Host will move the game to the **Reveal** stage.
 
 ### 2. Reveal
   - All Players will be see **both** Topics on their device.
   - Players can ask other players why they chose their word.
-  - **Agents** are trying to figure out who are **Impostors** and vice versa.
+  - **Agents** are trying to figure out who are **Imposters** and vice versa.
   - You want your team to survive.
   - Everyone is trying to seem confident in their decision.
 
@@ -41,19 +41,19 @@ This is about trying to figure out who only knew **one** Topic during their turn
 
 ### 4. Results
   - Players with the most votes are killed, even when there is a tie.
-  - The Round is over when only **Impostors** remain, only **Agents** remain, or when there is one **Impostor** and one **Agent** left.
+  - The Round is over when only **Imposters** remain, only **Agents** remain, or when there is one **Imposter** and one **Agent** left.
   - If the Round is still active
-    - **Scoring**: Surviving **Impostors**  receive two points, surviving **Agents** receive one.
+    - **Scoring**: Surviving **Imposters**  receive two points, surviving **Agents** receive one.
     - Players _keep_ their role for the next round so they should not reveal it at this time.
     - Two new Topics are generated and the game will start another **Turns** stage for the survivors.
     - The next alive Player clockwise of the Host goes first. Rotate this first turn every Round.
   - If the Round is over
-    - **Scoring**: If one group wins, all Players on that team receive three points. For example, if two of three **Impostors** survive, all three **Impostors** receive three points, if it is a draw, no one receives the extra points.
+    - **Scoring**: If one group wins, all Players on that team receive three points. For example, if two of three **Imposters** survive, all three **Imposters** receive three points, if it is a draw, no one receives the extra points.
     - Identities are revealed
     - Game Standings will be displayed
     - The Host can start a new Round which will assign new roles for each Player, or they can end the Game.
 
-**Impostors** will find more success if they say abstract words
+**Imposters** will find more success if they say abstract words
 
 
 # Application

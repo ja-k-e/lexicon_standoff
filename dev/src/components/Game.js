@@ -16,8 +16,8 @@ export default class Game {
   }
 
   calculateRoundOverData(players) {
-    let deadCounts = { impostor: 0, agent: 0 },
-      aliveCounts = { impostor: 0, agent: 0 },
+    let deadCounts = { imposter: 0, agent: 0 },
+      aliveCounts = { imposter: 0, agent: 0 },
       aliveIds = [],
       deadIds = [];
     for (let playerId in players) {
@@ -31,21 +31,21 @@ export default class Game {
       }
     }
     let roundOver =
-      aliveCounts.impostor === 0 ||
+      aliveCounts.imposter === 0 ||
       aliveCounts.agent === 0 ||
-      (aliveCounts.impostor === 1 && aliveCounts.agent === 1);
+      (aliveCounts.imposter === 1 && aliveCounts.agent === 1);
     return { aliveCounts, aliveIds, deadCounts, deadIds, roundOver };
   }
 
   calculatePoints(players, { aliveCounts, aliveIds, roundOver }) {
     let points = {};
     if (roundOver) {
-      if (aliveCounts.impostor === 1 && aliveCounts.agent === 1) {
+      if (aliveCounts.imposter === 1 && aliveCounts.agent === 1) {
         // It is a Draw. No points
-      } else if (aliveCounts.impostor > 0) {
-        // Impostors score three
+      } else if (aliveCounts.imposter > 0) {
+        // Imposters score three
         for (let playerId in players)
-          if (players[playerId]._.role === 'impostor')
+          if (players[playerId]._.role === 'imposter')
             points[playerId] = Game.winPoints;
       } else if (aliveCounts.agent > 0) {
         // Agents score three
@@ -56,7 +56,7 @@ export default class Game {
         // Everyone is dead. No points
       }
     } else {
-      // Alive Impostors score two, alive Agents score one
+      // Alive Imposters score two, alive Agents score one
       aliveIds.forEach(playerId => {
         points[playerId] = Game.survivePoints[players[playerId]._.role];
       });
@@ -77,11 +77,11 @@ export default class Game {
   generateRoundData() {
     let playerIds = Object.keys(this.state.players);
     let {
-      playerIdsImpostors,
+      playerIdsImposters,
       playerIdsAgents,
-      impostorCount
+      imposterCount
     } = this._generateRoles(playerIds);
-    this.impostorCount = impostorCount;
+    this.imposterCount = imposterCount;
     let playerCount = playerIds.length,
       topics = this.generateTopics(),
       playerCountAlive = playerCount,
@@ -89,9 +89,9 @@ export default class Game {
       killVotes = {},
       killedIds = [],
       roundOver = false,
-      aliveCounts = { impostor: 0, agent: 0 },
+      aliveCounts = { imposter: 0, agent: 0 },
       aliveIds = [],
-      deadCounts = { impostor: 0, agent: 0 },
+      deadCounts = { imposter: 0, agent: 0 },
       deadIds = [];
     return {
       game: {
@@ -104,11 +104,11 @@ export default class Game {
         aliveIds,
         deadCounts,
         deadIds,
-        impostorCount,
+        imposterCount,
         topics,
         roundOver
       },
-      players: { playerIdsImpostors, playerIdsAgents }
+      players: { playerIdsImposters, playerIdsAgents }
     };
   }
 
@@ -143,14 +143,14 @@ export default class Game {
     let ids = shuffle(Array.from(playerIds)),
       counts = this._distributor(playerIds.length),
       agentCount = counts[0],
-      impostorCount = counts[1];
+      imposterCount = counts[1];
     let playerIdsAgents = ids.slice(0, agentCount);
     ids = ids.slice(agentCount);
-    let playerIdsImpostors = ids;
+    let playerIdsImposters = ids;
     return {
-      playerIdsImpostors,
+      playerIdsImposters,
       playerIdsAgents,
-      impostorCount
+      imposterCount
     };
   }
 
@@ -159,8 +159,8 @@ export default class Game {
   _distributor(number) {
     // Going for 2 to 1
     let agents = Math.floor(number * 0.66667),
-      impostors = number - agents;
-    return [agents, impostors];
+      imposters = number - agents;
+    return [agents, imposters];
   }
 
   get _ref() {
@@ -174,7 +174,7 @@ export default class Game {
   // Class
 
   static get survivePoints() {
-    return { agent: 1, impostor: 2 };
+    return { agent: 1, imposter: 2 };
   }
 
   static get winPoints() {

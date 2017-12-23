@@ -246,7 +246,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = __webpack_require__(4),
+var config = __webpack_require__(5),
     ROOT = config.env;
 
 var Adapter = function () {
@@ -274,55 +274,6 @@ exports.default = Adapter;
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _App = __webpack_require__(10);
-
-var _App2 = _interopRequireDefault(_App);
-
-var _Games = __webpack_require__(11);
-
-var _Games2 = _interopRequireDefault(_Games);
-
-var _Players = __webpack_require__(13);
-
-var _Players2 = _interopRequireDefault(_Players);
-
-var _Users = __webpack_require__(14);
-
-var _Users2 = _interopRequireDefault(_Users);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var Adapters = {
-  App: new _App2.default(),
-  Games: new _Games2.default(),
-  Players: new _Players2.default(),
-  Users: new _Users2.default()
-};
-
-exports.default = Adapters;
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = {
-  env: 'development'
-};
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -393,6 +344,55 @@ var List = function (_Module) {
 }(_Module3.default);
 
 exports.default = List;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _App = __webpack_require__(10);
+
+var _App2 = _interopRequireDefault(_App);
+
+var _Games = __webpack_require__(11);
+
+var _Games2 = _interopRequireDefault(_Games);
+
+var _Players = __webpack_require__(13);
+
+var _Players2 = _interopRequireDefault(_Players);
+
+var _Users = __webpack_require__(14);
+
+var _Users2 = _interopRequireDefault(_Users);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Adapters = {
+  App: new _App2.default(),
+  Games: new _Games2.default(),
+  Players: new _Players2.default(),
+  Users: new _Users2.default()
+};
+
+exports.default = Adapters;
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  env: 'development'
+};
 
 /***/ }),
 /* 6 */
@@ -500,7 +500,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Adapters = __webpack_require__(3);
+var _Adapters = __webpack_require__(4);
 
 var _Adapters2 = _interopRequireDefault(_Adapters);
 
@@ -537,8 +537,8 @@ var Game = function () {
   }, {
     key: 'calculateRoundOverData',
     value: function calculateRoundOverData(players) {
-      var deadCounts = { impostor: 0, agent: 0 },
-          aliveCounts = { impostor: 0, agent: 0 },
+      var deadCounts = { imposter: 0, agent: 0 },
+          aliveCounts = { imposter: 0, agent: 0 },
           aliveIds = [],
           deadIds = [];
       for (var playerId in players) {
@@ -551,7 +551,7 @@ var Game = function () {
           deadIds.push(playerId);
         }
       }
-      var roundOver = aliveCounts.impostor === 0 || aliveCounts.agent === 0 || aliveCounts.impostor === 1 && aliveCounts.agent === 1;
+      var roundOver = aliveCounts.imposter === 0 || aliveCounts.agent === 0 || aliveCounts.imposter === 1 && aliveCounts.agent === 1;
       return { aliveCounts: aliveCounts, aliveIds: aliveIds, deadCounts: deadCounts, deadIds: deadIds, roundOver: roundOver };
     }
   }, {
@@ -563,12 +563,12 @@ var Game = function () {
 
       var points = {};
       if (roundOver) {
-        if (aliveCounts.impostor === 1 && aliveCounts.agent === 1) {
+        if (aliveCounts.imposter === 1 && aliveCounts.agent === 1) {
           // It is a Draw. No points
-        } else if (aliveCounts.impostor > 0) {
-          // Impostors score three
+        } else if (aliveCounts.imposter > 0) {
+          // Imposters score three
           for (var playerId in players) {
-            if (players[playerId]._.role === 'impostor') points[playerId] = Game.winPoints;
+            if (players[playerId]._.role === 'imposter') points[playerId] = Game.winPoints;
           }
         } else if (aliveCounts.agent > 0) {
           // Agents score three
@@ -579,7 +579,7 @@ var Game = function () {
           // Everyone is dead. No points
         }
       } else {
-        // Alive Impostors score two, alive Agents score one
+        // Alive Imposters score two, alive Agents score one
         aliveIds.forEach(function (playerId) {
           points[playerId] = Game.survivePoints[players[playerId]._.role];
         });
@@ -606,11 +606,11 @@ var Game = function () {
       var playerIds = Object.keys(this.state.players);
 
       var _generateRoles2 = this._generateRoles(playerIds),
-          playerIdsImpostors = _generateRoles2.playerIdsImpostors,
+          playerIdsImposters = _generateRoles2.playerIdsImposters,
           playerIdsAgents = _generateRoles2.playerIdsAgents,
-          impostorCount = _generateRoles2.impostorCount;
+          imposterCount = _generateRoles2.imposterCount;
 
-      this.impostorCount = impostorCount;
+      this.imposterCount = imposterCount;
       var playerCount = playerIds.length,
           topics = this.generateTopics(),
           playerCountAlive = playerCount,
@@ -618,9 +618,9 @@ var Game = function () {
           killVotes = {},
           killedIds = [],
           roundOver = false,
-          aliveCounts = { impostor: 0, agent: 0 },
+          aliveCounts = { imposter: 0, agent: 0 },
           aliveIds = [],
-          deadCounts = { impostor: 0, agent: 0 },
+          deadCounts = { imposter: 0, agent: 0 },
           deadIds = [];
       return {
         game: {
@@ -633,11 +633,11 @@ var Game = function () {
           aliveIds: aliveIds,
           deadCounts: deadCounts,
           deadIds: deadIds,
-          impostorCount: impostorCount,
+          imposterCount: imposterCount,
           topics: topics,
           roundOver: roundOver
         },
-        players: { playerIdsImpostors: playerIdsImpostors, playerIdsAgents: playerIdsAgents }
+        players: { playerIdsImposters: playerIdsImposters, playerIdsAgents: playerIdsAgents }
       };
     }
   }, {
@@ -676,14 +676,14 @@ var Game = function () {
       var ids = (0, _shuffle2.default)(Array.from(playerIds)),
           counts = this._distributor(playerIds.length),
           agentCount = counts[0],
-          impostorCount = counts[1];
+          imposterCount = counts[1];
       var playerIdsAgents = ids.slice(0, agentCount);
       ids = ids.slice(agentCount);
-      var playerIdsImpostors = ids;
+      var playerIdsImposters = ids;
       return {
-        playerIdsImpostors: playerIdsImpostors,
+        playerIdsImposters: playerIdsImposters,
         playerIdsAgents: playerIdsAgents,
-        impostorCount: impostorCount
+        imposterCount: imposterCount
       };
     }
 
@@ -694,8 +694,8 @@ var Game = function () {
     value: function _distributor(number) {
       // Going for 2 to 1
       var agents = Math.floor(number * 0.66667),
-          impostors = number - agents;
-      return [agents, impostors];
+          imposters = number - agents;
+      return [agents, imposters];
     }
   }, {
     key: '_ref',
@@ -713,7 +713,7 @@ var Game = function () {
   }], [{
     key: 'survivePoints',
     get: function get() {
-      return { agent: 1, impostor: 2 };
+      return { agent: 1, imposter: 2 };
     }
   }, {
     key: 'winPoints',
@@ -734,7 +734,7 @@ exports.default = Game;
 "use strict";
 
 
-var _Adapters = __webpack_require__(3);
+var _Adapters = __webpack_require__(4);
 
 var _Adapters2 = _interopRequireDefault(_Adapters);
 
@@ -752,7 +752,7 @@ var _Renderers2 = _interopRequireDefault(_Renderers);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var config = __webpack_require__(4);
+var config = __webpack_require__(5);
 
 console.clear();
 
@@ -1011,9 +1011,9 @@ var Games = function (_Adapter) {
           killedIds: [],
           killVotes: {},
           roundOver: false,
-          aliveCounts: { impostor: 0, agent: 0 },
+          aliveCounts: { imposter: 0, agent: 0 },
           aliveIds: [],
-          deadCounts: { impostor: 0, agent: 0 },
+          deadCounts: { imposter: 0, agent: 0 },
           deadIds: [],
           topics: topics
         }).then(resolve).catch(reject);
@@ -1091,12 +1091,12 @@ var Slugs = function () {
   }, {
     key: 'adjectives',
     get: function get() {
-      return ['quizzical', 'highfalutin', 'dynamic', 'wakeful', 'cheerful', 'thoughtful', 'cooperative', 'questionable', 'abundant', 'uneven', 'yummy', 'juicy', 'vacuous', 'concerned', 'young', 'sparkling', 'abhorrent', 'sweltering', 'late', 'macho', 'scrawny', 'friendly', 'kaput', 'divergent', 'busy', 'charming', 'protective', 'premium', 'puzzled', 'waggish', 'rambunctious', 'puffy', 'hard', 'fat', 'sedate', 'yellow', 'resonant', 'dapper', 'courageous', 'vast', 'cool', 'elated', 'wary', 'bewildered', 'level', 'wooden', 'ceaseless', 'tearful', 'cloudy', 'gullible', 'flashy', 'trite', 'quick', 'nondescript', 'round', 'slow', 'spiritual', 'brave', 'tenuous', 'abstracted', 'colossal', 'sloppy', 'obsolete', 'elegant', 'fabulous', 'vivacious', 'exuberant', 'faithful', 'helpless', 'odd', 'sordid', 'blue', 'imported', 'ugly', 'ruthless', 'deeply', 'eminent', 'reminiscent', 'rotten', 'sour', 'volatile', 'succinct', 'judicious', 'abrupt', 'learned', 'stereotyped', 'evanescent', 'efficacious', 'festive', 'loose', 'torpid', 'condemned', 'selective', 'strong', 'momentous', 'ordinary', 'dry', 'great', 'ultra', 'ahead', 'broken', 'dusty', 'piquant', 'creepy', 'miniature', 'periodic', 'equable', 'unsightly', 'narrow', 'grieving', 'whimsical', 'fantastic', 'kindhearted', 'miscreant', 'cowardly', 'cloistered', 'marked', 'bloody', 'chunky', 'undesirable', 'oval', 'nauseating', 'aberrant', 'stingy', 'standing', 'distinct', 'illegal', 'angry', 'faint', 'rustic', 'few', 'calm', 'gorgeous', 'mysterious', 'tacky', 'unadvised', 'greasy', 'minor', 'loving', 'melodic', 'flat', 'wretched', 'clever', 'barbarous', 'pretty', 'endurable', 'handsomely', 'unequaled', 'acceptable', 'symptomatic', 'hurt', 'tested', 'long', 'warm', 'ignorant', 'ashamed', 'excellent', 'known', 'adamant', 'eatable', 'verdant', 'meek', 'unbiased', 'rampant', 'somber', 'cuddly', 'harmonious', 'salty', 'overwrought', 'stimulating', 'beautiful', 'crazy', 'grouchy', 'thirsty', 'joyous', 'confused', 'terrible', 'high', 'unarmed', 'gabby', 'wet', 'sharp', 'wonderful', 'magenta', 'tan', 'huge', 'productive', 'defective', 'chilly', 'needy', 'imminent', 'flaky', 'fortunate', 'neighborly', 'hot', 'husky', 'optimal', 'gaping', 'faulty', 'guttural', 'massive', 'watery', 'abrasive', 'ubiquitous', 'aspiring', 'impartial', 'annoyed', 'billowy', 'lucky', 'panoramic', 'heartbreaking', 'fragile', 'purring', 'wistful', 'burly', 'filthy', 'psychedelic', 'harsh', 'disagreeable', 'ambiguous', 'short', 'splendid', 'crowded', 'light', 'yielding', 'hypnotic', 'dispensable', 'deserted', 'nonchalant', 'green', 'puny', 'deafening', 'classy', 'tall', 'typical', 'exclusive', 'materialistic', 'mute', 'shaky', 'inconclusive', 'rebellious', 'doubtful', 'telling', 'unsuitable', 'woebegone', 'cold', 'sassy', 'arrogant', 'perfect', 'adhesive', 'industrious', 'crabby', 'curly', 'voiceless', 'nostalgic', 'better', 'slippery', 'willing', 'nifty', 'orange', 'victorious', 'ritzy', 'wacky', 'vigorous', 'spotless', 'good', 'powerful', 'bashful', 'soggy', 'grubby', 'moaning', 'placid', 'permissible', 'half', 'towering', 'bawdy', 'measly', 'abaft', 'delightful', 'goofy', 'capricious', 'nonstop', 'addicted', 'acoustic', 'furtive', 'erratic', 'heavy', 'square', 'delicious', 'needless', 'resolute', 'innocent', 'abnormal', 'hurried', 'awful', 'impossible', 'aloof', 'giddy', 'large', 'pointless', 'petite', 'jolly', 'boundless', 'abounding', 'hilarious', 'heavenly', 'honorable', 'squeamish', 'red', 'phobic', 'trashy', 'pathetic', 'parched', 'godly', 'greedy', 'pleasant', 'small', 'aboriginal', 'dashing', 'icky', 'bumpy', 'laughable', 'hapless', 'silent', 'scary', 'shaggy', 'organic', 'unbecoming', 'inexpensive', 'wrong', 'repulsive', 'flawless', 'labored', 'disturbed', 'aboard', 'gusty', 'loud', 'jumbled', 'exotic', 'vulgar', 'threatening', 'belligerent', 'synonymous', 'encouraging', 'fancy', 'embarrassed', 'clumsy', 'fast', 'ethereal', 'chubby', 'high-pitched', 'plastic', 'open', 'straight', 'little', 'ancient', 'fair', 'psychotic', 'murky', 'earthy', 'callous', 'heady', 'lamentable', 'hallowed', 'obtainable', 'toothsome', 'oafish', 'gainful', 'flippant', 'tangy', 'tightfisted', 'damaging', 'utopian', 'gaudy', 'brainy', 'imperfect', 'shiny', 'fanatical', 'snotty', 'relieved', 'shallow', 'foamy', 'parsimonious', 'gruesome', 'elite', 'wide', 'kind', 'bored', 'tangible', 'depressed', 'boring', 'screeching', 'outrageous', 'determined', 'picayune', 'glossy', 'historical', 'staking', 'curious', 'gigantic', 'wandering', 'profuse', 'vengeful', 'glib', 'unaccountable', 'frightened', 'outstanding', 'chivalrous', 'workable', 'modern', 'swanky', 'comfortable', 'gentle', 'substantial', 'brawny', 'curved', 'nebulous', 'boorish', 'afraid', 'fierce', 'efficient', 'lackadaisical', 'recondite', 'internal', 'absorbed', 'squealing', 'frail', 'thundering', 'wanting', 'cooing', 'axiomatic', 'debonair', 'boiling', 'tired', 'numberless', 'flowery', 'mushy', 'enthusiastic', 'proud', 'upset', 'hungry', 'astonishing', 'deadpan', 'prickly', 'mammoth', 'absurd', 'clean', 'jittery', 'wry', 'entertaining', 'literate', 'lying', 'uninterested', 'aquatic', 'super', 'languid', 'cute', 'absorbing', 'scattered', 'brief', 'halting', 'bright', 'fuzzy', 'lethal', 'scarce', 'aggressive', 'obsequious', 'fine', 'giant', 'holistic', 'pastoral', 'stormy', 'quaint', 'nervous', 'wasteful', 'grotesque', 'loutish', 'abiding', 'unable', 'black', 'dysfunctional', 'knowledgeable', 'truculent', 'various', 'luxuriant', 'shrill', 'spiffy', 'guarded', 'colorful', 'misty', 'spurious', 'freezing', 'glamorous', 'famous', 'new', 'instinctive', 'nasty', 'exultant', 'seemly', 'tawdry', 'maniacal', 'wrathful', 'shy', 'nutritious', 'idiotic', 'worried', 'bad', 'stupid', 'ruddy', 'wholesale', 'naughty', 'thoughtless', 'futuristic', 'available', 'slimy', 'cynical', 'fluffy', 'plausible', 'nasty', 'tender', 'changeable', 'smiling', 'oceanic', 'satisfying', 'steadfast', 'ugliest', 'crooked', 'subsequent', 'fascinated', 'woozy', 'teeny', 'quickest', 'moldy', 'uppity', 'sable', 'horrible', 'silly', 'adhoc', 'numerous', 'berserk', 'wiry', 'knowing', 'lazy', 'childlike', 'zippy', 'fearless', 'pumped', 'weak', 'tacit', 'weary', 'rapid', 'precious', 'smoggy', 'swift', 'lyrical', 'steep', 'quack', 'direful', 'talented', 'hesitant', 'fallacious', 'ill', 'quarrelsome', 'quiet', 'flipped-out', 'didactic', 'fluttering', 'glorious', 'tough', 'sulky', 'elfin', 'abortive', 'sweet', 'habitual', 'supreme', 'hollow', 'possessive', 'inquisitive', 'adjoining', 'incandescent', 'lowly', 'majestic', 'bizarre', 'acrid', 'expensive', 'aback', 'unusual', 'foolish', 'jobless', 'capable', 'damp', 'political', 'dazzling', 'erect', 'Early', 'immense', 'hellish', 'omniscient', 'reflective', 'lovely', 'incompetent', 'empty', 'breakable', 'educated', 'easy', 'devilish', 'assorted', 'decorous', 'jaded', 'homely', 'dangerous', 'adaptable', 'coherent', 'dramatic', 'tense', 'abject', 'fretful', 'troubled', 'diligent', 'solid', 'plain', 'raspy', 'irate', 'offbeat', 'healthy', 'melted', 'cagey', 'many', 'wild', 'venomous', 'animated', 'alike', 'youthful', 'ripe', 'alcoholic', 'sincere', 'teeny-tiny', 'lush', 'defeated', 'zonked', 'foregoing', 'dizzy', 'frantic', 'obnoxious', 'funny', 'damaged', 'grandiose', 'spectacular', 'maddening', 'defiant', 'makeshift', 'strange', 'painstaking', 'merciful', 'madly', 'clammy', 'itchy', 'difficult', 'clear', 'used', 'temporary', 'abandoned', 'null', 'rainy', 'evil', 'alert', 'domineering', 'amuck', 'rabid', 'jealous', 'robust', 'obeisant', 'overt', 'enchanting', 'longing', 'cautious', 'motionless', 'bitter', 'anxious', 'craven', 'breezy', 'ragged', 'skillful', 'quixotic', 'knotty', 'grumpy', 'dark', 'draconian', 'alluring', 'magical', 'versed', 'humdrum', 'accurate', 'ludicrous', 'sleepy', 'envious', 'lavish', 'roasted', 'thinkable', 'overconfident', 'roomy', 'painful', 'wee', 'observant', 'old-fashioned', 'drunk', 'royal', 'likeable', 'adventurous', 'eager', 'obedient', 'attractive', 'x-rated', 'spooky', 'poised', 'righteous', 'excited', 'real', 'abashed', 'womanly', 'ambitious', 'lacking', 'testy', 'big', 'gamy', 'early', 'auspicious', 'blue-eyed', 'discreet', 'nappy', 'vague', 'helpful', 'nosy', 'perpetual', 'disillusioned', 'overrated', 'gleaming', 'tart', 'soft', 'agreeable', 'therapeutic', 'accessible', 'poor', 'gifted', 'old', 'humorous', 'flagrant', 'magnificent', 'alive', 'understood', 'economic', 'mighty', 'ablaze', 'racial', 'tasteful', 'purple', 'broad', 'lean', 'legal', 'witty', 'nutty', 'icy', 'feigned', 'redundant', 'adorable', 'apathetic', 'jumpy', 'scientific', 'combative', 'worthless', 'tasteless', 'voracious', 'jazzy', 'uptight', 'utter', 'hospitable', 'imaginary', 'finicky', 'shocking', 'dead', 'noisy', 'shivering', 'subdued', 'rare', 'zealous', 'demonic', 'ratty', 'snobbish', 'deranged', 'muddy', 'whispering', 'credible', 'hulking', 'fertile', 'tight', 'abusive', 'functional', 'obscene', 'thankful', 'daffy', 'smelly', 'lively', 'homeless', 'secretive', 'amused', 'lewd', 'mere', 'agonizing', 'sad', 'innate', 'sneaky', 'noxious', 'illustrious', 'alleged', 'cultured', 'tame', 'macabre', 'lonely', 'mindless', 'low', 'scintillating', 'statuesque', 'decisive', 'rhetorical', 'hysterical', 'happy', 'earsplitting', 'mundane', 'spicy', 'overjoyed', 'taboo', 'peaceful', 'forgetful', 'elderly', 'upbeat', 'squalid', 'warlike', 'dull', 'plucky', 'handsome', 'groovy', 'absent', 'wise', 'romantic', 'invincible', 'receptive', 'smooth', 'different', 'tiny', 'cruel', 'dirty', 'mature', 'faded', 'tiresome', 'wicked', 'average', 'panicky', 'detailed', 'juvenile', 'scandalous', 'steady', 'wealthy', 'deep', 'sticky', 'jagged', 'wide-eyed', 'tasty', 'disgusted', 'garrulous', 'graceful', 'tranquil', 'annoying', 'hissing', 'noiseless', 'selfish', 'onerous', 'lopsided', 'ossified', 'penitent', 'malicious', 'aromatic', 'successful', 'zany', 'evasive', 'wet', 'naive', 'nice', 'uttermost', 'brash', 'muddled', 'energetic', 'accidental', 'silky', 'guiltless', 'important', 'drab', 'aware', 'skinny', 'careful', 'rightful', 'tricky', 'sore', 'rich', 'blushing', 'stale', 'daily', 'watchful', 'uncovered', 'rough', 'fresh', 'hushed', 'rural'];
+      return ['aback', 'abaft', 'abandoned', 'abashed', 'aberrant', 'abhorrent', 'abiding', 'abject', 'ablaze', 'abnormal', 'aboard', 'aboriginal', 'abortive', 'abounding', 'abrasive', 'abrupt', 'absent', 'absorbed', 'absorbing', 'abstracted', 'absurd', 'abundant', 'abusive', 'acceptable', 'accessible', 'accidental', 'accurate', 'acoustic', 'acrid', 'adamant', 'adaptable', 'addicted', 'adhesive', 'adhoc', 'adjoining', 'adorable', 'adventurous', 'afraid', 'aggressive', 'agonizing', 'agreeable', 'ahead', 'alcoholic', 'alert', 'alike', 'alive', 'alleged', 'alluring', 'aloof', 'ambiguous', 'ambitious', 'amuck', 'amused', 'ancient', 'angry', 'animated', 'annoyed', 'annoying', 'anxious', 'apathetic', 'aquatic', 'aromatic', 'arrogant', 'ashamed', 'aspiring', 'assorted', 'astonishing', 'attractive', 'auspicious', 'available', 'average', 'aware', 'awful', 'axiomatic', 'bad', 'barbarous', 'bashful', 'bawdy', 'beautiful', 'belligerent', 'berserk', 'better', 'bewildered', 'big', 'billowy', 'bitter', 'bizarre', 'black', 'bloody', 'blue', 'blushing', 'boiling', 'boorish', 'bored', 'boring', 'boundless', 'brainy', 'brash', 'brave', 'brawny', 'breakable', 'breezy', 'brief', 'bright', 'broad', 'broken', 'bumpy', 'burly', 'busy', 'cagey', 'callous', 'calm', 'capable', 'capricious', 'careful', 'cautious', 'ceaseless', 'changeable', 'charming', 'cheerful', 'childlike', 'chilly', 'chivalrous', 'chubby', 'chunky', 'clammy', 'classy', 'clean', 'clear', 'clever', 'cloistered', 'cloudy', 'clumsy', 'coherent', 'cold', 'colorful', 'colossal', 'combative', 'comfortable', 'concerned', 'condemned', 'confused', 'cooing', 'cool', 'cooperative', 'courageous', 'cowardly', 'crabby', 'craven', 'crazy', 'credible', 'creepy', 'crooked', 'crowded', 'cruel', 'cuddly', 'cultured', 'curious', 'curly', 'curved', 'cute', 'cynical', 'daffy', 'daily', 'damaged', 'damaging', 'damp', 'dangerous', 'dapper', 'dark', 'dashing', 'dazzling', 'dead', 'deadpan', 'deafening', 'debonair', 'decisive', 'decorous', 'deep', 'deeply', 'defeated', 'defective', 'defiant', 'delicious', 'delightful', 'demonic', 'depressed', 'deranged', 'deserted', 'detailed', 'determined', 'devilish', 'didactic', 'different', 'difficult', 'diligent', 'direful', 'dirty', 'disagreeable', 'discreet', 'disgusted', 'disillusioned', 'dispensable', 'distinct', 'disturbed', 'divergent', 'dizzy', 'domineering', 'doubtful', 'drab', 'draconian', 'dramatic', 'drunk', 'dry', 'dull', 'dusty', 'dynamic', 'dysfunctional', 'eager', 'Early', 'early', 'earsplitting', 'earthy', 'easy', 'eatable', 'economic', 'educated', 'efficacious', 'efficient', 'elated', 'elderly', 'elegant', 'elfin', 'elite', 'embarrassed', 'eminent', 'empty', 'enchanting', 'encouraging', 'endurable', 'energetic', 'entertaining', 'enthusiastic', 'envious', 'equable', 'erect', 'erratic', 'ethereal', 'evanescent', 'evasive', 'evil', 'excellent', 'excited', 'exclusive', 'exotic', 'expensive', 'exuberant', 'exultant', 'fabulous', 'faded', 'faint', 'fair', 'faithful', 'fallacious', 'famous', 'fanatical', 'fancy', 'fantastic', 'fascinated', 'fast', 'fat', 'faulty', 'fearless', 'feigned', 'fertile', 'festive', 'few', 'fierce', 'filthy', 'fine', 'finicky', 'flagrant', 'flaky', 'flashy', 'flat', 'flawless', 'flippant', 'flowery', 'fluffy', 'fluttering', 'foamy', 'foolish', 'foregoing', 'forgetful', 'fortunate', 'fragile', 'frail', 'frantic', 'freezing', 'fresh', 'fretful', 'friendly', 'frightened', 'functional', 'funny', 'furtive', 'futuristic', 'fuzzy', 'gabby', 'gainful', 'gamy', 'gaping', 'garrulous', 'gaudy', 'gentle', 'giant', 'giddy', 'gifted', 'gigantic', 'glamorous', 'gleaming', 'glib', 'glorious', 'glossy', 'godly', 'good', 'goofy', 'gorgeous', 'graceful', 'grandiose', 'greasy', 'great', 'greedy', 'green', 'grieving', 'groovy', 'grotesque', 'grouchy', 'grubby', 'gruesome', 'grumpy', 'guarded', 'guiltless', 'gullible', 'gusty', 'guttural', 'habitual', 'half', 'hallowed', 'halting', 'handsome', 'handsomely', 'hapless', 'happy', 'hard', 'harmonious', 'harsh', 'heady', 'healthy', 'heartbreaking', 'heavenly', 'heavy', 'hellish', 'helpful', 'helpless', 'hesitant', 'high', 'highfalutin', 'hilarious', 'hissing', 'historical', 'holistic', 'hollow', 'homeless', 'homely', 'honorable', 'horrible', 'hospitable', 'hot', 'huge', 'hulking', 'humdrum', 'humorous', 'hungry', 'hurried', 'hurt', 'hushed', 'husky', 'hypnotic', 'hysterical', 'icky', 'icy', 'idiotic', 'ignorant', 'ill', 'illegal', 'illustrious', 'imaginary', 'immense', 'imminent', 'impartial', 'imperfect', 'important', 'imported', 'impossible', 'incandescent', 'incompetent', 'inconclusive', 'industrious', 'inexpensive', 'innate', 'innocent', 'inquisitive', 'instinctive', 'internal', 'invincible', 'irate', 'itchy', 'jaded', 'jagged', 'jazzy', 'jealous', 'jittery', 'jobless', 'jolly', 'joyous', 'judicious', 'juicy', 'jumbled', 'jumpy', 'juvenile', 'kaput', 'kind', 'kindhearted', 'knotty', 'knowing', 'knowledgeable', 'known', 'labored', 'lackadaisical', 'lacking', 'lamentable', 'languid', 'large', 'late', 'laughable', 'lavish', 'lazy', 'lean', 'learned', 'legal', 'lethal', 'level', 'lewd', 'light', 'likeable', 'literate', 'little', 'lively', 'lonely', 'long', 'longing', 'loose', 'lopsided', 'loud', 'loutish', 'lovely', 'loving', 'low', 'lowly', 'lucky', 'ludicrous', 'lush', 'luxuriant', 'lying', 'lyrical', 'macabre', 'macho', 'maddening', 'madly', 'magenta', 'magical', 'magnificent', 'majestic', 'makeshift', 'malicious', 'mammoth', 'maniacal', 'many', 'marked', 'massive', 'materialistic', 'mature', 'measly', 'meek', 'melodic', 'melted', 'merciful', 'mere', 'mighty', 'mindless', 'miniature', 'minor', 'miscreant', 'misty', 'moaning', 'modern', 'moldy', 'momentous', 'motionless', 'muddled', 'muddy', 'mundane', 'murky', 'mushy', 'mute', 'mysterious', 'naive', 'nappy', 'narrow', 'nasty', 'naughty', 'nauseating', 'nebulous', 'needless', 'needy', 'neighborly', 'nervous', 'new', 'nice', 'nifty', 'noiseless', 'noisy', 'nonchalant', 'nondescript', 'nonstop', 'nostalgic', 'nosy', 'noxious', 'null', 'numberless', 'numerous', 'nutritious', 'nutty', 'oafish', 'obedient', 'obeisant', 'obnoxious', 'obscene', 'obsequious', 'observant', 'obsolete', 'obtainable', 'oceanic', 'odd', 'offbeat', 'old', 'omniscient', 'onerous', 'open', 'optimal', 'orange', 'ordinary', 'organic', 'ossified', 'outrageous', 'outstanding', 'oval', 'overconfident', 'overjoyed', 'overrated', 'overt', 'overwrought', 'painful', 'painstaking', 'panicky', 'panoramic', 'parched', 'parsimonious', 'pastoral', 'pathetic', 'peaceful', 'penitent', 'perfect', 'periodic', 'permissible', 'perpetual', 'petite', 'phobic', 'picayune', 'piquant', 'placid', 'plain', 'plastic', 'plausible', 'pleasant', 'plucky', 'pointless', 'poised', 'political', 'poor', 'possessive', 'powerful', 'precious', 'premium', 'pretty', 'prickly', 'productive', 'profuse', 'protective', 'proud', 'psychedelic', 'psychotic', 'puffy', 'pumped', 'puny', 'purple', 'purring', 'puzzled', 'quack', 'quaint', 'quarrelsome', 'questionable', 'quick', 'quickest', 'quiet', 'quixotic', 'quizzical', 'rabid', 'racial', 'ragged', 'rainy', 'rambunctious', 'rampant', 'rapid', 'rare', 'raspy', 'ratty', 'real', 'rebellious', 'receptive', 'recondite', 'red', 'redundant', 'reflective', 'relieved', 'reminiscent', 'repulsive', 'resolute', 'resonant', 'rhetorical', 'rich', 'righteous', 'rightful', 'ripe', 'ritzy', 'roasted', 'robust', 'romantic', 'roomy', 'rotten', 'rough', 'round', 'royal', 'ruddy', 'rural', 'rustic', 'ruthless', 'sable', 'sad', 'salty', 'sassy', 'satisfying', 'scandalous', 'scarce', 'scary', 'scattered', 'scientific', 'scintillating', 'scrawny', 'screeching', 'secretive', 'sedate', 'seemly', 'selective', 'selfish', 'shaggy', 'shaky', 'shallow', 'sharp', 'shiny', 'shivering', 'shocking', 'short', 'shrill', 'shy', 'silent', 'silky', 'silly', 'sincere', 'skillful', 'skinny', 'sleepy', 'slimy', 'slippery', 'sloppy', 'slow', 'small', 'smelly', 'smiling', 'smoggy', 'smooth', 'sneaky', 'snobbish', 'snotty', 'soft', 'soggy', 'solid', 'somber', 'sordid', 'sore', 'sour', 'sparkling', 'spectacular', 'spicy', 'spiffy', 'spiritual', 'splendid', 'spooky', 'spotless', 'spurious', 'squalid', 'square', 'squealing', 'squeamish', 'staking', 'stale', 'standing', 'statuesque', 'steadfast', 'steady', 'steep', 'stereotyped', 'sticky', 'stimulating', 'stingy', 'stormy', 'straight', 'strange', 'strong', 'stupid', 'subdued', 'subsequent', 'substantial', 'successful', 'succinct', 'sulky', 'super', 'supreme', 'swanky', 'sweet', 'sweltering', 'swift', 'symptomatic', 'synonymous', 'taboo', 'tacit', 'tacky', 'talented', 'tall', 'tame', 'tan', 'tangible', 'tangy', 'tart', 'tasteful', 'tasteless', 'tasty', 'tawdry', 'tearful', 'teeny', 'telling', 'temporary', 'tender', 'tense', 'tenuous', 'terrible', 'tested', 'testy', 'thankful', 'therapeutic', 'thinkable', 'thirsty', 'thoughtful', 'thoughtless', 'threatening', 'thundering', 'tight', 'tightfisted', 'tiny', 'tired', 'tiresome', 'toothsome', 'torpid', 'tough', 'towering', 'tranquil', 'trashy', 'tricky', 'trite', 'troubled', 'truculent', 'typical', 'ubiquitous', 'ugliest', 'ugly', 'ultra', 'unable', 'unaccountable', 'unadvised', 'unarmed', 'unbecoming', 'unbiased', 'uncovered', 'understood', 'undesirable', 'unequaled', 'uneven', 'uninterested', 'unsightly', 'unsuitable', 'unusual', 'upbeat', 'uppity', 'upset', 'uptight', 'used', 'utopian', 'utter', 'uttermost', 'vacuous', 'vague', 'various', 'vast', 'vengeful', 'venomous', 'verdant', 'versed', 'victorious', 'vigorous', 'vivacious', 'voiceless', 'volatile', 'voracious', 'vulgar', 'wacky', 'waggish', 'wakeful', 'wandering', 'wanting', 'warlike', 'warm', 'wary', 'wasteful', 'watchful', 'watery', 'weak', 'wealthy', 'weary', 'wee', 'wet', 'whimsical', 'whispering', 'wholesale', 'wicked', 'wide', 'wild', 'willing', 'wiry', 'wise', 'wistful', 'witty', 'woebegone', 'womanly', 'wonderful', 'wooden', 'woozy', 'workable', 'worried', 'worthless', 'wrathful', 'wretched', 'wrong', 'wry', 'yellow', 'yielding', 'young', 'youthful', 'yummy', 'zany', 'zealous', 'zippy', 'zonked'];
     }
   }, {
     key: 'nouns',
     get: function get() {
-      return ['ball', 'bat', 'bed', 'book', 'boy', 'bun', 'can', 'cake', 'cap', 'car', 'cat', 'cow', 'cub', 'cup', 'dad', 'day', 'dog', 'doll', 'dust', 'fan', 'feet', 'girl', 'gun', 'hall', 'hat', 'hen', 'jar', 'kite', 'man', 'map', 'men', 'mom', 'pan', 'pet', 'pie', 'pig', 'pot', 'rat', 'son', 'sun', 'toe', 'tub', 'van', 'apple', 'arm', 'banana', 'bike', 'bird', 'book', 'chin', 'clam', 'class', 'clover', 'club', 'corn', 'crayon', 'crow', 'crown', 'crowd', 'crib', 'desk', 'dime', 'dirt', 'dress', 'fang', 'field', 'flag', 'flower', 'fog', 'game', 'heat', 'hill', 'home', 'horn', 'hose', 'joke', 'juice', 'kite', 'lake', 'maid', 'mask', 'mice', 'milk', 'mint', 'meal', 'meat', 'moon', 'mother', 'morning', 'name', 'nest', 'nose', 'pear', 'pen', 'pencil', 'plant', 'rain', 'river', 'road', 'rock', 'room', 'rose', 'seed', 'shape', 'shoe', 'shop', 'show', 'sink', 'snail', 'snake', 'snow', 'soda', 'sofa', 'star', 'step', 'stew', 'stove', 'straw', 'string', 'summer', 'swing', 'table', 'tank', 'team', 'tent', 'test', 'toes', 'tree', 'vest', 'water', 'wing', 'winter', 'woman', 'women', 'alarm', 'animal', 'aunt', 'bait', 'balloon', 'bath', 'bead', 'beam', 'bean', 'bedroom', 'boot', 'bread', 'brick', 'brother', 'camp', 'chicken', 'children', 'crook', 'deer', 'dock', 'doctor', 'downtown', 'drum', 'dust', 'eye', 'family', 'father', 'fight', 'flesh', 'food', 'frog', 'goose', 'grade', 'grandfather', 'grandmother', 'grape', 'grass', 'hook', 'horse', 'jail', 'jam', 'kiss', 'kitten', 'light', 'loaf', 'lock', 'lunch', 'lunchroom', 'meal', 'mother', 'notebook', 'owl', 'pail', 'parent', 'park', 'plot', 'rabbit', 'rake', 'robin', 'sack', 'sail', 'scale', 'sea', 'sister', 'soap', 'song', 'spark', 'space', 'spoon', 'spot', 'spy', 'summer', 'tiger', 'toad', 'town', 'trail', 'tramp', 'tray', 'trick', 'trip', 'uncle', 'vase', 'winter', 'water', 'week', 'wheel', 'wish', 'wool', 'yard', 'zebra', 'actor', 'airplane', 'airport', 'army', 'baseball', 'beef', 'birthday', 'boy', 'brush', 'bushes', 'butter', 'cast', 'cave', 'cent', 'cherries', 'cherry', 'cobweb', 'coil', 'cracker', 'dinner', 'eggnog', 'elbow', 'face', 'fireman', 'flavor', 'gate', 'glove', 'glue', 'goldfish', 'goose', 'grain', 'hair', 'haircut', 'hobbies', 'holiday', 'hot', 'jellyfish', 'ladybug', 'mailbox', 'number', 'oatmeal', 'pail', 'pancake', 'pear', 'pest', 'popcorn', 'queen', 'quicksand', 'quiet', 'quilt', 'rainstorm', 'scarecrow', 'scarf', 'stream', 'street', 'sugar', 'throne', 'toothpaste', 'twig', 'volleyball', 'wood', 'wrench', 'advice', 'anger', 'answer', 'apple', 'arithmetic', 'badge', 'basket', 'basketball', 'battle', 'beast', 'beetle', 'beggar', 'brain', 'branch', 'bubble', 'bucket', 'cactus', 'cannon', 'cattle', 'celery', 'cellar', 'cloth', 'coach', 'coast', 'crate', 'cream', 'daughter', 'donkey', 'drug', 'earthquake', 'feast', 'fifth', 'finger', 'flock', 'frame', 'furniture', 'geese', 'ghost', 'giraffe', 'governor', 'honey', 'hope', 'hydrant', 'icicle', 'income', 'island', 'jeans', 'judge', 'lace', 'lamp', 'lettuce', 'marble', 'month', 'north', 'ocean', 'patch', 'plane', 'playground', 'poison', 'riddle', 'rifle', 'scale', 'seashore', 'sheet', 'sidewalk', 'skate', 'slave', 'sleet', 'smoke', 'stage', 'station', 'thrill', 'throat', 'throne', 'title', 'toothbrush', 'turkey', 'underwear', 'vacation', 'vegetable', 'visitor', 'voyage', 'year', 'able', 'achieve', 'acoustics', 'action', 'activity', 'aftermath', 'afternoon', 'afterthought', 'apparel', 'appliance', 'beginner', 'believe', 'bomb', 'border', 'boundary', 'breakfast', 'cabbage', 'cable', 'calculator', 'calendar', 'caption', 'carpenter', 'cemetery', 'channel', 'circle', 'creator', 'creature', 'education', 'faucet', 'feather', 'friction', 'fruit', 'fuel', 'galley', 'guide', 'guitar', 'health', 'heart', 'idea', 'kitten', 'laborer', 'language', 'lawyer', 'linen', 'locket', 'lumber', 'magic', 'minister', 'mitten', 'money', 'mountain', 'music', 'partner', 'passenger', 'pickle', 'picture', 'plantation', 'plastic', 'pleasure', 'pocket', 'police', 'pollution', 'railway', 'recess', 'reward', 'route', 'scene', 'scent', 'squirrel', 'stranger', 'suit', 'sweater', 'temper', 'territory', 'texture', 'thread', 'treatment', 'veil', 'vein', 'volcano', 'wealth', 'weather', 'wilderness', 'wren', 'wrist', 'writer', 'account', 'achiever', 'acoustics', 'act', 'action', 'activity', 'actor', 'addition', 'adjustment', 'advertisement', 'advice', 'aftermath', 'afternoon', 'afterthought', 'agreement', 'air', 'airplane', 'airport', 'alarm', 'amount', 'amusement', 'anger', 'angle', 'animal', 'answer', 'ant', 'ants', 'apparatus', 'apparel', 'apple', 'apples', 'appliance', 'approval', 'arch', 'argument', 'arithmetic', 'arm', 'army', 'art', 'attack', 'attempt', 'attention', 'attraction', 'aunt', 'authority', 'babies', 'baby', 'back', 'badge', 'bag', 'bait', 'balance', 'ball', 'balloon', 'balls', 'banana', 'band', 'base', 'baseball', 'basin', 'basket', 'basketball', 'bat', 'bath', 'battle', 'bead', 'beam', 'bean', 'bear', 'bears', 'beast', 'bed', 'bedroom', 'beds', 'bee', 'beef', 'beetle', 'beggar', 'beginner', 'behavior', 'belief', 'believe', 'bell', 'bells', 'berry', 'bike', 'bikes', 'bird', 'birds', 'birth', 'birthday', 'bit', 'bite', 'blade', 'blood', 'blow', 'board', 'boat', 'boats', 'body', 'bomb', 'bone', 'book', 'books', 'boot', 'border', 'bottle', 'boundary', 'box', 'boy', 'boys', 'brain', 'brake', 'branch', 'brass', 'bread', 'breakfast', 'breath', 'brick', 'bridge', 'brother', 'brothers', 'brush', 'bubble', 'bucket', 'building', 'bulb', 'bun', 'burn', 'burst', 'bushes', 'business', 'butter', 'button', 'cabbage', 'cable', 'cactus', 'cake', 'cakes', 'calculator', 'calendar', 'camera', 'camp', 'can', 'cannon', 'canvas', 'cap', 'caption', 'car', 'card', 'care', 'carpenter', 'carriage', 'cars', 'cart', 'cast', 'cat', 'cats', 'cattle', 'cause', 'cave', 'celery', 'cellar', 'cemetery', 'cent', 'chain', 'chair', 'chairs', 'chalk', 'chance', 'change', 'channel', 'cheese', 'cherries', 'cherry', 'chess', 'chicken', 'chickens', 'children', 'chin', 'church', 'circle', 'clam', 'class', 'clock', 'clocks', 'cloth', 'cloud', 'clouds', 'clover', 'club', 'coach', 'coal', 'coast', 'coat', 'cobweb', 'coil', 'collar', 'color', 'comb', 'comfort', 'committee', 'company', 'comparison', 'competition', 'condition', 'connection', 'control', 'cook', 'copper', 'copy', 'cord', 'cork', 'corn', 'cough', 'country', 'cover', 'cow', 'cows', 'crack', 'cracker', 'crate', 'crayon', 'cream', 'creator', 'creature', 'credit', 'crib', 'crime', 'crook', 'crow', 'crowd', 'crown', 'crush', 'cry', 'cub', 'cup', 'current', 'curtain', 'curve', 'cushion', 'dad', 'daughter', 'day', 'death', 'debt', 'decision', 'deer', 'degree', 'design', 'desire', 'desk', 'destruction', 'detail', 'development', 'digestion', 'dime', 'dinner', 'dinosaurs', 'direction', 'dirt', 'discovery', 'discussion', 'disease', 'disgust', 'distance', 'distribution', 'division', 'dock', 'doctor', 'dog', 'dogs', 'doll', 'dolls', 'donkey', 'door', 'downtown', 'drain', 'drawer', 'dress', 'drink', 'driving', 'drop', 'drug', 'drum', 'duck', 'ducks', 'dust', 'ear', 'earth', 'earthquake', 'edge', 'education', 'effect', 'egg', 'eggnog', 'eggs', 'elbow', 'end', 'engine', 'error', 'event', 'example', 'exchange', 'existence', 'expansion', 'experience', 'expert', 'eye', 'eyes', 'face', 'fact', 'fairies', 'fall', 'family', 'fan', 'fang', 'farm', 'farmer', 'father', 'father', 'faucet', 'fear', 'feast', 'feather', 'feeling', 'feet', 'fiction', 'field', 'fifth', 'fight', 'finger', 'finger', 'fire', 'fireman', 'fish', 'flag', 'flame', 'flavor', 'flesh', 'flight', 'flock', 'floor', 'flower', 'flowers', 'fly', 'fog', 'fold', 'food', 'foot', 'force', 'fork', 'form', 'fowl', 'frame', 'friction', 'friend', 'friends', 'frog', 'frogs', 'front', 'fruit', 'fuel', 'furniture', 'alley', 'game', 'garden', 'gate', 'geese', 'ghost', 'giants', 'giraffe', 'girl', 'girls', 'glass', 'glove', 'glue', 'goat', 'gold', 'goldfish', 'goodbye', 'goose', 'government', 'governor', 'grade', 'grain', 'grandfather', 'grandmother', 'grape', 'grass', 'grip', 'ground', 'group', 'growth', 'guide', 'guitar', 'gun', 'hair', 'haircut', 'hall', 'hammer', 'hand', 'hands', 'harbor', 'harmony', 'hat', 'hate', 'head', 'health', 'hearing', 'heart', 'heat', 'help', 'hen', 'hill', 'history', 'hobbies', 'hole', 'holiday', 'home', 'honey', 'hook', 'hope', 'horn', 'horse', 'horses', 'hose', 'hospital', 'hot', 'hour', 'house', 'houses', 'humor', 'hydrant', 'ice', 'icicle', 'idea', 'impulse', 'income', 'increase', 'industry', 'ink', 'insect', 'instrument', 'insurance', 'interest', 'invention', 'iron', 'island', 'jail', 'jam', 'jar', 'jeans', 'jelly', 'jellyfish', 'jewel', 'join', 'joke', 'journey', 'judge', 'juice', 'jump', 'kettle', 'key', 'kick', 'kiss', 'kite', 'kitten', 'kittens', 'kitty', 'knee', 'knife', 'knot', 'knowledge', 'laborer', 'lace', 'ladybug', 'lake', 'lamp', 'land', 'language', 'laugh', 'lawyer', 'lead', 'leaf', 'learning', 'leather', 'leg', 'legs', 'letter', 'letters', 'lettuce', 'level', 'library', 'lift', 'light', 'limit', 'line', 'linen', 'lip', 'liquid', 'list', 'lizards', 'loaf', 'lock', 'locket', 'look', 'loss', 'love', 'low', 'lumber', 'lunch', 'lunchroom', 'machine', 'magic', 'maid', 'mailbox', 'man', 'manager', 'map', 'marble', 'mark', 'market', 'mask', 'mass', 'match', 'meal', 'measure', 'meat', 'meeting', 'memory', 'men', 'metal', 'mice', 'middle', 'milk', 'mind', 'mine', 'minister', 'mint', 'minute', 'mist', 'mitten', 'mom', 'money', 'monkey', 'month', 'moon', 'morning', 'mother', 'motion', 'mountain', 'mouth', 'move', 'muscle', 'music', 'nail', 'name', 'nation', 'neck', 'need', 'needle', 'nerve', 'nest', 'net', 'news', 'night', 'noise', 'north', 'nose', 'note', 'notebook', 'number', 'nut', 'oatmeal', 'observation', 'ocean', 'offer', 'office', 'oil', 'operation', 'opinion', 'orange', 'oranges', 'order', 'organization', 'ornament', 'oven', 'owl', 'owner', 'page', 'pail', 'pain', 'paint', 'pan', 'pancake', 'paper', 'parcel', 'parent', 'park', 'part', 'partner', 'party', 'passenger', 'paste', 'patch', 'payment', 'peace', 'pear', 'pen', 'pencil', 'person', 'pest', 'pet', 'pets', 'pickle', 'picture', 'pie', 'pies', 'pig', 'pigs', 'pin', 'pipe', 'pizzas', 'place', 'plane', 'planes', 'plant', 'plantation', 'plants', 'plastic', 'plate', 'play', 'playground', 'pleasure', 'plot', 'plough', 'pocket', 'point', 'poison', 'police', 'polish', 'pollution', 'popcorn', 'porter', 'position', 'pot', 'potato', 'powder', 'power', 'price', 'print', 'prison', 'process', 'produce', 'profit', 'property', 'prose', 'protest', 'pull', 'pump', 'punishment', 'purpose', 'push', 'quarter', 'quartz', 'queen', 'question', 'quicksand', 'quiet', 'quill', 'quilt', 'quince', 'quiver', 'rabbit', 'rabbits', 'rail', 'railway', 'rain', 'rainstorm', 'rake', 'range', 'rat', 'rate', 'ray', 'reaction', 'reading', 'reason', 'receipt', 'recess', 'record', 'regret', 'relation', 'religion', 'representative', 'request', 'respect', 'rest', 'reward', 'rhythm', 'rice', 'riddle', 'rifle', 'ring', 'rings', 'river', 'road', 'robin', 'rock', 'rod', 'roll', 'roof', 'room', 'root', 'rose', 'route', 'rub', 'rule', 'run', 'sack', 'sail', 'salt', 'sand', 'scale', 'scarecrow', 'scarf', 'scene', 'scent', 'school', 'science', 'scissors', 'screw', 'sea', 'seashore', 'seat', 'secretary', 'seed', 'selection', 'self', 'sense', 'servant', 'shade', 'shake', 'shame', 'shape', 'sheep', 'sheet', 'shelf', 'ship', 'shirt', 'shock', 'shoe', 'shoes', 'shop', 'show', 'side', 'sidewalk', 'sign', 'silk', 'silver', 'sink', 'sister', 'sisters', 'size', 'skate', 'skin', 'skirt', 'sky', 'slave', 'sleep', 'sleet', 'slip', 'slope', 'smash', 'smell', 'smile', 'smoke', 'snail', 'snails', 'snake', 'snakes', 'sneeze', 'snow', 'soap', 'society', 'sock', 'soda', 'sofa', 'son', 'song', 'songs', 'sort', 'sound', 'soup', 'space', 'spade', 'spark', 'spiders', 'sponge', 'spoon', 'spot', 'spring', 'spy', 'square', 'squirrel', 'stage', 'stamp', 'star', 'start', 'statement', 'station', 'steam', 'steel', 'stem', 'step', 'stew', 'stick', 'sticks', 'stitch', 'stocking', 'stomach', 'stone', 'stop', 'store', 'story', 'stove', 'stranger', 'straw', 'stream', 'street', 'stretch', 'string', 'structure', 'substance', 'sugar', 'suggestion', 'suit', 'summer', 'sun', 'support', 'surprise', 'sweater', 'swim', 'swing', 'system', 'table', 'tail', 'talk', 'tank', 'taste', 'tax', 'teaching', 'team', 'teeth', 'temper', 'tendency', 'tent', 'territory', 'test', 'texture', 'theory', 'thing', 'things', 'thought', 'thread', 'thrill', 'throat', 'throne', 'thumb', 'thunder', 'ticket', 'tiger', 'time', 'tin', 'title', 'toad', 'toe', 'toes', 'tomatoes', 'tongue', 'tooth', 'toothbrush', 'toothpaste', 'top', 'touch', 'town', 'toy', 'toys', 'trade', 'trail', 'train', 'trains', 'tramp', 'transport', 'tray', 'treatment', 'tree', 'trees', 'trick', 'trip', 'trouble', 'trousers', 'truck', 'trucks', 'tub', 'turkey', 'turn', 'twig', 'twist', 'umbrella', 'uncle', 'underwear', 'unit', 'use', 'vacation', 'value', 'van', 'vase', 'vegetable', 'veil', 'vein', 'verse', 'vessel', 'vest', 'view', 'visitor', 'voice', 'volcano', 'volleyball', 'voyage', 'walk', 'wall', 'war', 'wash', 'waste', 'watch', 'water', 'wave', 'waves', 'wax', 'way', 'wealth', 'weather', 'week', 'weight', 'wheel', 'whip', 'whistle', 'wilderness', 'wind', 'window', 'wine', 'wing', 'winter', 'wire', 'wish', 'woman', 'women', 'wood', 'wool', 'word', 'work', 'worm', 'wound', 'wren', 'wrench', 'wrist', 'writer', 'writing', 'yak', 'yam', 'yard', 'yarn', 'year', 'yoke', 'zebra', 'zephyr', 'zinc', 'zipper', 'zoo'];
+      return ['able', 'account', 'achieve', 'achiever', 'acoustics', 'act', 'action', 'activity', 'actor', 'addition', 'adjustment', 'advertisement', 'advice', 'aftermath', 'afternoon', 'afterthought', 'agreement', 'air', 'airplane', 'airport', 'alarm', 'alley', 'amount', 'amusement', 'anger', 'angle', 'animal', 'answer', 'ant', 'ants', 'apparatus', 'apparel', 'apple', 'apple', 'apples', 'appliance', 'approval', 'arch', 'argument', 'arithmetic', 'arm', 'army', 'art', 'attack', 'attempt', 'attention', 'attraction', 'aunt', 'authority', 'babies', 'baby', 'back', 'badge', 'bag', 'bait', 'balance', 'ball', 'balloon', 'balls', 'banana', 'band', 'base', 'baseball', 'basin', 'basket', 'basketball', 'bat', 'bath', 'battle', 'bead', 'beam', 'bean', 'bear', 'bears', 'beast', 'bed', 'bedroom', 'beds', 'bee', 'beef', 'beetle', 'beggar', 'beginner', 'behavior', 'belief', 'believe', 'bell', 'bells', 'berry', 'bike', 'bikes', 'bird', 'birds', 'birth', 'birthday', 'bit', 'bite', 'blade', 'blood', 'blow', 'board', 'boat', 'boats', 'body', 'bomb', 'bone', 'book', 'book', 'books', 'boot', 'border', 'bottle', 'boundary', 'box', 'boy', 'boy', 'boys', 'brain', 'brake', 'branch', 'brass', 'bread', 'breakfast', 'breath', 'brick', 'bridge', 'brother', 'brothers', 'brush', 'bubble', 'bucket', 'building', 'bulb', 'bun', 'burn', 'burst', 'bushes', 'business', 'butter', 'button', 'cabbage', 'cable', 'cactus', 'cake', 'cakes', 'calculator', 'calendar', 'camera', 'camp', 'can', 'cannon', 'canvas', 'cap', 'caption', 'car', 'card', 'care', 'carpenter', 'carriage', 'cars', 'cart', 'cast', 'cat', 'cats', 'cattle', 'cause', 'cave', 'celery', 'cellar', 'cemetery', 'cent', 'chain', 'chair', 'chairs', 'chalk', 'chance', 'change', 'channel', 'cheese', 'cherries', 'cherry', 'chess', 'chicken', 'chickens', 'children', 'chin', 'church', 'circle', 'clam', 'class', 'clock', 'clocks', 'cloth', 'cloud', 'clouds', 'clover', 'club', 'coach', 'coal', 'coast', 'coat', 'cobweb', 'coil', 'collar', 'color', 'comb', 'comfort', 'committee', 'company', 'comparison', 'competition', 'condition', 'connection', 'control', 'cook', 'copper', 'copy', 'cord', 'cork', 'corn', 'cough', 'country', 'cover', 'cow', 'cows', 'crack', 'cracker', 'crate', 'crayon', 'cream', 'creator', 'creature', 'credit', 'crib', 'crime', 'crook', 'crow', 'crowd', 'crown', 'crush', 'cry', 'cub', 'cup', 'current', 'curtain', 'curve', 'cushion', 'dad', 'daughter', 'day', 'death', 'debt', 'decision', 'deer', 'degree', 'design', 'desire', 'desk', 'destruction', 'detail', 'development', 'digestion', 'dime', 'dinner', 'dinosaurs', 'direction', 'dirt', 'discovery', 'discussion', 'disease', 'disgust', 'distance', 'distribution', 'division', 'dock', 'doctor', 'dog', 'dogs', 'doll', 'dolls', 'donkey', 'door', 'downtown', 'drain', 'drawer', 'dress', 'drink', 'driving', 'drop', 'drug', 'drum', 'duck', 'ducks', 'dust', 'dust', 'ear', 'earth', 'earthquake', 'edge', 'education', 'effect', 'egg', 'eggnog', 'eggs', 'elbow', 'end', 'engine', 'error', 'event', 'example', 'exchange', 'existence', 'expansion', 'experience', 'expert', 'eye', 'eyes', 'face', 'fact', 'fairies', 'fall', 'family', 'fan', 'fang', 'farm', 'farmer', 'father', 'father', 'faucet', 'fear', 'feast', 'feather', 'feeling', 'feet', 'fiction', 'field', 'fifth', 'fight', 'finger', 'finger', 'fire', 'fireman', 'fish', 'flag', 'flame', 'flavor', 'flesh', 'flight', 'flock', 'floor', 'flower', 'flowers', 'fly', 'fog', 'fold', 'food', 'foot', 'force', 'fork', 'form', 'fowl', 'frame', 'friction', 'friend', 'friends', 'frog', 'frogs', 'front', 'fruit', 'fuel', 'furniture', 'galley', 'game', 'garden', 'gate', 'geese', 'ghost', 'giants', 'giraffe', 'girl', 'girls', 'glass', 'glove', 'glue', 'goat', 'gold', 'goldfish', 'goodbye', 'goose', 'goose', 'government', 'governor', 'grade', 'grain', 'grandfather', 'grandmother', 'grape', 'grass', 'grip', 'ground', 'group', 'growth', 'guide', 'guitar', 'gun', 'hair', 'haircut', 'hall', 'hammer', 'hand', 'hands', 'harbor', 'harmony', 'hat', 'hate', 'head', 'health', 'hearing', 'heart', 'heat', 'help', 'hen', 'hill', 'history', 'hobbies', 'hole', 'holiday', 'home', 'honey', 'hook', 'hope', 'horn', 'horse', 'horses', 'hose', 'hospital', 'hot', 'hour', 'house', 'houses', 'humor', 'hydrant', 'ice', 'icicle', 'idea', 'impulse', 'income', 'increase', 'industry', 'ink', 'insect', 'instrument', 'insurance', 'interest', 'invention', 'iron', 'island', 'jail', 'jam', 'jar', 'jeans', 'jelly', 'jellyfish', 'jewel', 'join', 'joke', 'journey', 'judge', 'juice', 'jump', 'kettle', 'key', 'kick', 'kiss', 'kite', 'kite', 'kitten', 'kitten', 'kittens', 'kitty', 'knee', 'knife', 'knot', 'knowledge', 'laborer', 'lace', 'ladybug', 'lake', 'lamp', 'land', 'language', 'laugh', 'lawyer', 'lead', 'leaf', 'learning', 'leather', 'leg', 'legs', 'letter', 'letters', 'lettuce', 'level', 'library', 'lift', 'light', 'limit', 'line', 'linen', 'lip', 'liquid', 'list', 'lizards', 'loaf', 'lock', 'locket', 'look', 'loss', 'love', 'low', 'lumber', 'lunch', 'lunchroom', 'machine', 'magic', 'maid', 'mailbox', 'man', 'manager', 'map', 'marble', 'mark', 'market', 'mask', 'mass', 'match', 'meal', 'meal', 'measure', 'meat', 'meeting', 'memory', 'men', 'metal', 'mice', 'middle', 'milk', 'mind', 'mine', 'minister', 'mint', 'minute', 'mist', 'mitten', 'mom', 'money', 'monkey', 'month', 'moon', 'morning', 'mother', 'mother', 'motion', 'mountain', 'mouth', 'move', 'muscle', 'music', 'nail', 'name', 'nation', 'neck', 'need', 'needle', 'nerve', 'nest', 'net', 'news', 'night', 'noise', 'north', 'nose', 'note', 'notebook', 'number', 'nut', 'oatmeal', 'observation', 'ocean', 'offer', 'office', 'oil', 'operation', 'opinion', 'orange', 'oranges', 'order', 'organization', 'ornament', 'oven', 'owl', 'owner', 'page', 'pail', 'pail', 'pain', 'paint', 'pan', 'pancake', 'paper', 'parcel', 'parent', 'park', 'part', 'partner', 'party', 'passenger', 'paste', 'patch', 'payment', 'peace', 'pear', 'pear', 'pen', 'pencil', 'person', 'pest', 'pet', 'pets', 'pickle', 'picture', 'pie', 'pies', 'pig', 'pigs', 'pin', 'pipe', 'pizzas', 'place', 'plane', 'planes', 'plant', 'plantation', 'plants', 'plastic', 'plate', 'play', 'playground', 'pleasure', 'plot', 'plough', 'pocket', 'point', 'poison', 'police', 'polish', 'pollution', 'popcorn', 'porter', 'position', 'pot', 'potato', 'powder', 'power', 'price', 'print', 'prison', 'process', 'produce', 'profit', 'property', 'prose', 'protest', 'pull', 'pump', 'punishment', 'purpose', 'push', 'quarter', 'quartz', 'queen', 'question', 'quicksand', 'quiet', 'quill', 'quilt', 'quince', 'quiver', 'rabbit', 'rabbits', 'rail', 'railway', 'rain', 'rainstorm', 'rake', 'range', 'rat', 'rate', 'ray', 'reaction', 'reading', 'reason', 'receipt', 'recess', 'record', 'regret', 'relation', 'religion', 'representative', 'request', 'respect', 'rest', 'reward', 'rhythm', 'rice', 'riddle', 'rifle', 'ring', 'rings', 'river', 'road', 'robin', 'rock', 'rod', 'roll', 'roof', 'room', 'root', 'rose', 'route', 'rub', 'rule', 'run', 'sack', 'sail', 'salt', 'sand', 'scale', 'scale', 'scarecrow', 'scarf', 'scene', 'scent', 'school', 'science', 'scissors', 'screw', 'sea', 'seashore', 'seat', 'secretary', 'seed', 'selection', 'self', 'sense', 'servant', 'shade', 'shake', 'shame', 'shape', 'sheep', 'sheet', 'shelf', 'ship', 'shirt', 'shock', 'shoe', 'shoes', 'shop', 'show', 'side', 'sidewalk', 'sign', 'silk', 'silver', 'sink', 'sister', 'sisters', 'size', 'skate', 'skin', 'skirt', 'sky', 'slave', 'sleep', 'sleet', 'slip', 'slope', 'smash', 'smell', 'smile', 'smoke', 'snail', 'snails', 'snake', 'snakes', 'sneeze', 'snow', 'soap', 'society', 'sock', 'soda', 'sofa', 'son', 'song', 'songs', 'sort', 'sound', 'soup', 'space', 'spade', 'spark', 'spiders', 'sponge', 'spoon', 'spot', 'spring', 'spy', 'square', 'squirrel', 'stage', 'stamp', 'star', 'start', 'statement', 'station', 'steam', 'steel', 'stem', 'step', 'stew', 'stick', 'sticks', 'stitch', 'stocking', 'stomach', 'stone', 'stop', 'store', 'story', 'stove', 'stranger', 'straw', 'stream', 'street', 'stretch', 'string', 'structure', 'substance', 'sugar', 'suggestion', 'suit', 'summer', 'summer', 'sun', 'support', 'surprise', 'sweater', 'swim', 'swing', 'system', 'table', 'tail', 'talk', 'tank', 'taste', 'tax', 'teaching', 'team', 'teeth', 'temper', 'tendency', 'tent', 'territory', 'test', 'texture', 'theory', 'thing', 'things', 'thought', 'thread', 'thrill', 'throat', 'throne', 'throne', 'thumb', 'thunder', 'ticket', 'tiger', 'time', 'tin', 'title', 'toad', 'toe', 'toes', 'tomatoes', 'tongue', 'tooth', 'toothbrush', 'toothpaste', 'top', 'touch', 'town', 'toy', 'toys', 'trade', 'trail', 'train', 'trains', 'tramp', 'transport', 'tray', 'treatment', 'tree', 'trees', 'trick', 'trip', 'trouble', 'trousers', 'truck', 'trucks', 'tub', 'turkey', 'turn', 'twig', 'twist', 'umbrella', 'uncle', 'underwear', 'unit', 'use', 'vacation', 'value', 'van', 'vase', 'vegetable', 'veil', 'vein', 'verse', 'vessel', 'vest', 'view', 'visitor', 'voice', 'volcano', 'volleyball', 'voyage', 'walk', 'wall', 'war', 'wash', 'waste', 'watch', 'water', 'water', 'wave', 'waves', 'wax', 'way', 'wealth', 'weather', 'week', 'weight', 'wheel', 'whip', 'whistle', 'wilderness', 'wind', 'window', 'wine', 'wing', 'winter', 'winter', 'wire', 'wish', 'woman', 'women', 'wood', 'wool', 'word', 'work', 'worm', 'wound', 'wren', 'wrench', 'wrist', 'writer', 'writing', 'yak', 'yam', 'yard', 'yarn', 'year', 'yoke', 'zebra', 'zephyr', 'zinc', 'zipper', 'zoo'];
     }
   }]);
 
@@ -1284,7 +1284,7 @@ var Players = function (_Adapter) {
     value: function masterUpdateRoundData(players, _ref3) {
       var _this9 = this;
 
-      var playerIdsImpostors = _ref3.playerIdsImpostors,
+      var playerIdsImposters = _ref3.playerIdsImposters,
           playerIdsAgents = _ref3.playerIdsAgents;
 
       return new Promise(function (resolve, reject) {
@@ -1295,7 +1295,7 @@ var Players = function (_Adapter) {
               alive = true,
               score = 0,
               scoreRound = 0;
-          if (playerIdsImpostors.includes(playerId)) role = 'impostor';else if (playerIdsAgents.includes(playerId)) role = 'agent';else role = 'agent';
+          if (playerIdsImposters.includes(playerId)) role = 'imposter';else if (playerIdsAgents.includes(playerId)) role = 'agent';else role = 'agent';
           _this9.db.ref(_this9.r([player.gameId, playerId])).update({ role: role, alive: alive, score: score, scoreRound: scoreRound }).then(function () {
             playerCount--;
             if (playerCount <= 0) resolve();
@@ -1516,7 +1516,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Adapters = __webpack_require__(3);
+var _Adapters = __webpack_require__(4);
 
 var _Adapters2 = _interopRequireDefault(_Adapters);
 
@@ -1536,7 +1536,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = __webpack_require__(4);
+var config = __webpack_require__(5);
 
 var //
 STUB = config.env === 'development',
@@ -1848,12 +1848,12 @@ var State = function () {
           return _this12.renderers.turns.render(_this12.game._);
         },
         reveal: function reveal() {
-          return _this12.renderers.reveal.render(_this12.game._);
+          return _this12.renderers.reveal.render(_this12.game._, _this12.players);
         },
         votes: function votes() {
           return _this12.renderers.votes.render({
             players: _this12.players,
-            impostorCount: _this12.game._.impostorCount,
+            imposterCount: _this12.game._.imposterCount,
             votes: _this12.game._.votes
           });
         },
@@ -2145,7 +2145,7 @@ var _Button = __webpack_require__(1);
 
 var _Button2 = _interopRequireDefault(_Button);
 
-var _List = __webpack_require__(5);
+var _List = __webpack_require__(3);
 
 var _List2 = _interopRequireDefault(_List);
 
@@ -2281,9 +2281,10 @@ var Turns = function (_Renderer) {
     value: function renderInitial() {
       this.$h1 = this.el('h1');
       this.$topics = this.el('p', null, 'topics');
+      this.$hint = this.el('p', null, 'topics');
       this.$desc = this.el('p', null, 'description');
       this.$header.appendChild(this.$h1);
-      this.append(this.$main, [this.$topics, this.$desc]);
+      this.append(this.$main, [this.$topics, this.$desc, this.$hint]);
 
       if (this.player._.master) this.renderInitialMaster();
     }
@@ -2307,14 +2308,17 @@ var Turns = function (_Renderer) {
       if (this.player._.alive) {
         var descHtml = void 0,
             topicsHtml = void 0;
-        if (this.player._.role === 'impostor') {
-          descHtml = 'On your turn, say one word that you associate with this Topic. Be abstract.';
-          topicsHtml = topics[0];
+        if (this.player._.role === 'imposter') {
+          descHtml = 'On your turn, say one word that you associate with the Topic above and\n          relates to this second Topic hint:';
+          topicsHtml = topics[0][1];
+          var cat = this._capitalize(topics[1][0]);
+          this.$hint.innerHTML = '\u201C' + cat + '\u201D';
         } else {
           var first = Math.round(Math.random()),
               last = first === 0 ? 1 : 0;
           descHtml = 'On your turn, say one word that you associate with both of the Topics above.';
-          topicsHtml = topics[first] + ' &amp; ' + topics[last];
+          topicsHtml = topics[first][1] + ' &amp; ' + topics[last][1];
+          this.$hint.innerHTML = '';
         }
         this.$topics.innerHTML = topicsHtml;
         this.$desc.innerHTML = descHtml;
@@ -2362,6 +2366,10 @@ var _Button = __webpack_require__(1);
 
 var _Button2 = _interopRequireDefault(_Button);
 
+var _List = __webpack_require__(3);
+
+var _List2 = _interopRequireDefault(_List);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -2383,12 +2391,17 @@ var Reveal = function (_Renderer) {
     key: 'renderInitial',
     value: function renderInitial() {
       this.$h1 = this.el('h1');
+      this.$header.appendChild(this.$h1);
+
       this.$topics = this.el('p', null, 'topics');
       this.$desc = this.el('p', null, 'description');
-      this.$header.appendChild(this.$h1);
       this.append(this.$main, [this.$topics, this.$desc]);
+
+      this.imposters = new _List2.default();
+      this.append(this.$main, this.imposters.elements);
+
       if (this.player._.master) {
-        var $inst = this.el('p', 'Players question each other\'s word selections and discuss who they think is an Impostor.\n          Once everyone is ready to vote, proceed.', 'instruction');
+        var $inst = this.el('p', 'Players question each other\'s word selections and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
         var proceed = new _Button2.default({
           content: 'Proceed',
           clickEvent: this.events.dispatchVotes.bind(this)
@@ -2398,14 +2411,25 @@ var Reveal = function (_Renderer) {
     }
   }, {
     key: 'render',
-    value: function render(_ref) {
+    value: function render(_ref, players) {
       var topics = _ref.topics;
 
+      this.imposters.reset();
       var role = this.player.capitalizedRole;
       this.$h1.innerHTML = '\n      <span class="status">Reveal</span> <span class="info"><span class="throb">' + role + '</span></span>';
-      this.$topics.innerHTML = topics[0] + ' &amp; ' + topics[1];
+      this.$topics.innerHTML = topics[0][1] + ' &amp; ' + topics[1][1];
       if (this.player._.alive) {
         this.$desc.innerHTML = "If questioned, explain your association for the Topics. Question other's choices.";
+        if (this.player._.role === 'imposter') {
+          this.imposters.title('Other Imposters');
+          for (var playerId in players) {
+            var player = players[playerId];
+            if (player._.role === 'imposter' && playerId !== this.player.id) {
+              var classname = player._.alive ? '' : 'dead';
+              this.imposters.add(this.userSpan(player, classname));
+            }
+          }
+        }
       } else {
         this.renderDead(this.$desc);
       }
@@ -2449,7 +2473,7 @@ var _Button = __webpack_require__(1);
 
 var _Button2 = _interopRequireDefault(_Button);
 
-var _List = __webpack_require__(5);
+var _List = __webpack_require__(3);
 
 var _List2 = _interopRequireDefault(_List);
 
@@ -2503,7 +2527,7 @@ var Votes = function (_Renderer) {
     value: function render(_ref) {
       var players = _ref.players,
           votes = _ref.votes,
-          impostorCount = _ref.impostorCount;
+          imposterCount = _ref.imposterCount;
 
       this.$main.classList.remove('inactive');
       this.vote.enable();
@@ -2523,11 +2547,11 @@ var Votes = function (_Renderer) {
         if (this.player._.alive) {
           this.$footer.classList.remove('hide');
           this.votes.title('Select a Player');
-          var agentCount = Object.keys(players).length - impostorCount,
-              isAre = impostorCount === 1 ? 'is' : 'are',
-              impostorS = this._pluralize(impostorCount, 'Impostor'),
+          var agentCount = Object.keys(players).length - imposterCount,
+              isAre = imposterCount === 1 ? 'is' : 'are',
+              imposterS = this._pluralize(imposterCount, 'Imposter'),
               agentS = this._pluralize(agentCount, 'Agent');
-          this.$desc.innerHTML = '\n          Vote for the Player you want to Kill. There ' + isAre + ' a total of ' + impostorS + ' and ' + agentS + '.';
+          this.$desc.innerHTML = '\n          Vote for the Player you want to Kill. There ' + isAre + ' a total of ' + imposterS + ' and ' + agentS + '.';
 
           var first = true;
           for (var playerId in players) {
@@ -2607,7 +2631,7 @@ var _Button = __webpack_require__(1);
 
 var _Button2 = _interopRequireDefault(_Button);
 
-var _List = __webpack_require__(5);
+var _List = __webpack_require__(3);
 
 var _List2 = _interopRequireDefault(_List);
 
@@ -2634,11 +2658,11 @@ var Results = function (_Renderer) {
       this.$h1 = this.el('h1');
       this.$header.appendChild(this.$h1);
 
-      this.$desc = this.el('div');
-      this.$main.appendChild(this.$desc);
-
       this.killed = new _List2.default();
       this.append(this.$main, this.killed.elements);
+
+      this.$desc = this.el('div');
+      this.$main.appendChild(this.$desc);
 
       this.players = new _List2.default();
       this.append(this.$main, this.players.elements);
@@ -2709,11 +2733,11 @@ var Results = function (_Renderer) {
       });
 
       if (roundOver) {
-        this.extra1.title('Impostors');
+        this.extra1.title('Imposters');
         this.extra2.title('Standings');
         this.extra2.$ul.classList.add('flex-list-half');
         var winnerText = this._winnerText(aliveCounts);
-        this.$desc.innerHTML = '\n        <p class="description">' + winnerText + '</p>\n        <p class="description">' + this._roundPointsText(aliveCounts) + '</p>\n      ';
+        this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + this._roundPointsText(aliveCounts) + '\n        </p>\n      ';
         var playerIds = Object.keys(players);
         playerIds.sort(function (a, b) {
           var aScore = players[a]._.score,
@@ -2726,7 +2750,7 @@ var Results = function (_Renderer) {
               score = '<span class="score">' + player._.score + '</span>',
               html = _this2.userSpan(player) + ' ' + score;
           _this2.extra2.add(html);
-          if (player._.role === 'impostor') _this2.extra1.add(_this2.userSpan(player));
+          if (player._.role === 'imposter') _this2.extra1.add(_this2.userSpan(player));
         });
       } else {
         this.extra1.title('Survivors');
@@ -2769,7 +2793,8 @@ var Results = function (_Renderer) {
       var imposter = _ref2.imposter,
           agent = _ref2.agent;
 
-      if (imposter > 0) return 'The <span class="role">Impostors</span> won!';
+      if (imposter === 1 && agent === 1) return 'It was a draw!';
+      if (imposter > 0) return 'The <span class="role">Imposters</span> won!';
       if (agent > 0) return 'The <span class="role">Agents</span> won!';
       return 'It was a draw!';
     }
@@ -2779,7 +2804,8 @@ var Results = function (_Renderer) {
       var imposter = _ref3.imposter,
           agent = _ref3.agent;
 
-      if (imposter > 0) return 'All Impostors receive ' + this._points(_Game2.default.winPoints) + '.';
+      if (imposter === 1 && agent === 1) return 'No one receives additional points.';
+      if (imposter > 0) return 'All Imposters receive ' + this._points(_Game2.default.winPoints) + '.';
       if (agent > 0) return 'All Agents receive ' + this._points(_Game2.default.winPoints) + '.';
       return 'No one receives additional points.';
     }
@@ -2853,7 +2879,7 @@ var Topics = function () {
   }, {
     key: 'topics',
     get: function get() {
-      return ['Accordions', 'Adult', 'Aeroplane', 'Africa', 'Agriculture', 'Air', 'Aircraft Carrier', 'Airforce', 'Airplane', 'Airports', 'Album', 'Alligators', 'Alphabet', 'America', 'Amusement Parks', 'Apes', 'Apple', 'Archery', 'Arm', 'Army', 'Art', 'Artists', 'Asia', 'Astronomy', 'Athletics', 'Baby', 'Backpack', 'Bakeries', 'Balloons', 'Bananas', 'Bank', 'Barbecue', 'Barbers', 'Baseball', 'Basketball', 'Bathroom', 'Bathtub', 'Bats', 'Bears', 'Bed', 'Bee', 'Beekeeping', 'Bible', 'Billiards', 'Birds', 'Blacksmiths', 'Boats', 'Bohemians', 'Bomb', 'Books', 'Boss', 'Bottle', 'Bowl', 'Box', 'Boxing', 'Boy', 'Boy Scouts', 'Brain', 'Bread', 'Breastfeeding', 'Breweries', 'Bridges', 'Buddhism', 'Buffaloes', 'Butterfly', 'Button', 'Cactus', 'Camels', 'Canoes', 'Cappuccino', 'Car', 'Car-race', 'Cards', 'Carousels', 'Carpentry', 'Carpet', 'Carrot', 'Cats', 'Caves', 'Cemetery', 'Central America', 'Chair', 'Checkbook', 'Cheese', 'Chess', 'Chess Board', 'Chief', 'Child', 'Chisel', 'Chocolates', 'Church', 'Cigarettes', 'Circle', 'Circus', 'Clock', 'Clowns', 'Coal', 'Cobblers', 'Cocoa', 'Code', 'Coffee', 'Coffee-shop', 'Coffin', 'Coins', 'Comet', 'Communism', 'Compact Disc', 'Compass', 'Computer', 'Cotton', 'Cows', 'Cricket', 'Crime', 'Criminals', 'Crocodiles', 'Crystal', 'Cup', 'Cycle', 'Cycling', 'Dance', 'Data Base', 'Death', 'Dentistry', 'Desk', 'Diamonds', 'Disasters', 'Disney Movies', 'Diving', 'Dogs', 'Dolphins', 'Donkeys', 'Dress', 'Drill', 'Drink', 'Drugstores', 'Drum', 'Dung', 'Ears', 'Earth', 'Earthquake', 'Egg', 'Electricity', 'Elephants', 'Engineering', 'Eraser', 'Europe', 'Execution', 'Explosive', 'Eyes', 'Family', 'Fan', 'Farm', 'Farmers Markets', 'Feather', 'Fencing', 'Ferry Boats', 'Festival', 'Film', 'Finger', 'Fire', 'Firemen', 'Fishing', 'Flight', 'Flood', 'Floodlight', 'Flower', 'Foot', 'Football', 'Fork', 'Fortune Tellers', 'Foxes', 'France', 'Freaks', 'Freeway', 'Frogs', 'Fruit', 'Funerals', 'Fungus', 'Games', 'Garden', 'Gas', 'Gas Station', 'Gate', 'Geese', 'Gemstone', 'Giants', 'Giraffes', 'Girl', 'Gloves', 'Goats', 'God', 'Gold', 'Golf', 'Gorillas', 'Grapes', 'Guitar', 'Gymnastics', 'Gypsies', 'Hammer', 'Hammocks', 'Hat', 'Hieroglyphics', 'Highway', 'Hippopotamus', 'Hockey', 'Horoscope', 'Horses', 'Hose', 'Hotels', 'Hunting', 'Hurricanes', 'Ice', 'Ice-cream', 'Insects', 'Jamaica', 'Jet fighter', 'Jewelery', 'Journalism', 'Jungles', 'Junk', 'Justice', 'Kaleidoscope', 'Kitchen', 'Knife', 'Laundry', 'Leather', 'Leather jacket', 'Leg', 'Library', 'Lighters', 'Lighthouses', 'Lions', 'Liquid', 'Magicians', 'Magnet', 'Man', 'Map', 'Marionettes', 'Masonry', 'Mass', 'Matches', 'Maze', 'Meat', 'Medicine', 'Meteor', 'Meteorology', 'Microscope', 'Military', 'Milkshake', 'Mining', 'Mist', 'Money', 'Monkeys', 'Monster', 'Mosquito', 'Motherhood', 'Motorcycles', 'Mountaineering', 'Mouth', 'Movie', 'Movie Theaters', 'Mules', 'Mummies', 'Muppets', 'Murderers', 'Music', 'Nail', 'Napoleon', 'Native Americans', 'Navy', 'Necklace', 'Needle', 'Newspapers', 'North Africa', 'Nurses', 'Oil', 'Onion', 'Ostriches', 'Outer Space', 'Paint Brush', 'Pants', 'Paper Boys', 'Parachute', 'Parachuting', 'Passport', 'Pebble', 'Pendulum', 'Pepper', 'Perfume', 'Pharmacy', 'Pigeons', 'Pigs', 'Pillar', 'Pillow', 'Pineapple', 'Pipe Organs', 'Pipes', 'Plane', 'Planet', 'Playing Cards', 'Pocket', 'Police', 'Politics', 'Pork', 'Post-office', 'Postcards', 'Potatoes', 'Pottery', 'President', 'Printer', 'Printing', 'Prisons', 'Programming', 'Puppets', 'Pyramid', 'Rabbits', 'Radar', 'Radio', 'Radiology', 'Railroads', 'Rainbow', 'Record', 'Red Cross', 'Restaurant', 'Rhinoceros', 'Rice', 'Rifle', 'Ring', 'Robot', 'Rock', 'Rocket', 'Roof', 'Room', 'Rope', 'Royalty', 'Rugby', 'Saddle', 'Sailing', 'Salt', 'Salvation Army', 'Sandpaper', 'Sandwich', 'Satellite', 'School', 'Seashells', 'Seesaws', 'Sewing Machines', 'Sex', 'Sharks', 'Sheep', 'Shells', 'Ship', 'Shipping', 'Shipwrecks', 'Shoes', 'Shop', 'Shovels', 'Shower', 'Signature', 'Skating', 'Skeleton', 'Skiing', 'Skull', 'Slave', 'Slavery', 'Smoking', 'Snail', 'Snakes', 'Soccer', 'Socialism', 'Software', 'Solid', 'Sorrow', 'South America', 'Space Shuttle', 'Spas', 'Spectrum', 'Sphere', 'Spice', 'Spinning', 'Spiral', 'Spirits', 'Spoon', 'Sports', 'Sports-car', 'Spotlight', 'Square', 'Stadiums', 'Staircase', 'Star', 'Stomach', 'Submarines', 'Sugar', 'Sun', 'Sunglasses', 'Surveyor', 'Swimming Pool', 'Swings', 'Sword', 'Table', 'Tanning', 'Tapestry', 'Tattoos', 'Technology', 'Teeth', 'Telephone', 'Telescope', 'Television', 'Tennis', 'The Olympic Games', 'The Post Office', 'Thermometer', 'Tigers', 'Toads', 'Tobacco', 'Toilet', 'Tongue', 'Torch', 'Torpedo', 'Torture', 'Train', 'Treadmill', 'Triangle', 'Tunnel', 'Turtles', 'Typewriters', 'Umbrella', 'Vaccines', 'Vacuum', 'Vampire', 'Vanilla', 'Vegetables', 'Veterinarians', 'Videotape', 'Volcanoes', 'Volleyball', 'Vulture', 'Water', 'Water Skiing', 'Weapon', 'Weaving', 'Web', 'Wedding', 'Whales', 'Wheelchair', 'Whistling', 'Windmills', 'Window', 'Winter', 'Woman', 'Women in the Army', 'Wood', 'World War 1', 'Worm', 'Wrestling', 'X-rays', 'Zebras', 'Zeppelins'];
+      return [['activities', 'Archery'], ['activities', 'Art'], ['activities', 'Astronomy'], ['activities', 'Athletics'], ['activities', 'Baseball'], ['activities', 'Basketball'], ['activities', 'Billiards'], ['activities', 'Books'], ['activities', 'Boxing'], ['activities', 'Boy Scouts'], ['activities', 'Buddhism'], ['activities', 'Canoes'], ['activities', 'Car-race'], ['activities', 'Carousel'], ['activities', 'Carpentry'], ['activities', 'Chess'], ['activities', 'Cigarettes'], ['activities', 'Cycling'], ['activities', 'Dance'], ['activities', 'Diving'], ['activities', 'Fencing'], ['activities', 'Fishing'], ['activities', 'Football'], ['activities', 'Games'], ['activities', 'Golf'], ['activities', 'Gymnastics'], ['activities', 'Hockey'], ['activities', 'Hunting'], ['activities', 'Mountaineering'], ['activities', 'Painting'], ['activities', 'Parachuting'], ['activities', 'Playing Cards'], ['activities', 'Pottery'], ['activities', 'Rugby'], ['activities', 'Saddle'], ['activities', 'Sailing'], ['activities', 'Seesaws'], ['activities', 'Sex'], ['activities', 'Skating'], ['activities', 'Skiing'], ['activities', 'Smoking'], ['activities', 'Soccer'], ['activities', 'Sports'], ['activities', 'Swimming Pool'], ['activities', 'Swings'], ['activities', 'Tanning'], ['activities', 'Tattoos'], ['activities', 'Tennis'], ['activities', 'The Olympic Games'], ['activities', 'Tobacco'], ['activities', 'Treadmill'], ['activities', 'Volleyball'], ['activities', 'Water Skiing'], ['activities', 'Weaving'], ['activities', 'Whistling'], ['activities', 'Wrestling'], ['animals', 'Alligators'], ['animals', 'Apes'], ['animals', 'Bats'], ['animals', 'Bears'], ['animals', 'Bee'], ['animals', 'Birds'], ['animals', 'Buffaloes'], ['animals', 'Butterfly'], ['animals', 'Camels'], ['animals', 'Cats'], ['animals', 'Cows'], ['animals', 'Cricket'], ['animals', 'Crocodiles'], ['animals', 'Dogs'], ['animals', 'Dolphins'], ['animals', 'Donkeys'], ['animals', 'Elephants'], ['animals', 'Foxes'], ['animals', 'Frogs'], ['animals', 'Geese'], ['animals', 'Giraffes'], ['animals', 'Goats'], ['animals', 'Gorillas'], ['animals', 'Hippopotamus'], ['animals', 'Horses'], ['animals', 'Insects'], ['animals', 'Lions'], ['animals', 'Monkeys'], ['animals', 'Mosquito'], ['animals', 'Mules'], ['animals', 'Ostriches'], ['animals', 'Pigeons'], ['animals', 'Pigs'], ['animals', 'Rabbits'], ['animals', 'Rhinoceros'], ['animals', 'Sharks'], ['animals', 'Sheep'], ['animals', 'Snail'], ['animals', 'Snakes'], ['animals', 'Tigers'], ['animals', 'Toads'], ['animals', 'Turtles'], ['animals', 'Vulture'], ['animals', 'Whales'], ['animals', 'Worm'], ['animals', 'Zebras'], ['art', 'Accordions'], ['art', 'Album'], ['art', 'Artists'], ['art', 'Balloons'], ['art', 'Bass'], ['art', 'Bohemians'], ['art', 'Cello'], ['art', 'Compact Disc'], ['art', 'Drawing'], ['art', 'Drum'], ['art', 'Film'], ['art', 'Guitar'], ['art', 'Hieroglyphics'], ['art', 'Jewelery'], ['art', 'Marionettes'], ['art', 'Movie'], ['art', 'Muppets'], ['art', 'Music'], ['art', 'Novels'], ['art', 'Pipe Organs'], ['art', 'Puppets'], ['art', 'Record'], ['art', 'Sculpture'], ['art', 'Singing'], ['art', 'Sketching'], ['art', 'Typewriters'], ['art', 'Viola'], ['art', 'Violin'], ['art', 'Writing'], ['art', 'Yodeling'], ['fiction', 'Aladdin'], ['fiction', 'Aliens'], ['fiction', 'Alive in Wonderland'], ['fiction', 'Batman'], ['fiction', 'Bilbo Baggins'], ['fiction', 'Boogeyman'], ['fiction', 'E.T.'], ['fiction', 'Forrest Gump'], ['fiction', 'Freaks'], ['fiction', 'Gandalf'], ['fiction', 'Giants'], ['fiction', 'Harry Potter'], ['fiction', 'Horoscope'], ['fiction', 'James Bond'], ['fiction', 'Luke Skywalker'], ['fiction', 'Monsters'], ['fiction', 'Mummies'], ['fiction', 'Optimus Prime'], ['fiction', 'Princess Leia'], ['fiction', 'Santa'], ['fiction', 'Superman'], ['fiction', 'The Joker'], ['fiction', 'Vampire'], ['fiction', 'Werewolves'], ['fiction', 'Witch'], ['fiction', 'Wolverine'], ['fiction', 'Wonder Woman'], ['fiction', 'Yoda'], ['fiction', 'Zombies'], ['food', 'Agriculture'], ['food', 'Apple'], ['food', 'Bakeries'], ['food', 'Bananas'], ['food', 'Barbecue'], ['food', 'Beekeeping'], ['food', 'Bread'], ['food', 'Breastfeeding'], ['food', 'Cappuccino'], ['food', 'Carrot'], ['food', 'Cheese'], ['food', 'Chocolates'], ['food', 'Cocoa'], ['food', 'Coffee'], ['food', 'Drink'], ['food', 'Egg'], ['food', 'Fruit'], ['food', 'Garden'], ['food', 'Grapes'], ['food', 'Ice-cream'], ['food', 'Meat'], ['food', 'Milkshake'], ['food', 'Onion'], ['food', 'Pepper'], ['food', 'Pineapple'], ['food', 'Pork'], ['food', 'Potatoes'], ['food', 'Rice'], ['food', 'Salt'], ['food', 'Sandwich'], ['food', 'Spice'], ['food', 'Sugar'], ['food', 'Vanilla'], ['food', 'Vegetables'], ['household', 'Backpack'], ['household', 'Bathtub'], ['household', 'Bed'], ['household', 'Bible'], ['household', 'Bottle'], ['household', 'Bowl'], ['household', 'Box'], ['household', 'Button'], ['household', 'Cards'], ['household', 'Carpet'], ['household', 'Chair'], ['household', 'Checkbook'], ['household', 'Clock'], ['household', 'Coins'], ['household', 'Computer'], ['household', 'Cup'], ['household', 'Desk'], ['household', 'Disney Movies'], ['household', 'Dress'], ['household', 'Drill'], ['household', 'Eraser'], ['household', 'Fan'], ['household', 'Floodlight'], ['household', 'Fork'], ['household', 'Gate'], ['household', 'Gloves'], ['household', 'Hammer'], ['household', 'Hammocks'], ['household', 'Hat'], ['household', 'Hose'], ['household', 'Junk'], ['household', 'Kaleidoscope'], ['household', 'Knife'], ['household', 'Laundry'], ['household', 'Leather jacket'], ['household', 'Lighters'], ['household', 'Matches'], ['household', 'Nail'], ['household', 'Necklace'], ['household', 'Needle'], ['household', 'Newspapers'], ['household', 'Pants'], ['household', 'Perfume'], ['household', 'Pillar'], ['household', 'Pillow'], ['household', 'Pipes'], ['household', 'Postcards'], ['household', 'Printer'], ['household', 'Radio'], ['household', 'Ring'], ['household', 'Roof'], ['household', 'Rope'], ['household', 'Sandpaper'], ['household', 'Sewing Machines'], ['household', 'Shoes'], ['household', 'Shovels'], ['household', 'Shower'], ['household', 'Spoon'], ['household', 'Spotlight'], ['household', 'Staircase'], ['household', 'Sunglasses'], ['household', 'Table'], ['household', 'Tapestry'], ['household', 'Television'], ['household', 'Toilet'], ['household', 'Umbrella'], ['household', 'Vacuum'], ['household', 'Wheelchair'], ['household', 'Window'], ['nature', 'Adult'], ['nature', 'Air'], ['nature', 'Arm'], ['nature', 'Baby'], ['nature', 'Boy'], ['nature', 'Brain'], ['nature', 'Cactus'], ['nature', 'Caves'], ['nature', 'Child'], ['nature', 'Coal'], ['nature', 'Comet'], ['nature', 'Cotton'], ['nature', 'Crystal'], ['nature', 'Diamonds'], ['nature', 'Disasters'], ['nature', 'Dung'], ['nature', 'Ears'], ['nature', 'Earthquake'], ['nature', 'Electricity'], ['nature', 'Eyes'], ['nature', 'Family'], ['nature', 'Feather'], ['nature', 'Finger'], ['nature', 'Fire'], ['nature', 'Flood'], ['nature', 'Flower'], ['nature', 'Foot'], ['nature', 'Fungus'], ['nature', 'Gas'], ['nature', 'Gemstone'], ['nature', 'Girl'], ['nature', 'God'], ['nature', 'Gold'], ['nature', 'Hurricanes'], ['nature', 'Ice'], ['nature', 'Jungles'], ['nature', 'Leather'], ['nature', 'Leg'], ['nature', 'Liquid'], ['nature', 'Magnet'], ['nature', 'Man'], ['nature', 'Meteor'], ['nature', 'Meteorology'], ['nature', 'Mist'], ['nature', 'Motherhood'], ['nature', 'Mouth'], ['nature', 'Oil'], ['nature', 'Outer Space'], ['nature', 'Pebble'], ['nature', 'Rainbow'], ['nature', 'Rock'], ['nature', 'Seashells'], ['nature', 'Shells'], ['nature', 'Skeleton'], ['nature', 'Skull'], ['nature', 'Spirits'], ['nature', 'Star'], ['nature', 'Stomach'], ['nature', 'Sun'], ['nature', 'Teeth'], ['nature', 'Tongue'], ['nature', 'Vaccines'], ['nature', 'Volcanoes'], ['nature', 'Water'], ['nature', 'Winter'], ['nature', 'Woman'], ['nature', 'Wood'], ['occupations', 'Boss'], ['occupations', 'Chief'], ['occupations', 'Clowns'], ['occupations', 'Cobblers'], ['occupations', 'Engineering'], ['occupations', 'Firemen'], ['occupations', 'Fortune Tellers'], ['occupations', 'Journalism'], ['occupations', 'Magicians'], ['occupations', 'Mailperson'], ['occupations', 'Masonry'], ['occupations', 'Medicine'], ['occupations', 'Mining'], ['occupations', 'Nurses'], ['occupations', 'Paper Delivery'], ['occupations', 'Pilot'], ['occupations', 'Plumber'], ['occupations', 'Shipping'], ['occupations', 'Surveyor'], ['occupations', 'Veterinarians'], ['places', 'Africa'], ['places', 'America'], ['places', 'Amusement Parks'], ['places', 'Asia'], ['places', 'Bank'], ['places', 'Barber'], ['places', 'Bathroom'], ['places', 'Blacksmiths'], ['places', 'Brewery'], ['places', 'Bridge'], ['places', 'Cemetery'], ['places', 'Central America'], ['places', 'Church'], ['places', 'Circus'], ['places', 'Coffee-shop'], ['places', 'Dentist'], ['places', 'Drugstores'], ['places', 'Earth'], ['places', 'Egypt'], ['places', 'Europe'], ['places', 'Farm'], ['places', 'Farmers Markets'], ['places', 'Festival'], ['places', 'France'], ['places', 'Freeway'], ['places', 'Funerals'], ['places', 'Gas Station'], ['places', 'Highway'], ['places', 'Hotels'], ['places', 'Jamaica'], ['places', 'Kitchen'], ['places', 'Library'], ['places', 'Lighthouses'], ['places', 'Mass'], ['places', 'Movie Theaters'], ['places', 'North Africa'], ['places', 'Pharmacy'], ['places', 'Planet'], ['places', 'Post-office'], ['places', 'Prisons'], ['places', 'Restaurant'], ['places', 'Room'], ['places', 'Salvation Army'], ['places', 'School'], ['places', 'Shop'], ['places', 'South America'], ['places', 'Spas'], ['places', 'Stadiums'], ['places', 'The Post Office'], ['places', 'Wedding'], ['places', 'Windmills'], ['politics', 'Airforce'], ['politics', 'Army'], ['politics', 'Budget'], ['politics', 'Communism'], ['politics', 'Crime'], ['politics', 'Criminals'], ['politics', 'Execution'], ['politics', 'Justice'], ['politics', 'Military'], ['politics', 'Money'], ['politics', 'Napoleon'], ['politics', 'Native Americans'], ['politics', 'Navy'], ['politics', 'Police'], ['politics', 'Politics'], ['politics', 'President'], ['politics', 'Red Cross'], ['politics', 'Royalty'], ['politics', 'Slavery'], ['politics', 'Socialism'], ['politics', 'Taxes'], ['politics', 'Torture'], ['politics', 'Women in the Army'], ['politics', 'World War I'], ['politics', 'World War II'], ['technology', 'Code'], ['technology', 'Database'], ['technology', 'Internet'], ['technology', 'Microscope'], ['technology', 'Microsoft'], ['technology', 'Programming'], ['technology', 'Radar'], ['technology', 'Radiology'], ['technology', 'Robot'], ['technology', 'Satellite'], ['technology', 'Software'], ['technology', 'Telephone'], ['technology', 'Telescope'], ['technology', 'The Cloud'], ['technology', 'Thermometer'], ['technology', 'Videotape'], ['technology', 'Web'], ['technology', 'X-rays'], ['travel', 'Aircraft Carrier'], ['travel', 'Airplane'], ['travel', 'Airports'], ['travel', 'Boats'], ['travel', 'Car'], ['travel', 'Compass'], ['travel', 'Ferry Boats'], ['travel', 'Flight'], ['travel', 'Jet fighter'], ['travel', 'Map'], ['travel', 'Motorcycles'], ['travel', 'Passport'], ['travel', 'Plane'], ['travel', 'Railroads'], ['travel', 'Rocket'], ['travel', 'Ship'], ['travel', 'Shipwreck'], ['travel', 'Space Shuttle'], ['travel', 'Sports-car'], ['travel', 'Submarines'], ['travel', 'Train'], ['travel', 'Tunnel'], ['travel', 'Zeppelins'], ['violence', 'Atomic Bomb'], ['violence', 'Axe'], ['violence', 'Coffin'], ['violence', 'Death'], ['violence', 'Explosive'], ['violence', 'Grenade'], ['violence', 'Hatchet'], ['violence', 'Machine Gun'], ['violence', 'Murderers'], ['violence', 'Ninja Star'], ['violence', 'Pistol'], ['violence', 'Poison'], ['violence', 'Rifle'], ['violence', 'Spear'], ['violence', 'Sword'], ['violence', 'Torch'], ['violence', 'Torpedo'], ['violence', 'Weapon']];
     }
   }]);
 

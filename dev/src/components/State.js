@@ -258,11 +258,11 @@ export default class State {
     let status = this.game._.status;
     let map = {
       turns: () => this.renderers.turns.render(this.game._),
-      reveal: () => this.renderers.reveal.render(this.game._),
+      reveal: () => this.renderers.reveal.render(this.game._, this.players),
       votes: () =>
         this.renderers.votes.render({
           players: this.players,
-          impostorCount: this.game._.impostorCount,
+          imposterCount: this.game._.imposterCount,
           votes: this.game._.votes
         }),
       results: () =>

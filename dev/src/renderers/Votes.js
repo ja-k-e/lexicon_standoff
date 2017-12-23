@@ -28,7 +28,7 @@ export default class Votes extends Renderer {
     this.append(this.$footer, [this.vote.$el]);
   }
 
-  render({ players, votes, impostorCount }) {
+  render({ players, votes, imposterCount }) {
     this.$main.classList.remove('inactive');
     this.vote.enable();
     this.votes.reset();
@@ -48,12 +48,12 @@ export default class Votes extends Renderer {
       if (this.player._.alive) {
         this.$footer.classList.remove('hide');
         this.votes.title('Select a Player');
-        let agentCount = Object.keys(players).length - impostorCount,
-          isAre = impostorCount === 1 ? 'is' : 'are',
-          impostorS = this._pluralize(impostorCount, 'Impostor'),
+        let agentCount = Object.keys(players).length - imposterCount,
+          isAre = imposterCount === 1 ? 'is' : 'are',
+          imposterS = this._pluralize(imposterCount, 'Imposter'),
           agentS = this._pluralize(agentCount, 'Agent');
         this.$desc.innerHTML = `
-          Vote for the Player you want to Kill. There ${isAre} a total of ${impostorS} and ${agentS}.`;
+          Vote for the Player you want to Kill. There ${isAre} a total of ${imposterS} and ${agentS}.`;
 
         let first = true;
         for (let playerId in players) {

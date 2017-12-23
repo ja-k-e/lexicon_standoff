@@ -33,7 +33,11 @@ const settings = {
     }
   },
   webserver: {
-    livereload: true,
+    livereload: {
+      enable: true,
+      filter: p =>
+        !!p.match(/(dev\/app\.css)|(dev\/app\.js)|(dev\/index\.html)/)
+    },
     directoryListing: false,
     open: false
   }

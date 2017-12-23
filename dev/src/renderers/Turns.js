@@ -5,9 +5,10 @@ export default class Turns extends Renderer {
   renderInitial() {
     this.$h1 = this.el('h1');
     this.$topics = this.el('p', null, 'topics');
+    this.$hint = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
     this.$header.appendChild(this.$h1);
-    this.append(this.$main, [this.$topics, this.$desc]);
+    this.append(this.$main, [this.$topics, this.$desc, this.$hint]);
 
     if (this.player._.master) this.renderInitialMaster();
   }
@@ -33,14 +34,18 @@ export default class Turns extends Renderer {
       <span class="status">Turns</span> <span class="info"><span class="throb">${role}</span></span>`;
     if (this.player._.alive) {
       let descHtml, topicsHtml;
-      if (this.player._.role === 'impostor') {
-        descHtml = `On your turn, say one word that you associate with this Topic. Be abstract.`;
-        topicsHtml = topics[0];
+      if (this.player._.role === 'imposter') {
+        descHtml = `On your turn, say one word that you associate with the Topic above and
+          relates to this second Topic hint:`;
+        topicsHtml = topics[0][1];
+        let cat = this._capitalize(topics[1][0]);
+        this.$hint.innerHTML = `“${cat}”`;
       } else {
         let first = Math.round(Math.random()),
           last = first === 0 ? 1 : 0;
         descHtml = `On your turn, say one word that you associate with both of the Topics above.`;
-        topicsHtml = `${topics[first]} &amp; ${topics[last]}`;
+        topicsHtml = `${topics[first][1]} &amp; ${topics[last][1]}`;
+        this.$hint.innerHTML = '';
       }
       this.$topics.innerHTML = topicsHtml;
       this.$desc.innerHTML = descHtml;

@@ -98,9 +98,9 @@ export default class Games extends Adapter {
           killedIds: [],
           killVotes: {},
           roundOver: false,
-          aliveCounts: { impostor: 0, agent: 0 },
+          aliveCounts: { imposter: 0, agent: 0 },
           aliveIds: [],
-          deadCounts: { impostor: 0, agent: 0 },
+          deadCounts: { imposter: 0, agent: 0 },
           deadIds: [],
           topics
         })

@@ -8,11 +8,11 @@ export default class Results extends Renderer {
     this.$h1 = this.el('h1');
     this.$header.appendChild(this.$h1);
 
-    this.$desc = this.el('div');
-    this.$main.appendChild(this.$desc);
-
     this.killed = new List();
     this.append(this.$main, this.killed.elements);
+
+    this.$desc = this.el('div');
+    this.$main.appendChild(this.$desc);
 
     this.players = new List();
     this.append(this.$main, this.players.elements);
@@ -84,13 +84,14 @@ export default class Results extends Renderer {
     });
 
     if (roundOver) {
-      this.extra1.title('Impostors');
+      this.extra1.title('Imposters');
       this.extra2.title('Standings');
       this.extra2.$ul.classList.add('flex-list-half');
       let winnerText = this._winnerText(aliveCounts);
       this.$desc.innerHTML = `
-        <p class="description">${winnerText}</p>
-        <p class="description">${this._roundPointsText(aliveCounts)}</p>
+        <p class="description">
+          ${winnerText} ${this._roundPointsText(aliveCounts)}
+        </p>
       `;
       let playerIds = Object.keys(players);
       playerIds
@@ -106,7 +107,7 @@ export default class Results extends Renderer {
             score = `<span class="score">${player._.score}</span>`,
             html = `${this.userSpan(player)} ${score}`;
           this.extra2.add(html);
-          if (player._.role === 'impostor')
+          if (player._.role === 'imposter')
             this.extra1.add(this.userSpan(player));
         });
     } else {
@@ -147,14 +148,17 @@ export default class Results extends Renderer {
   }
 
   _winnerText({ imposter, agent }) {
-    if (imposter > 0) return 'The <span class="role">Impostors</span> won!';
+    if (imposter === 1 && agent === 1) return 'It was a draw!';
+    if (imposter > 0) return 'The <span class="role">Imposters</span> won!';
     if (agent > 0) return 'The <span class="role">Agents</span> won!';
     return 'It was a draw!';
   }
 
   _roundPointsText({ imposter, agent }) {
+    if (imposter === 1 && agent === 1)
+      return 'No one receives additional points.';
     if (imposter > 0)
-      return `All Impostors receive ${this._points(Game.winPoints)}.`;
+      return `All Imposters receive ${this._points(Game.winPoints)}.`;
     if (agent > 0) return `All Agents receive ${this._points(Game.winPoints)}.`;
     return 'No one receives additional points.';
   }

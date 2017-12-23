@@ -139,7 +139,7 @@ export default class Players extends Adapter {
     });
   }
 
-  masterUpdateRoundData(players, { playerIdsImpostors, playerIdsAgents }) {
+  masterUpdateRoundData(players, { playerIdsImposters, playerIdsAgents }) {
     return new Promise((resolve, reject) => {
       let playerCount = Object.keys(players).length;
       for (let playerId in players) {
@@ -148,7 +148,7 @@ export default class Players extends Adapter {
           alive = true,
           score = 0,
           scoreRound = 0;
-        if (playerIdsImpostors.includes(playerId)) role = 'impostor';
+        if (playerIdsImposters.includes(playerId)) role = 'imposter';
         else if (playerIdsAgents.includes(playerId)) role = 'agent';
         else role = 'agent';
         this.db
