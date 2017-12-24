@@ -14,6 +14,9 @@ export default class Start extends Renderer {
     this.players = new List();
     this.append(this.$main, this.players.elements);
 
+    this.$roles = this.el('p', null, 'description');
+    this.$main.appendChild(this.$roles);
+
     if (this.player._.master) {
       let $inst = this.el(
         'p',
@@ -36,13 +39,21 @@ export default class Start extends Renderer {
 
   render({ players, gameId }) {
     this.players.reset();
-    let playerCount = Object.keys(players).length;
-    let remain = 3 - playerCount,
+    let playerCount = Object.keys(players).length,
+      roles = this._distributor(playerCount),
+      remain = 3 - playerCount,
       waiting = remain > 0,
       playerS = remain > 1 ? 'Players' : 'Player';
     this.players.title(
       waiting ? `Need at least ${remain} more ${playerS}` : ''
     );
+    if (waiting) {
+      this.$roles.innerHTML = '';
+    } else {
+      let imposterS = roles[1] === 1 ? 'Imposter' : 'Imposters';
+      this.$roles.innerHTML = `There will be ${roles[0]} Agents and ${roles[1]} ${imposterS}.`;
+    }
+
     if (this.player._.master && this.start) {
       if (waiting) this.start.disable();
       else this.start.enable();
@@ -55,6 +66,13 @@ export default class Start extends Renderer {
       let html = `<span class="user ${you}"><img src="${image}" /> <span>${name}</span></span>`;
       this.players.add(html);
     }
+  }
+
+  _distributor(number) {
+    // Going for 2 to 1
+    let agents = Math.floor(number * 0.66667),
+      imposters = number - agents;
+    return [agents, imposters];
   }
 
   get _name() {

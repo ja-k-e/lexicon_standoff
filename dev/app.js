@@ -2209,6 +2209,9 @@ var Start = function (_Renderer) {
       this.players = new _List2.default();
       this.append(this.$main, this.players.elements);
 
+      this.$roles = this.el('p', null, 'description');
+      this.$main.appendChild(this.$roles);
+
       if (this.player._.master) {
         var $inst = this.el('p', 'Once everyone is here, start the game. Players can join this Game using the Game Secret above.', 'instruction');
         var $group = this.el('div', null, 'item-group');
@@ -2231,11 +2234,19 @@ var Start = function (_Renderer) {
           gameId = _ref.gameId;
 
       this.players.reset();
-      var playerCount = Object.keys(players).length;
-      var remain = 3 - playerCount,
+      var playerCount = Object.keys(players).length,
+          roles = this._distributor(playerCount),
+          remain = 3 - playerCount,
           waiting = remain > 0,
           playerS = remain > 1 ? 'Players' : 'Player';
       this.players.title(waiting ? 'Need at least ' + remain + ' more ' + playerS : '');
+      if (waiting) {
+        this.$roles.innerHTML = '';
+      } else {
+        var imposterS = roles[1] === 1 ? 'Imposter' : 'Imposters';
+        this.$roles.innerHTML = 'There will be ' + roles[0] + ' Agents and ' + roles[1] + ' ' + imposterS + '.';
+      }
+
       if (this.player._.master && this.start) {
         if (waiting) this.start.disable();else this.start.enable();
       }
@@ -2250,6 +2261,14 @@ var Start = function (_Renderer) {
         var html = '<span class="user ' + you + '"><img src="' + image + '" /> <span>' + name + '</span></span>';
         this.players.add(html);
       }
+    }
+  }, {
+    key: '_distributor',
+    value: function _distributor(number) {
+      // Going for 2 to 1
+      var agents = Math.floor(number * 0.66667),
+          imposters = number - agents;
+      return [agents, imposters];
     }
   }, {
     key: '_name',
