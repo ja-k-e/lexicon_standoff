@@ -113,7 +113,7 @@ export default class Game {
   }
 
   generateTopics() {
-    return [this.topicGenerator.loadTopic(), this.topicGenerator.loadTopic()];
+    return [1, 2, 3, 4].map(_ => this.topicGenerator.loadTopic());
   }
 
   generateKilledIds() {

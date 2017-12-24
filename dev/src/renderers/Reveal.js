@@ -34,10 +34,9 @@ export default class Reveal extends Renderer {
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
       <span class="status">Reveal</span> <span class="info"><span class="throb">${role}</span></span>`;
-    this.$topics.innerHTML = `${topics[0][1]} &amp; ${topics[1][1]}`;
+    this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
     if (this.player._.alive) {
-      this.$desc.innerHTML =
-        "If questioned, explain your association for the Topics. Question other's choices.";
+      this.$desc.innerHTML = `These were the two Topics. Explain why you chose your word.`;
       if (this.player._.role === 'imposter') {
         this.imposters.title('Other Imposters');
         for (let playerId in players) {

@@ -146,14 +146,13 @@ export default class Players extends Adapter {
         let player = players[playerId];
         let role,
           alive = true,
-          score = 0,
           scoreRound = 0;
         if (playerIdsImposters.includes(playerId)) role = 'imposter';
         else if (playerIdsAgents.includes(playerId)) role = 'agent';
         else role = 'agent';
         this.db
           .ref(this.r([player.gameId, playerId]))
-          .update({ role, alive, score, scoreRound })
+          .update({ role, alive, scoreRound })
           .then(() => {
             playerCount--;
             if (playerCount <= 0) resolve();

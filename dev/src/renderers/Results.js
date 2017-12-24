@@ -8,7 +8,7 @@ export default class Results extends Renderer {
     this.$h1 = this.el('h1');
     this.$header.appendChild(this.$h1);
 
-    this.killed = new List();
+    this.killed = new List('flex-list flex-list-large');
     this.append(this.$main, this.killed.elements);
 
     this.$desc = this.el('div');
@@ -87,10 +87,11 @@ export default class Results extends Renderer {
       this.extra1.title('Imposters');
       this.extra2.title('Standings');
       this.extra2.$ul.classList.add('flex-list-half');
-      let winnerText = this._winnerText(aliveCounts);
+      let winnerText = this._winnerText(aliveCounts),
+        roundText = this._roundPointsText(aliveCounts);
       this.$desc.innerHTML = `
         <p class="description">
-          ${winnerText} ${this._roundPointsText(aliveCounts)}
+          ${winnerText} ${roundText} ${this._roundPoints()}
         </p>
       `;
       let playerIds = Object.keys(players);
@@ -115,8 +116,8 @@ export default class Results extends Renderer {
       this.extra2.title('Graveyard');
       this.extra2.$ul.classList.remove('flex-list-half');
       this.$desc.innerHTML = `
-        <p class="description">The Round is still in progress. Player roles will be maintained.</p>
-        <p class="description">${this._playerPoints()}</p>
+        <p class="description">The Round is still in progress. Player roles will stay the same.
+        ${this._playerPoints()}</p>
       `;
       for (let playerId in players) {
         let player = players[playerId],
@@ -143,34 +144,53 @@ export default class Results extends Renderer {
   }
 
   _points(count) {
-    let pointS = count === 1 ? 'point' : 'points';
-    return `<span class="points">${count} ${pointS}</span>`;
+    return `<span class="points">${count}</span>`;
   }
 
   _winnerText({ imposter, agent }) {
-    if (imposter === 1 && agent === 1) return 'It was a draw!';
-    if (imposter > 0) return 'The <span class="role">Imposters</span> won!';
-    if (agent > 0) return 'The <span class="role">Agents</span> won!';
-    return 'It was a draw!';
+    let role = this.player._.role;
+    if (imposter === 1 && agent === 1) {
+      return 'One Imposter and one Agent are left so it is a draw!';
+    } else if (imposter > 0) {
+      let prefix = role === 'imposter' ? this._success() : this._failure();
+      return `${prefix} The <span class="role">Imposters</span> won.`;
+    } else if (agent > 0) {
+      let prefix = role === 'agent' ? this._success() : this._failure();
+      return `${prefix} The <span class="role">Agents</span> won.`;
+    }
+    return 'Everyone died!';
   }
 
   _roundPointsText({ imposter, agent }) {
     if (imposter === 1 && agent === 1)
-      return 'No one receives additional points.';
-    if (imposter > 0)
-      return `All Imposters receive ${this._points(Game.winPoints)}.`;
-    if (agent > 0) return `All Agents receive ${this._points(Game.winPoints)}.`;
-    return 'No one receives additional points.';
+      return 'No one scores additional points.';
+    if (imposter > 0 || agent > 0)
+      return `Each score ${this._points(Game.winPoints)}.`;
+    return 'No one scores additional points.';
   }
 
   _playerPoints() {
     let { scoreRound, role, alive } = this.player._,
       scoreTurn = alive ? Game.survivePoints[role] : 0,
-      reason = alive ? 'survived' : 'died';
-    return `You received ${this._points(
-      scoreTurn
-    )} this Turn because you ${reason}
+      reason = alive ? 'survived' : 'died',
+      points = this._points(scoreTurn);
+    return `You scored ${points} this Turn because you ${reason},
       and have scored ${this._points(scoreRound)} this Round.`;
+  }
+
+  _roundPoints() {
+    let { scoreRound } = this.player._;
+    return `You scored ${this._points(scoreRound)} this Round.`;
+  }
+
+  _success() {
+    let messages = ['Awesome', 'Radical', 'Great job', 'Wow', 'Kapow'];
+    return messages[Math.floor(Math.random() * messages.length)] + '!';
+  }
+
+  _failure() {
+    let messages = ['Shucks', 'Darn it all', 'Ugh', 'Whelp'];
+    return messages[Math.floor(Math.random() * messages.length)] + '!';
   }
 
   get _name() {
