@@ -69,6 +69,9 @@ export default class Users extends Adapter {
   }
 
   _userDataFromParams(params) {
+    // Default Google image (can replace?):
+    // https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg
+
     let id = params.uid,
       image = params.photoURL,
       name = params.displayName.replace(/ .+$/, '');

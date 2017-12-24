@@ -1415,6 +1415,9 @@ var Users = function (_Adapter) {
   }, {
     key: '_userDataFromParams',
     value: function _userDataFromParams(params) {
+      // Default Google image (can replace?):
+      // https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg
+
       var id = params.uid,
           image = params.photoURL,
           name = params.displayName.replace(/ .+$/, '');
@@ -1999,15 +2002,17 @@ var Auth = function (_Renderer) {
       var $h1 = this.el('h1', 'Lexicon Standoff'),
           $desc = this.el('p', 'Please Sign In', 'description'),
           $google = this.el('button', 'Google'),
-          $facebook = this.el('button', 'Facebook'),
-          $twitter = this.el('button', 'Twitter');
-      this.append(this.$main, [$h1, $desc, $google, $facebook, $twitter]);
+
+      // $facebook = this.el('button', 'Facebook'),
+      $twitter = this.el('button', 'Twitter');
+      // this.append(this.$main, [$h1, $desc, $google, $facebook, $twitter]);
+      this.append(this.$main, [$h1, $desc, $google, $twitter]);
       $google.addEventListener('click', function () {
         _this2.events.authGoogle();
       });
-      $facebook.addEventListener('click', function () {
-        _this2.events.authFacebook();
-      });
+      // $facebook.addEventListener('click', () => {
+      //   this.events.authFacebook();
+      // });
       $twitter.addEventListener('click', function () {
         _this2.events.authTwitter();
       });
