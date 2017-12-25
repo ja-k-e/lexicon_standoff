@@ -91,7 +91,7 @@ export default class Results extends Renderer {
         roundText = this._roundPointsText(aliveCounts);
       this.$desc.innerHTML = `
         <p class="description">
-          ${winnerText} ${roundText} ${this._roundPoints()}
+          ${winnerText} ${this._playerPoints()} ${roundText}
         </p>
       `;
       let playerIds = Object.keys(players);
@@ -162,10 +162,11 @@ export default class Results extends Renderer {
   }
 
   _roundPointsText({ imposter, agent }) {
+    let addl = this._points(Game.winPoints);
     if (imposter === 1 && agent === 1)
       return 'No one scores additional points.';
-    if (imposter > 0 || agent > 0)
-      return `Each score ${this._points(Game.winPoints)}.`;
+    if (imposter > 0) return `Each Imposter scored an additional ${addl}.`;
+    if (agent > 0) return `Each Agent scored an additional ${addl}.`;
     return 'No one scores additional points.';
   }
 
@@ -176,11 +177,6 @@ export default class Results extends Renderer {
       points = this._points(scoreTurn);
     return `You scored ${points} this Turn because you ${reason},
       and have scored ${this._points(scoreRound)} this Round.`;
-  }
-
-  _roundPoints() {
-    let { scoreRound } = this.player._;
-    return `You scored ${this._points(scoreRound)} this Round.`;
   }
 
   _success() {

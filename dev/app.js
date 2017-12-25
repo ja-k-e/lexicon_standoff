@@ -583,28 +583,29 @@ var Game = function () {
           aliveIds = _ref2.aliveIds,
           roundOver = _ref2.roundOver;
 
-      var points = {};
+      var points = {},
+          winRole = null;
       if (roundOver) {
-        if (aliveCounts.imposter === 1 && aliveCounts.agent === 1) {
-          // It is a Draw. No points
-        } else if (aliveCounts.imposter > 0) {
-          // Imposters score three
-          for (var playerId in players) {
-            if (players[playerId]._.role === 'imposter') points[playerId] = Game.winPoints;
-          }
-        } else if (aliveCounts.agent > 0) {
-          // Agents score three
-          for (var _playerId in players) {
-            if (players[_playerId]._.role === 'agent') points[_playerId] = Game.winPoints;
-          }
+        if (aliveCounts.imposter === 1 && aliveCounts.agent === 1) ;else if (aliveCounts.imposter > 0)
+          // Nothing. Draw.
+          winRole = 'imposter';else if (aliveCounts.agent > 0) winRole = 'agent';
+      }
+      // Alive Imposters score two, alive Agents score one
+      for (var playerId in players) {
+        var player = players[playerId],
+            role = player._.role,
+            survivePts = Game.survivePoints[role];
+        // If winning Team
+        if (winRole && winRole === role) {
+          // If alive, extra points
+          var pts = player._.alive ? Game.winPoints + survivePts : Game.winPoints;
+          points[playerId] = pts;
+        } else if (winRole) {
+          // If Loser,
         } else {
-          // Everyone is dead. No points
+          // Game Still playing
+          if (player._.alive) points[playerId] = survivePts;
         }
-      } else {
-        // Alive Imposters score two, alive Agents score one
-        aliveIds.forEach(function (playerId) {
-          points[playerId] = Game.survivePoints[players[playerId]._.role];
-        });
       }
       return points;
     }
@@ -682,13 +683,13 @@ var Game = function () {
         killVotes[killedId] = killVotes[killedId] || 0;
         killVotes[killedId]++;
       }
-      for (var _playerId2 in killVotes) {
-        var votes = killVotes[_playerId2];
+      for (var _playerId in killVotes) {
+        var votes = killVotes[_playerId];
         if (votes > most) {
           most = votes;
-          killedIds = [_playerId2];
+          killedIds = [_playerId];
         } else if (votes === most) {
-          killedIds.push(_playerId2);
+          killedIds.push(_playerId);
         }
       }
       return { killVotes: killVotes, killedIds: killedIds };
@@ -2795,7 +2796,7 @@ var Results = function (_Renderer) {
         this.extra2.$ul.classList.add('flex-list-half');
         var winnerText = this._winnerText(aliveCounts),
             roundText = this._roundPointsText(aliveCounts);
-        this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + roundText + ' ' + this._roundPoints() + '\n        </p>\n      ';
+        this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + this._playerPoints() + ' ' + roundText + '\n        </p>\n      ';
         var playerIds = Object.keys(players);
         playerIds.sort(function (a, b) {
           var aScore = players[a]._.score,
@@ -2868,8 +2869,10 @@ var Results = function (_Renderer) {
       var imposter = _ref3.imposter,
           agent = _ref3.agent;
 
+      var addl = this._points(_Game2.default.winPoints);
       if (imposter === 1 && agent === 1) return 'No one scores additional points.';
-      if (imposter > 0 || agent > 0) return 'Each score ' + this._points(_Game2.default.winPoints) + '.';
+      if (imposter > 0) return 'Each Imposter scored an additional ' + addl + '.';
+      if (agent > 0) return 'Each Agent scored an additional ' + addl + '.';
       return 'No one scores additional points.';
     }
   }, {
@@ -2884,13 +2887,6 @@ var Results = function (_Renderer) {
           points = this._points(scoreTurn);
 
       return 'You scored ' + points + ' this Turn because you ' + reason + ',\n      and have scored ' + this._points(scoreRound) + ' this Round.';
-    }
-  }, {
-    key: '_roundPoints',
-    value: function _roundPoints() {
-      var scoreRound = this.player._.scoreRound;
-
-      return 'You scored ' + this._points(scoreRound) + ' this Round.';
     }
   }, {
     key: '_success',

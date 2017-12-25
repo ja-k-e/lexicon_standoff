@@ -38,28 +38,31 @@ export default class Game {
   }
 
   calculatePoints(players, { aliveCounts, aliveIds, roundOver }) {
-    let points = {};
+    let points = {},
+      winRole = null;
     if (roundOver) {
-      if (aliveCounts.imposter === 1 && aliveCounts.agent === 1) {
-        // It is a Draw. No points
-      } else if (aliveCounts.imposter > 0) {
-        // Imposters score three
-        for (let playerId in players)
-          if (players[playerId]._.role === 'imposter')
-            points[playerId] = Game.winPoints;
-      } else if (aliveCounts.agent > 0) {
-        // Agents score three
-        for (let playerId in players)
-          if (players[playerId]._.role === 'agent')
-            points[playerId] = Game.winPoints;
+      if (aliveCounts.imposter === 1 && aliveCounts.agent === 1);
+      else if (aliveCounts.imposter > 0)
+        // Nothing. Draw.
+        winRole = 'imposter';
+      else if (aliveCounts.agent > 0) winRole = 'agent';
+    }
+    // Alive Imposters score two, alive Agents score one
+    for (let playerId in players) {
+      let player = players[playerId],
+        role = player._.role,
+        survivePts = Game.survivePoints[role];
+      // If winning Team
+      if (winRole && winRole === role) {
+        // If alive, extra points
+        let pts = player._.alive ? Game.winPoints + survivePts : Game.winPoints;
+        points[playerId] = pts;
+      } else if (winRole) {
+        // If Loser,
       } else {
-        // Everyone is dead. No points
+        // Game Still playing
+        if (player._.alive) points[playerId] = survivePts;
       }
-    } else {
-      // Alive Imposters score two, alive Agents score one
-      aliveIds.forEach(playerId => {
-        points[playerId] = Game.survivePoints[players[playerId]._.role];
-      });
     }
     return points;
   }
