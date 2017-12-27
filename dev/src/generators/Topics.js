@@ -190,7 +190,7 @@ export default class Topics {
       ['art', 'Accordions'],
       ['art', 'Albums'],
       ['art', 'Artists'],
-      ['art', 'Basses'],
+      ['art', 'Bass'],
       ['art', 'Bohemians'],
       ['art', 'Cameras'],
       ['art', 'Cellos'],
