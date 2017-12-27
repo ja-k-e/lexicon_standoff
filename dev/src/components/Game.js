@@ -11,8 +11,8 @@ export default class Game {
     this.topicGenerator = new Topics();
   }
 
-  detectAllVotesSubmitted() {
-    return Object.keys(this._.votes).length === this._.playerCountAlive;
+  detectAllActionsSubmitted() {
+    return Object.keys(this._.votes).length === this._.playerCount;
   }
 
   calculateRoundOverData(players) {
@@ -116,17 +116,25 @@ export default class Game {
   }
 
   generateTopics() {
-    return [1, 2, 3, 4].map(_ => this.topicGenerator.loadTopic());
+    return [1, 2, 3, 4, 5].map(_ => this.topicGenerator.loadTopic());
   }
 
-  generateKilledIds() {
+  generateActionIds() {
     let killVotes = {},
       killedIds = [],
+      confusionVotes = {},
+      confusionIds = [],
       most = 0;
     for (let playerId in this._.votes) {
-      let killedId = this._.votes[playerId];
-      killVotes[killedId] = killVotes[killedId] || 0;
-      killVotes[killedId]++;
+      let actionId = this._.votes[playerId],
+        aliveAction = this.state.players[playerId]._.alive;
+      if (aliveAction) {
+        killVotes[actionId] = killVotes[actionId] || 0;
+        killVotes[actionId]++;
+      } else {
+        confusionVotes[actionId] = confusionVotes[actionId] || 0;
+        confusionVotes[actionId]++;
+      }
     }
     for (let playerId in killVotes) {
       let votes = killVotes[playerId];
@@ -137,7 +145,11 @@ export default class Game {
         killedIds.push(playerId);
       }
     }
-    return { killVotes, killedIds };
+    for (let playerId in confusionVotes) {
+      let votes = confusionVotes[playerId];
+      confusionIds.push(playerId);
+    }
+    return { confusionVotes, confusionIds, killVotes, killedIds };
   }
 
   // Generators

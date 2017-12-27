@@ -19,7 +19,7 @@ export default class Games extends Adapter {
     });
   }
 
-  globalKillVote(gameId, actingPlayerId, playerId) {
+  globalVote(gameId, actingPlayerId, playerId) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
@@ -69,11 +69,24 @@ export default class Games extends Adapter {
     });
   }
 
-  masterUpdateKilledIds(gameId, killedIds, killVotes, playerCountAlive) {
+  masterUpdateActionIds(
+    gameId,
+    confusionVotes,
+    confusionIds,
+    killVotes,
+    killedIds,
+    playerCountAlive
+  ) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
-        .update({ killedIds, killVotes, playerCountAlive })
+        .update({
+          confusionVotes,
+          confusionIds,
+          killedIds,
+          killVotes,
+          playerCountAlive
+        })
         .then(resolve)
         .catch(reject);
     });

@@ -7,7 +7,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 5,
+  STUB_COUNT = 3,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -57,8 +57,8 @@ export default class State {
   handleGameChanges() {
     if (this.game.changes.status) this.handleStatusChange();
     if (this.master) {
-      if (this.game.changes.votes) this.handleVotesChange();
-      if (this.game._.status === 'votes' && this.game.changes.killedIds)
+      if (this.game.changes.votes) this.handleActionsChange();
+      if (this.game._.status === 'actions' && this.game.changes.killedIds)
         this.handleKilledIdsChange();
     }
   }
@@ -91,25 +91,39 @@ export default class State {
     });
   }
 
-  handleVotesChange() {
-    if (this.game._.status === 'votes') {
-      if (this.game.detectAllVotesSubmitted() && !this.killLock) {
-        this.killLock = true;
-        let { killVotes, killedIds } = this.game.generateKilledIds();
-        Adapters.Players.masterKillPlayers(this.game.id, killedIds).then(() => {
-          let playerCountAlive =
-            this.game._.playerCountAlive - killedIds.length;
-          Adapters.Games
-            .masterUpdateKilledIds(
-              this.game.id,
-              killedIds,
-              killVotes,
-              playerCountAlive
-            )
-            .then(() => {
-              this.killLock = false;
-            });
-        });
+  handleActionsChange() {
+    if (this.game._.status === 'actions') {
+      if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
+        this.actionLock = true;
+        let {
+          confusionVotes,
+          confusionIds,
+          killVotes,
+          killedIds
+        } = this.game.generateActionIds();
+        Adapters.Players
+          .masterActOnPlayers(
+            this.game.id,
+            this.players,
+            killedIds,
+            confusionIds
+          )
+          .then(() => {
+            let playerCountAlive =
+              this.game._.playerCountAlive - killedIds.length;
+            Adapters.Games
+              .masterUpdateActionIds(
+                this.game.id,
+                confusionVotes,
+                confusionIds,
+                killVotes,
+                killedIds,
+                playerCountAlive
+              )
+              .then(() => {
+                this.actionLock = false;
+              });
+          });
       }
     }
   }
@@ -177,10 +191,10 @@ export default class State {
         dispatchReveal: () => this.dispatchReveal()
       }),
       reveal: new Renderers.Reveal(this.player, {
-        dispatchVotes: () => this.dispatchVotes()
+        dispatchActions: () => this.dispatchActions()
       }),
-      votes: new Renderers.Votes(this.player, {
-        dispatchVote: p => this.dispatchVote(p)
+      actions: new Renderers.Actions(this.player, {
+        dispatchAction: (p, a) => this.dispatchAction(p, a)
       }),
       results: new Renderers.Results(this.player, {
         dispatchEnd: () => this.dispatchEnd(),
@@ -191,7 +205,7 @@ export default class State {
     this.renderers.start.renderInitial();
     this.renderers.turns.renderInitial();
     this.renderers.reveal.renderInitial();
-    this.renderers.votes.renderInitial();
+    this.renderers.actions.renderInitial();
     this.renderers.results.renderInitial();
     this.rendered = true;
   }
@@ -215,8 +229,8 @@ export default class State {
     Adapters.Games.masterUpdateStatus(this.game.id, 'reveal');
   }
 
-  dispatchVotes() {
-    Adapters.Games.masterUpdateStatus(this.game.id, 'votes');
+  dispatchActions() {
+    Adapters.Games.masterUpdateStatus(this.game.id, 'actions');
   }
 
   dispatchNewRound() {
@@ -238,17 +252,17 @@ export default class State {
     });
   }
 
-  dispatchVote(playerId) {
-    Adapters.Games.globalKillVote(this.game.id, this.user.id, playerId);
+  dispatchAction(playerId) {
+    Adapters.Games.globalVote(this.game.id, this.user.id, playerId);
     if (STUB) this.devDispatchVote(playerId);
   }
 
   devDispatchVote(playerId) {
     let spoofs = this.game._.playerCount - STUB_COUNT;
     if (this.player._.master)
-      for (let i = 0; i < this.game._.playerCountAlive - 1; i++) {
+      for (let i = 0; i < this.game._.playerCount - 2; i++) {
         let id = `${STUB_PREFIX}${i + 1}`;
-        Adapters.Games.globalKillVote(this.game.id, id, playerId);
+        Adapters.Games.globalVote(this.game.id, id, playerId);
       }
   }
 
@@ -259,8 +273,8 @@ export default class State {
     let map = {
       turns: () => this.renderers.turns.render(this.game._),
       reveal: () => this.renderers.reveal.render(this.game._, this.players),
-      votes: () =>
-        this.renderers.votes.render({
+      actions: () =>
+        this.renderers.actions.render({
           players: this.players,
           imposterCount: this.game._.imposterCount,
           votes: this.game._.votes
@@ -282,7 +296,7 @@ export default class State {
 
   _devCreateStubbedPlayers(gameId) {
     let image =
-      'https://lh4.googleusercontent.com/-qkrR_IJ6BCc/AAAAAAAAAAI/AAAAAAAABGU/SQGbIJDw4NQ/photo.jpg';
+      'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
     for (let i = 0; i < STUB_COUNT; i++) {
       Adapters.Players.globalCreate(
         gameId,

@@ -429,9 +429,9 @@ var _Reveal = __webpack_require__(24);
 
 var _Reveal2 = _interopRequireDefault(_Reveal);
 
-var _Votes = __webpack_require__(25);
+var _Actions = __webpack_require__(25);
 
-var _Votes2 = _interopRequireDefault(_Votes);
+var _Actions2 = _interopRequireDefault(_Actions);
 
 var _Results = __webpack_require__(26);
 
@@ -446,7 +446,7 @@ var Renderers = {
   Start: _Start2.default,
   Turns: _Turns2.default,
   Reveal: _Reveal2.default,
-  Votes: _Votes2.default,
+  Actions: _Actions2.default,
   Results: _Results2.default
 };
 
@@ -552,9 +552,9 @@ var Game = function () {
   }
 
   _createClass(Game, [{
-    key: 'detectAllVotesSubmitted',
-    value: function detectAllVotesSubmitted() {
-      return Object.keys(this._.votes).length === this._.playerCountAlive;
+    key: 'detectAllActionsSubmitted',
+    value: function detectAllActionsSubmitted() {
+      return Object.keys(this._.votes).length === this._.playerCount;
     }
   }, {
     key: 'calculateRoundOverData',
@@ -668,20 +668,28 @@ var Game = function () {
     value: function generateTopics() {
       var _this2 = this;
 
-      return [1, 2, 3, 4].map(function (_) {
+      return [1, 2, 3, 4, 5].map(function (_) {
         return _this2.topicGenerator.loadTopic();
       });
     }
   }, {
-    key: 'generateKilledIds',
-    value: function generateKilledIds() {
+    key: 'generateActionIds',
+    value: function generateActionIds() {
       var killVotes = {},
           killedIds = [],
+          confusionVotes = {},
+          confusionIds = [],
           most = 0;
       for (var playerId in this._.votes) {
-        var killedId = this._.votes[playerId];
-        killVotes[killedId] = killVotes[killedId] || 0;
-        killVotes[killedId]++;
+        var actionId = this._.votes[playerId],
+            aliveAction = this.state.players[playerId]._.alive;
+        if (aliveAction) {
+          killVotes[actionId] = killVotes[actionId] || 0;
+          killVotes[actionId]++;
+        } else {
+          confusionVotes[actionId] = confusionVotes[actionId] || 0;
+          confusionVotes[actionId]++;
+        }
       }
       for (var _playerId in killVotes) {
         var votes = killVotes[_playerId];
@@ -692,7 +700,11 @@ var Game = function () {
           killedIds.push(_playerId);
         }
       }
-      return { killVotes: killVotes, killedIds: killedIds };
+      for (var _playerId2 in confusionVotes) {
+        var _votes = confusionVotes[_playerId2];
+        confusionIds.push(_playerId2);
+      }
+      return { confusionVotes: confusionVotes, confusionIds: confusionIds, killVotes: killVotes, killedIds: killedIds };
     }
 
     // Generators
@@ -961,8 +973,8 @@ var Games = function (_Adapter) {
       });
     }
   }, {
-    key: 'globalKillVote',
-    value: function globalKillVote(gameId, actingPlayerId, playerId) {
+    key: 'globalVote',
+    value: function globalVote(gameId, actingPlayerId, playerId) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
@@ -1010,12 +1022,18 @@ var Games = function (_Adapter) {
       });
     }
   }, {
-    key: 'masterUpdateKilledIds',
-    value: function masterUpdateKilledIds(gameId, killedIds, killVotes, playerCountAlive) {
+    key: 'masterUpdateActionIds',
+    value: function masterUpdateActionIds(gameId, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive) {
       var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        _this6.db.ref(_this6.r(gameId)).update({ killedIds: killedIds, killVotes: killVotes, playerCountAlive: playerCountAlive }).then(resolve).catch(reject);
+        _this6.db.ref(_this6.r(gameId)).update({
+          confusionVotes: confusionVotes,
+          confusionIds: confusionIds,
+          killedIds: killedIds,
+          killVotes: killVotes,
+          playerCountAlive: playerCountAlive
+        }).then(resolve).catch(reject);
       });
     }
   }, {
@@ -1252,18 +1270,20 @@ var Players = function (_Adapter) {
       });
     }
   }, {
-    key: 'masterKillPlayers',
-    value: function masterKillPlayers(gameId, playerIds) {
+    key: 'masterActOnPlayers',
+    value: function masterActOnPlayers(gameId, players, killedIds, confusionIds) {
       var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        var playerCount = playerIds.length;
-        playerIds.forEach(function (playerId) {
-          _this6.db.ref(_this6.r([gameId, playerId])).update({ alive: false }).then(function () {
+        var playerCount = Object.keys(players).length;
+        for (var playerId in players) {
+          var params = { confused: confusionIds.includes(playerId) };
+          if (killedIds.includes(playerId)) params.alive = false;
+          _this6.db.ref(_this6.r([gameId, playerId])).update(params).then(function () {
             playerCount--;
             if (playerCount <= 0) resolve();
           }).catch(reject);
-        });
+        }
       });
     }
   }, {
@@ -1319,10 +1339,11 @@ var Players = function (_Adapter) {
         for (var playerId in players) {
           var player = players[playerId];
           var role = void 0,
+              confused = false,
               alive = true,
               scoreRound = 0;
           if (playerIdsImposters.includes(playerId)) role = 'imposter';else if (playerIdsAgents.includes(playerId)) role = 'agent';else role = 'agent';
-          _this9.db.ref(_this9.r([player.gameId, playerId])).update({ role: role, alive: alive, scoreRound: scoreRound }).then(function () {
+          _this9.db.ref(_this9.r([player.gameId, playerId])).update({ role: role, alive: alive, confused: confused, scoreRound: scoreRound }).then(function () {
             playerCount--;
             if (playerCount <= 0) resolve();
           }).catch(reject);
@@ -1569,7 +1590,7 @@ var config = __webpack_require__(5);
 
 var //
 STUB = config.env === 'development',
-    STUB_COUNT = 5,
+    STUB_COUNT = 3,
     STUB_PREFIX = 'TEST_USER_';
 
 var State = function () {
@@ -1627,8 +1648,8 @@ var State = function () {
     value: function handleGameChanges() {
       if (this.game.changes.status) this.handleStatusChange();
       if (this.master) {
-        if (this.game.changes.votes) this.handleVotesChange();
-        if (this.game._.status === 'votes' && this.game.changes.killedIds) this.handleKilledIdsChange();
+        if (this.game.changes.votes) this.handleActionsChange();
+        if (this.game._.status === 'actions' && this.game.changes.killedIds) this.handleKilledIdsChange();
       }
     }
   }, {
@@ -1663,22 +1684,24 @@ var State = function () {
       });
     }
   }, {
-    key: 'handleVotesChange',
-    value: function handleVotesChange() {
+    key: 'handleActionsChange',
+    value: function handleActionsChange() {
       var _this4 = this;
 
-      if (this.game._.status === 'votes') {
-        if (this.game.detectAllVotesSubmitted() && !this.killLock) {
-          this.killLock = true;
+      if (this.game._.status === 'actions') {
+        if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
+          this.actionLock = true;
 
-          var _game$generateKilledI = this.game.generateKilledIds(),
-              killVotes = _game$generateKilledI.killVotes,
-              killedIds = _game$generateKilledI.killedIds;
+          var _game$generateActionI = this.game.generateActionIds(),
+              confusionVotes = _game$generateActionI.confusionVotes,
+              confusionIds = _game$generateActionI.confusionIds,
+              killVotes = _game$generateActionI.killVotes,
+              killedIds = _game$generateActionI.killedIds;
 
-          _Adapters2.default.Players.masterKillPlayers(this.game.id, killedIds).then(function () {
+          _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds, confusionIds).then(function () {
             var playerCountAlive = _this4.game._.playerCountAlive - killedIds.length;
-            _Adapters2.default.Games.masterUpdateKilledIds(_this4.game.id, killedIds, killVotes, playerCountAlive).then(function () {
-              _this4.killLock = false;
+            _Adapters2.default.Games.masterUpdateActionIds(_this4.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
+              _this4.actionLock = false;
             });
           });
         }
@@ -1767,13 +1790,13 @@ var State = function () {
           }
         }),
         reveal: new _Renderers2.default.Reveal(this.player, {
-          dispatchVotes: function dispatchVotes() {
-            return _this7.dispatchVotes();
+          dispatchActions: function dispatchActions() {
+            return _this7.dispatchActions();
           }
         }),
-        votes: new _Renderers2.default.Votes(this.player, {
-          dispatchVote: function dispatchVote(p) {
-            return _this7.dispatchVote(p);
+        actions: new _Renderers2.default.Actions(this.player, {
+          dispatchAction: function dispatchAction(p, a) {
+            return _this7.dispatchAction(p, a);
           }
         }),
         results: new _Renderers2.default.Results(this.player, {
@@ -1791,7 +1814,7 @@ var State = function () {
       this.renderers.start.renderInitial();
       this.renderers.turns.renderInitial();
       this.renderers.reveal.renderInitial();
-      this.renderers.votes.renderInitial();
+      this.renderers.actions.renderInitial();
       this.renderers.results.renderInitial();
       this.rendered = true;
     }
@@ -1823,9 +1846,9 @@ var State = function () {
       _Adapters2.default.Games.masterUpdateStatus(this.game.id, 'reveal');
     }
   }, {
-    key: 'dispatchVotes',
-    value: function dispatchVotes() {
-      _Adapters2.default.Games.masterUpdateStatus(this.game.id, 'votes');
+    key: 'dispatchActions',
+    value: function dispatchActions() {
+      _Adapters2.default.Games.masterUpdateStatus(this.game.id, 'actions');
     }
   }, {
     key: 'dispatchNewRound',
@@ -1849,18 +1872,18 @@ var State = function () {
       });
     }
   }, {
-    key: 'dispatchVote',
-    value: function dispatchVote(playerId) {
-      _Adapters2.default.Games.globalKillVote(this.game.id, this.user.id, playerId);
+    key: 'dispatchAction',
+    value: function dispatchAction(playerId) {
+      _Adapters2.default.Games.globalVote(this.game.id, this.user.id, playerId);
       if (STUB) this.devDispatchVote(playerId);
     }
   }, {
     key: 'devDispatchVote',
     value: function devDispatchVote(playerId) {
       var spoofs = this.game._.playerCount - STUB_COUNT;
-      if (this.player._.master) for (var i = 0; i < this.game._.playerCountAlive - 1; i++) {
+      if (this.player._.master) for (var i = 0; i < this.game._.playerCount - 2; i++) {
         var id = '' + STUB_PREFIX + (i + 1);
-        _Adapters2.default.Games.globalKillVote(this.game.id, id, playerId);
+        _Adapters2.default.Games.globalVote(this.game.id, id, playerId);
       }
     }
 
@@ -1879,8 +1902,8 @@ var State = function () {
         reveal: function reveal() {
           return _this12.renderers.reveal.render(_this12.game._, _this12.players);
         },
-        votes: function votes() {
-          return _this12.renderers.votes.render({
+        actions: function actions() {
+          return _this12.renderers.actions.render({
             players: _this12.players,
             imposterCount: _this12.game._.imposterCount,
             votes: _this12.game._.votes
@@ -1902,7 +1925,7 @@ var State = function () {
     // Private
 
     value: function _devCreateStubbedPlayers(gameId) {
-      var image = 'https://lh4.googleusercontent.com/-qkrR_IJ6BCc/AAAAAAAAAAI/AAAAAAAABGU/SQGbIJDw4NQ/photo.jpg';
+      var image = 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
       for (var i = 0; i < STUB_COUNT; i++) {
         _Adapters2.default.Players.globalCreate(gameId, {
           id: '' + STUB_PREFIX + (i + 1),
@@ -2366,17 +2389,18 @@ var Turns = function (_Renderer) {
       });
       this.$h1.innerHTML = '\n      <span class="status">Turns</span> <span class="info"><span class="throb">' + role + '</span></span>';
       if (this.player._.alive) {
-        var descHtml = void 0,
+        var descHtml = '',
             topicsHtml = void 0;
+        if (this.player._.confused) descHtml += 'You have been confused by a dead Player! ';
         if (this.player._.role === 'imposter') {
-          descHtml = 'On your turn, say one word that you associate with the <strong>two</strong> Agent Topics.\n          They are two of the above.';
-          var shuffled = (0, _shuffle2.default)([0, 1, 2, 3]).map(function (idx) {
-            return topics[idx][1];
-          });
-          topicsHtml = '\n          \u201C' + shuffled[0] + '\u201D, \u201C' + shuffled[1] + '\u201D, \u201C' + shuffled[2] + '\u201D, or \u201C' + shuffled[3] + '\u201D\n        ';
+          if (this.player._.confused) topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
+        } else {
+          if (this.player._.confused) topicsHtml = this._shuffledHtml([0, 1, 4], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
+        }
+        if (this.player._.confused || this.player._.role === 'imposter') {
+          descHtml += 'On your turn, say one word that you associate with the <strong>two</strong> Agent Topics.\n          They are two of the above.';
         } else {
           descHtml = 'On your turn, say one word that you associate with both of the Topics above.';
-          topicsHtml = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
         }
         this.$topics.innerHTML = topicsHtml;
         this.$desc.innerHTML = descHtml;
@@ -2385,6 +2409,22 @@ var Turns = function (_Renderer) {
         this.renderDead(this.$desc);
       }
       this.toggleSections();
+    }
+  }, {
+    key: '_shuffledHtml',
+    value: function _shuffledHtml(arr, topics) {
+      if (arr.length === 2) {
+        return '\u201C' + topics[arr[0]][1] + '\u201D &amp; \u201C' + topics[arr[1]][1] + '\u201D';
+      } else {
+        var shuffled = (0, _shuffle2.default)(arr).map(function (idx) {
+          return topics[idx][1];
+        });
+        var html = '';
+        shuffled.forEach(function (topic, i) {
+          if (i < shuffled.length - 1) html += '\u201C' + topic + '\u201D, ';else html += 'or \u201C' + topic + '\u201D';
+        });
+        return html;
+      }
     }
   }, {
     key: '_name',
@@ -2462,7 +2502,7 @@ var Reveal = function (_Renderer) {
         var $inst = this.el('p', 'Players question each other\'s word selections and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
         var proceed = new _Button2.default({
           content: 'Proceed',
-          clickEvent: this.events.dispatchVotes.bind(this)
+          clickEvent: this.events.dispatchActions.bind(this)
         });
         this.append(this.$footer, [$inst, proceed.$el]);
       }
@@ -2501,7 +2541,7 @@ var Reveal = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchVotes'];
+      return ['dispatchActions'];
     }
   }]);
 
@@ -2543,16 +2583,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Votes = function (_Renderer) {
-  _inherits(Votes, _Renderer);
+var Actions = function (_Renderer) {
+  _inherits(Actions, _Renderer);
 
-  function Votes() {
-    _classCallCheck(this, Votes);
+  function Actions() {
+    _classCallCheck(this, Actions);
 
-    return _possibleConstructorReturn(this, (Votes.__proto__ || Object.getPrototypeOf(Votes)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Actions.__proto__ || Object.getPrototypeOf(Actions)).apply(this, arguments));
   }
 
-  _createClass(Votes, [{
+  _createClass(Actions, [{
     key: 'renderInitial',
     value: function renderInitial() {
       var _this2 = this;
@@ -2570,10 +2610,10 @@ var Votes = function (_Renderer) {
       this.append(this.$main, this.graveyard.elements);
 
       this.vote = new _Button2.default({
-        content: 'Vote',
+        content: '',
         clickEvent: function clickEvent() {
           var playerId = _this2.$section.querySelector(':checked').value;
-          _this2.events.dispatchVote(playerId);
+          _this2.events.dispatchAction(playerId);
           _this2.vote.disable();
           _this2.$main.classList.add('inactive');
         }
@@ -2592,39 +2632,37 @@ var Votes = function (_Renderer) {
       this.votes.reset();
       this.graveyard.reset();
       this.toggleSections();
+      var alive = this.player._.alive;
 
       this.graveyard.title('Graveyard');
       var role = this.player.capitalizedRole;
-      this.$h1.innerHTML = '\n      <span class="status">Votes</span> <span class="info"><span class="throb">' + role + '</span></span>';
+      this.$h1.innerHTML = '\n      <span class="status">Actions</span> <span class="info"><span class="throb">' + role + '</span></span>';
       // If this player has already voted (refreshed the vote page after voting)
       if (votes && votes[this.player.id]) {
         this.votes.title('You have already voted!');
-        this.$footer.classList.add('hide');
         this.vote.disable();
+        this.$footer.classList.add('hide');
       } else {
-        if (this.player._.alive) {
-          this.$footer.classList.remove('hide');
-          this.votes.title('Select a Player');
-          var agentCount = Object.keys(players).length - imposterCount,
-              isAre = imposterCount === 1 ? 'is' : 'are',
-              imposterS = this._pluralize(imposterCount, 'Imposter'),
-              agentS = this._pluralize(agentCount, 'Agent');
-          this.$desc.innerHTML = '\n          Vote for the Player you want to Kill. There ' + isAre + ' a total of ' + imposterS + ' and ' + agentS + '.';
-
-          var first = true;
-          for (var playerId in players) {
-            if (playerId !== this.player.id) {
-              var player = players[playerId];
-              if (player._.alive) {
-                var selected = first ? 'checked' : '';
-                if (first) first = false;
-                this.votes.add('\n                <input id="' + playerId + '" value="' + playerId + '"\n                  type="radio" name="votes" ' + selected + ' />\n                <label for="' + playerId + '">' + this.userSpan(player) + '</label>\n              ');
-              }
+        this.$footer.classList.remove('hide');
+        this.votes.title('Select a Player');
+        var agentCount = Object.keys(players).length - imposterCount,
+            isAre = imposterCount === 1 ? 'is' : 'are',
+            imposterS = this._pluralize(imposterCount, 'Imposter'),
+            agentS = this._pluralize(agentCount, 'Agent'),
+            term = this.player._.alive ? 'Kill' : 'Confuse',
+            extra = this.player._.alive ? '' : 'You are Dead.';
+        this.vote.content(term);
+        this.$desc.innerHTML = '\n        ' + extra + ' Vote for the Player you want to <strong>' + term + '</strong>.\n        There ' + isAre + ' a total of ' + imposterS + ' and ' + agentS + '.';
+        var first = true;
+        for (var playerId in players) {
+          if (playerId !== this.player.id) {
+            var player = players[playerId];
+            if (player._.alive) {
+              var selected = first ? 'checked' : '';
+              if (first) first = false;
+              this.votes.add('\n              <input id="' + playerId + '" value="' + playerId + '"\n                type="radio" name="votes" ' + selected + ' />\n              <label for="' + playerId + '">' + this.userSpan(player) + '</label>\n            ');
             }
           }
-        } else {
-          this.renderDead(this.$desc);
-          this.$footer.classList.add('hide');
         }
       }
 
@@ -2650,19 +2688,19 @@ var Votes = function (_Renderer) {
   }, {
     key: '_name',
     get: function get() {
-      return 'votes';
+      return 'actions';
     }
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchVote'];
+      return ['dispatchAction'];
     }
   }]);
 
-  return Votes;
+  return Actions;
 }(_Renderer3.default);
 
-exports.default = Votes;
+exports.default = Actions;
 
 /***/ }),
 /* 26 */
@@ -2796,7 +2834,7 @@ var Results = function (_Renderer) {
         this.extra2.$ul.classList.add('flex-list-half');
         var winnerText = this._winnerText(aliveCounts),
             roundText = this._roundPointsText(aliveCounts);
-        this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + this._playerPoints() + ' ' + roundText + '\n        </p>\n      ';
+        this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + this._playerPoints(true) + ' ' + roundText + '\n        </p>\n      ';
         var playerIds = Object.keys(players);
         playerIds.sort(function (a, b) {
           var aScore = players[a]._.score,
@@ -2815,7 +2853,7 @@ var Results = function (_Renderer) {
         this.extra1.title('Survivors');
         this.extra2.title('Graveyard');
         this.extra2.$ul.classList.remove('flex-list-half');
-        this.$desc.innerHTML = '\n        <p class="description">The Round is still in progress. Player roles will stay the same.\n        ' + this._playerPoints() + '</p>\n      ';
+        this.$desc.innerHTML = '\n        <p class="description">The Round is still in progress. Player roles will stay the same.\n        ' + this._playerPoints(false) + '</p>\n      ';
         for (var playerId in players) {
           var player = players[playerId],
               alive = player._.alive;
@@ -2877,16 +2915,17 @@ var Results = function (_Renderer) {
     }
   }, {
     key: '_playerPoints',
-    value: function _playerPoints() {
+    value: function _playerPoints(roundOver) {
       var _player$_ = this.player._,
           scoreRound = _player$_.scoreRound,
           role = _player$_.role,
           alive = _player$_.alive,
           scoreTurn = alive ? _Game2.default.survivePoints[role] : 0,
           reason = alive ? 'survived' : 'died',
-          points = this._points(scoreTurn);
+          points = this._points(scoreTurn),
+          extra = roundOver ? 'in total' : 'so far';
 
-      return 'You scored ' + points + ' this Turn because you ' + reason + ',\n      and have scored ' + this._points(scoreRound) + ' this Round.';
+      return 'You scored ' + points + ' this Turn because you ' + reason + ',\n      and scored ' + this._points(scoreRound) + ' ' + extra + ' this Round.';
     }
   }, {
     key: '_success',
@@ -2958,7 +2997,7 @@ var Topics = function () {
   }, {
     key: 'topics',
     get: function get() {
-      return [['activities', 'Archery'], ['activities', 'Artistry'], ['activities', 'Astronomy'], ['activities', 'Athletics'], ['activities', 'Baseball'], ['activities', 'Basketball'], ['activities', 'Billiards'], ['activities', 'Books'], ['activities', 'Boxing'], ['activities', 'Boy Scouts'], ['activities', 'Buddhism'], ['activities', 'Canoes'], ['activities', 'Car-race'], ['activities', 'Carousel'], ['activities', 'Carpentry'], ['activities', 'Chess'], ['activities', 'Cigarettes'], ['activities', 'Cycling'], ['activities', 'Dance'], ['activities', 'Diving'], ['activities', 'Fencing'], ['activities', 'Fishing'], ['activities', 'Football'], ['activities', 'Games'], ['activities', 'Golf'], ['activities', 'Gymnastics'], ['activities', 'Hockey'], ['activities', 'Hunting'], ['activities', 'Mountaineering'], ['activities', 'Painting'], ['activities', 'Parachuting'], ['activities', 'Playing Cards'], ['activities', 'Pottery'], ['activities', 'Rugby'], ['activities', 'Saddle'], ['activities', 'Sailing'], ['activities', 'Seesaws'], ['activities', 'Skating'], ['activities', 'Skiing'], ['activities', 'Smoking'], ['activities', 'Soccer'], ['activities', 'Sports'], ['activities', 'Swimming Pool'], ['activities', 'Swings'], ['activities', 'Tanning'], ['activities', 'Tattoos'], ['activities', 'Tennis'], ['activities', 'Olympic Games'], ['activities', 'Tobacco'], ['activities', 'Treadmill'], ['activities', 'Volleyball'], ['activities', 'Water Skiing'], ['activities', 'Weaving'], ['activities', 'Whistling'], ['activities', 'Wrestling'], ['animals', 'Aardvark'], ['animals', 'Alligators'], ['animals', 'Alpacas'], ['animals', 'Ants'], ['animals', 'Armadillos'], ['animals', 'Baboons'], ['animals', 'Badger'], ['animals', 'Bats'], ['animals', 'Bears'], ['animals', 'Bees'], ['animals', 'Beetles'], ['animals', 'Birds'], ['animals', 'Buffaloes'], ['animals', 'Butterflies'], ['animals', 'Camels'], ['animals', 'Cats'], ['animals', 'Caterpillars'], ['animals', 'Cheetahs'], ['animals', 'Chipmunk'], ['animals', 'Cows'], ['animals', 'Coyotes'], ['animals', 'Cricket'], ['animals', 'Crocodiles'], ['animals', 'Deer'], ['animals', 'Dinosaurs'], ['animals', 'Dogs'], ['animals', 'Dolphins'], ['animals', 'Donkeys'], ['animals', 'Doves'], ['animals', 'Ducks'], ['animals', 'Eagle'], ['animals', 'Eels'], ['animals', 'Elephants'], ['animals', 'Ferrets'], ['animals', 'Fish'], ['animals', 'Flamingos'], ['animals', 'Foxes'], ['animals', 'Frogs'], ['animals', 'Geese'], ['animals', 'Giraffes'], ['animals', 'Goats'], ['animals', 'Goldfish'], ['animals', 'Gorillas'], ['animals', 'Hamsters'], ['animals', 'Hippopotamus'], ['animals', 'Horses'], ['animals', 'Hornets'], ['animals', 'Hummingbirds'], ['animals', 'Hyenas'], ['animals', 'Iguanas'], ['animals', 'Insects'], ['animals', 'Jaguars'], ['animals', 'Jellyfish'], ['animals', 'Kangaroos'], ['animals', 'Koalas'], ['animals', 'Komodo Dragons'], ['animals', 'Ladybugs'], ['animals', 'Leeches'], ['animals', 'Lemurs'], ['animals', 'Lions'], ['animals', 'Lizards'], ['animals', 'Llamas'], ['animals', 'Lobsters'], ['animals', 'Macaws'], ['animals', 'Manta Rays'], ['animals', 'Mastadons'], ['animals', 'Mice'], ['animals', 'Mollusks'], ['animals', 'Monkeys'], ['animals', 'Mosquitoes'], ['animals', 'Moths'], ['animals', 'Mules'], ['animals', 'Octopuses'], ['animals', 'Ostriches'], ['animals', 'Otters'], ['animals', 'Owls'], ['animals', 'Oxen'], ['animals', 'Pandas'], ['animals', 'Panthers'], ['animals', 'Peacocks'], ['animals', 'Pelicans'], ['animals', 'Penguins'], ['animals', 'Pigeons'], ['animals', 'Pigs'], ['animals', 'Piranhas'], ['animals', 'Porcupines'], ['animals', 'Possums'], ['animals', 'Pythons'], ['animals', 'Rabbits'], ['animals', 'Raccoons'], ['animals', 'Ravens'], ['animals', 'Rhinoceroses'], ['animals', 'Roosters'], ['animals', 'Scorpions'], ['animals', 'Sharks'], ['animals', 'Sheep'], ['animals', 'Shrimp'], ['animals', 'Snail'], ['animals', 'Snakes'], ['animals', 'Sparrows'], ['animals', 'Squids'], ['animals', 'Swans'], ['animals', 'Tarantulas'], ['animals', 'Tigers'], ['animals', 'Toads'], ['animals', 'Turkeys'], ['animals', 'Turtles'], ['animals', 'Vulture'], ['animals', 'Walruses'], ['animals', 'Whales'], ['animals', 'Wolves'], ['animals', 'Worms'], ['animals', 'Zebras'], ['art', 'Accordions'], ['art', 'Albums'], ['art', 'Artists'], ['art', 'Basses'], ['art', 'Bohemians'], ['art', 'Cameras'], ['art', 'Cellos'], ['art', 'Compact Discs'], ['art', 'Drawings'], ['art', 'Drums'], ['art', 'Films'], ['art', 'Flutes'], ['art', 'Guitars'], ['art', 'Harps'], ['art', 'Hieroglyphics'], ['art', 'Jewelery'], ['art', 'Mandolins'], ['art', 'Marionettes'], ['art', 'Movies'], ['art', 'Music'], ['art', 'Novels'], ['art', 'Pianos'], ['art', 'Pipe Organs'], ['art', 'Pottery'], ['art', 'Puppets'], ['art', 'Records'], ['art', 'Saxophones'], ['art', 'Sculpture'], ['art', 'Singing'], ['art', 'Sketching'], ['art', 'Synthesizers'], ['art', 'Trumpets'], ['art', 'Typewriters'], ['art', 'Ukuleles'], ['art', 'Violas'], ['art', 'Violins'], ['art', 'Writing'], ['art', 'Yodeling'], ['fiction', 'Aladdin'], ['fiction', 'Aliens'], ['fiction', 'Alice in Wonderland'], ['fiction', 'Bambi'], ['fiction', 'Batman'], ['fiction', 'Bilbo Baggins'], ['fiction', 'Boogeyman'], ['fiction', 'Cinderella'], ['fiction', 'Donald Duck'], ['fiction', 'E.T.'], ['fiction', 'Fairies'], ['fiction', 'Forrest Gump'], ['fiction', 'Freaks'], ['fiction', 'Gandalf'], ['fiction', 'Giants'], ['fiction', 'Harry Potter'], ['fiction', 'Hermione Granger'], ['fiction', 'Horoscope'], ['fiction', 'James Bond'], ['fiction', 'Luke Skywalker'], ['fiction', 'Mickey Mouse'], ['fiction', 'Minnie Mouse'], ['fiction', 'Monsters'], ['fiction', 'Mother Goose'], ['fiction', 'Mummies'], ['fiction', 'Muppets'], ['fiction', 'Optimus Prime'], ['fiction', 'Peter Pan'], ['fiction', 'Princess Leia'], ['fiction', 'Santa'], ['fiction', 'Shrek'], ['fiction', 'Snow White'], ['fiction', 'Superman'], ['fiction', 'The Joker'], ['fiction', 'Vampire'], ['fiction', 'Werewolves'], ['fiction', 'Winnie the Pooh'], ['fiction', 'Witch'], ['fiction', 'Wolverine'], ['fiction', 'Wonder Woman'], ['fiction', 'Yoda'], ['fiction', 'Zombies'], ['food', 'Apples'], ['food', 'Bakeries'], ['food', 'Bananas'], ['food', 'Barbecue'], ['food', 'Beef Jerky'], ['food', 'Beekeeping'], ['food', 'Breads'], ['food', 'Breastfeeding'], ['food', 'Cappuccino'], ['food', 'Carrots'], ['food', 'Cheeseburger'], ['food', 'Cheeses'], ['food', 'Chocolates'], ['food', 'Cocoa'], ['food', 'Coffee'], ['food', 'Cookies'], ['food', 'Doughnut'], ['food', 'Drink'], ['food', 'Eggs'], ['food', 'Fortune Cookies'], ['food', 'Fried Chicken'], ['food', 'Fruit'], ['food', 'Garden'], ['food', 'Grapes'], ['food', 'Grits'], ['food', 'Hot Dog'], ['food', 'Ice-cream'], ['food', 'Jello'], ['food', 'Meat'], ['food', 'Milkshake'], ['food', 'Onion'], ['food', 'Pancake'], ['food', 'Pepper'], ['food', 'Pineapple'], ['food', 'Pizza'], ['food', 'Pork'], ['food', 'Potatoes'], ['food', 'Rice'], ['food', 'Salt'], ['food', 'Sandwich'], ['food', 'Sausages'], ['food', 'Spice'], ['food', 'Sugar'], ['food', 'Tomatoes'], ['food', 'Vanilla'], ['food', 'Vegetables'], ['government', 'Agriculture'], ['government', 'Aircraft Carrier'], ['government', 'Airforce'], ['government', 'Army'], ['government', 'Budget'], ['government', 'CIA'], ['government', 'Communism'], ['government', 'Congress'], ['government', 'Crime'], ['government', 'Criminals'], ['government', 'Democracy'], ['government', 'Execution'], ['government', 'Health Insurance'], ['government', 'Homeland Security'], ['government', 'Judges'], ['government', 'Justice'], ['government', 'Mayors'], ['government', 'Military'], ['government', 'Monarchy'], ['government', 'Money'], ['government', 'Napoleon'], ['government', 'Native Americans'], ['government', 'Navy'], ['government', 'President'], ['government', 'Public Education'], ['government', 'Racism'], ['government', 'Red Cross'], ['government', 'Royalty'], ['government', 'Senate'], ['government', 'Slavery'], ['government', 'Socialism'], ['government', 'Spies'], ['government', 'Taxes'], ['government', 'The Economy'], ['government', 'Torture'], ['government', 'World War II'], ['household', 'Backpack'], ['household', 'Bathtub'], ['household', 'Beds'], ['household', 'Bible'], ['household', 'Bottle'], ['household', 'Bowl'], ['household', 'Boxes'], ['household', 'Button'], ['household', 'Cards'], ['household', 'Carpet'], ['household', 'Chair'], ['household', 'Checkbook'], ['household', 'Clock'], ['household', 'Coins'], ['household', 'Computer'], ['household', 'Cups'], ['household', 'Desk'], ['household', 'Disney Movies'], ['household', 'Dress'], ['household', 'Drill'], ['household', 'Eraser'], ['household', 'Fans'], ['household', 'Floodlight'], ['household', 'Fork'], ['household', 'Gate'], ['household', 'Gloves'], ['household', 'Hammer'], ['household', 'Hammocks'], ['household', 'Hats'], ['household', 'Hose'], ['household', 'Junk'], ['household', 'Kaleidoscope'], ['household', 'Knife'], ['household', 'Laundry'], ['household', 'Leather jacket'], ['household', 'Lighters'], ['household', 'Matches'], ['household', 'Nail'], ['household', 'Necklace'], ['household', 'Needle'], ['household', 'Newspapers'], ['household', 'Pants'], ['household', 'Perfume'], ['household', 'Pillar'], ['household', 'Pillow'], ['household', 'Pipes'], ['household', 'Postcards'], ['household', 'Printer'], ['household', 'Radio'], ['household', 'Ring'], ['household', 'Roof'], ['household', 'Rope'], ['household', 'Sandpaper'], ['household', 'Sewing Machines'], ['household', 'Shoes'], ['household', 'Shovels'], ['household', 'Shower'], ['household', 'Spoon'], ['household', 'Spotlight'], ['household', 'Staircase'], ['household', 'Sunglasses'], ['household', 'Table'], ['household', 'Tapestry'], ['household', 'Television'], ['household', 'Toilet'], ['household', 'Umbrella'], ['household', 'Vacuum'], ['household', 'Wheelchair'], ['household', 'Window'], ['nature', 'Adult'], ['nature', 'Arms'], ['nature', 'Baby'], ['nature', 'Boys'], ['nature', 'Brain'], ['nature', 'Breeze'], ['nature', 'Cactus'], ['nature', 'Caves'], ['nature', 'Child'], ['nature', 'Coal'], ['nature', 'Comet'], ['nature', 'Cotton'], ['nature', 'Crystal'], ['nature', 'Diamonds'], ['nature', 'Disasters'], ['nature', 'Dung'], ['nature', 'Ears'], ['nature', 'Earthquake'], ['nature', 'Electricity'], ['nature', 'Eyes'], ['nature', 'Family'], ['nature', 'Feather'], ['nature', 'Finger'], ['nature', 'Fire'], ['nature', 'Flood'], ['nature', 'Flower'], ['nature', 'Foot'], ['nature', 'Fungus'], ['nature', 'Gases'], ['nature', 'Gemstone'], ['nature', 'Girl'], ['nature', 'God'], ['nature', 'Gold'], ['nature', 'Hurricanes'], ['nature', 'Icicle'], ['nature', 'Jungles'], ['nature', 'Leather'], ['nature', 'Legs'], ['nature', 'Liquid'], ['nature', 'Magnet'], ['nature', 'Meteor'], ['nature', 'Meteorology'], ['nature', 'Mist'], ['nature', 'Moon'], ['nature', 'Motherhood'], ['nature', 'Mouth'], ['nature', 'Oil'], ['nature', 'Outer Space'], ['nature', 'Pebble'], ['nature', 'Rainbow'], ['nature', 'Rock'], ['nature', 'Seashells'], ['nature', 'Shells'], ['nature', 'Skeleton'], ['nature', 'Skull'], ['nature', 'Snow'], ['nature', 'Spirits'], ['nature', 'Star'], ['nature', 'Stomach'], ['nature', 'Sun'], ['nature', 'Teeth'], ['nature', 'Tongue'], ['nature', 'Vaccines'], ['nature', 'Volcanoes'], ['nature', 'Water'], ['nature', 'Winter'], ['nature', 'Woman'], ['nature', 'Wood'], ['occupations', 'Accountant'], ['occupations', 'Archaeologist'], ['occupations', 'Architect'], ['occupations', 'Banker'], ['occupations', 'Boss'], ['occupations', 'Botanist'], ['occupations', 'Butler'], ['occupations', 'Chief'], ['occupations', 'Clowns'], ['occupations', 'Cobblers'], ['occupations', 'Electrician'], ['occupations', 'Engineering'], ['occupations', 'Fireman'], ['occupations', 'Fortune Tellers'], ['occupations', 'Journalism'], ['occupations', 'Librarians'], ['occupations', 'Magicians'], ['occupations', 'Mailperson'], ['occupations', 'Masonry'], ['occupations', 'Mechanic'], ['occupations', 'Medicine'], ['occupations', 'Mining'], ['occupations', 'Nurses'], ['occupations', 'Paper Delivery'], ['occupations', 'Pilot'], ['occupations', 'Plumber'], ['occupations', 'Police Officer'], ['occupations', 'Psychiatrists'], ['occupations', 'Shipping'], ['occupations', 'Surveyor'], ['occupations', 'Tax Collector'], ['occupations', 'Teacher'], ['occupations', 'Veterinarians'], ['occupations', 'Waiters'], ['occupations', 'Zookeepers'], ['personalities', 'Abraham Lincoln'], ['personalities', 'Adolf Hitler'], ['personalities', 'Albert Einstein'], ['personalities', 'Alfred Hitchcock'], ['personalities', 'Angelina Jolie'], ['personalities', 'Anne Frank'], ['personalities', 'Arnold Schwarzenegger'], ['personalities', 'Audrey Hepburn'], ['personalities', 'Barack Obama'], ['personalities', 'Bill Gates'], ['personalities', 'Charles Darwin'], ['personalities', 'Dalai Lama'], ['personalities', 'Donald Trump'], ['personalities', 'Elvis Presley'], ['personalities', 'George W Bush'], ['personalities', 'Jesse Owens'], ['personalities', 'John F Kennedy'], ['personalities', 'Lance Armstrong'], ['personalities', 'Madonna'], ['personalities', 'Marilyn Monroe'], ['personalities', 'Martin Luther King Jr'], ['personalities', 'Michael Jackson'], ['personalities', 'Michael Jordan'], ['personalities', 'Muhammad Ali'], ['personalities', 'Nelson Mandela'], ['personalities', 'Oprah Winfrey'], ['personalities', 'Pablo Picasso'], ['personalities', 'Paul McCartney'], ['personalities', 'Princess Diana'], ['personalities', 'Queen Elizabeth II'], ['personalities', 'Rosa Parks'], ['personalities', 'Steve Jobs'], ['personalities', 'Thomas Edison'], ['personalities', 'Tom Cruise'], ['personalities', 'Vincent Van Gogh'], ['personalities', 'Vladimir Putin'], ['places', 'Africa'], ['places', 'America'], ['places', 'Amusement Parks'], ['places', 'Asia'], ['places', 'Bank'], ['places', 'Barber'], ['places', 'Bathroom'], ['places', 'Blacksmiths'], ['places', 'Brewery'], ['places', 'Bridge'], ['places', 'Cemetery'], ['places', 'Central America'], ['places', 'Church'], ['places', 'Circus'], ['places', 'Coffee-shop'], ['places', 'Dentist'], ['places', 'Drugstores'], ['places', 'Earth'], ['places', 'Egypt'], ['places', 'Europe'], ['places', 'Farm'], ['places', 'Farmers Markets'], ['places', 'Festival'], ['places', 'France'], ['places', 'Freeway'], ['places', 'Funerals'], ['places', 'Gas Station'], ['places', 'Highway'], ['places', 'Hotels'], ['places', 'Jamaica'], ['places', 'Kitchen'], ['places', 'Library'], ['places', 'Lighthouses'], ['places', 'Mass'], ['places', 'Movie Theaters'], ['places', 'North Africa'], ['places', 'Pharmacy'], ['places', 'Planet'], ['places', 'Post-office'], ['places', 'Prisons'], ['places', 'Restaurant'], ['places', 'Room'], ['places', 'Salvation Army'], ['places', 'School'], ['places', 'Shop'], ['places', 'South America'], ['places', 'Spas'], ['places', 'Stadiums'], ['places', 'The Post Office'], ['places', 'Theme Parks'], ['places', 'Wedding'], ['places', 'Windmills'], ['sciences', 'Antennas'], ['sciences', 'Cable'], ['sciences', 'Cancer'], ['sciences', 'Climate Change'], ['sciences', 'Code'], ['sciences', 'Databases'], ['sciences', 'Disease'], ['sciences', 'Internet'], ['sciences', 'Internet Providers'], ['sciences', 'Microscope'], ['sciences', 'Microsoft'], ['sciences', 'Programming'], ['sciences', 'Radar'], ['sciences', 'Radiology'], ['sciences', 'Robot'], ['sciences', 'Satellite'], ['sciences', 'Software'], ['sciences', 'Telephone'], ['sciences', 'Telescope'], ['sciences', 'The Cloud'], ['sciences', 'Thermometer'], ['sciences', 'Videotape'], ['sciences', 'X-rays'], ['travel', 'Airplane'], ['travel', 'Airports'], ['travel', 'Boats'], ['travel', 'Cars'], ['travel', 'Compass'], ['travel', 'Ferries'], ['travel', 'Flight'], ['travel', 'Jet fighter'], ['travel', 'Maps'], ['travel', 'Motorcycles'], ['travel', 'Passport'], ['travel', 'Plane'], ['travel', 'Railroads'], ['travel', 'Rocket'], ['travel', 'Ship'], ['travel', 'Shipwreck'], ['travel', 'Space Shuttle'], ['travel', 'Sports-car'], ['travel', 'Submarines'], ['travel', 'Train'], ['travel', 'Tunnel'], ['travel', 'Zeppelins'], ['violence', 'Atomic Bomb'], ['violence', 'Axes'], ['violence', 'Coffin'], ['violence', 'Death'], ['violence', 'Explosive'], ['violence', 'Grenade'], ['violence', 'Hatchet'], ['violence', 'Machine Gun'], ['violence', 'Murder'], ['violence', 'Ninja Star'], ['violence', 'Pistol'], ['violence', 'Poison'], ['violence', 'Rifle'], ['violence', 'Spear'], ['violence', 'Sword'], ['violence', 'Torch'], ['violence', 'Torpedo'], ['violence', 'Weapon']];
+      return [['activities', 'Archery'], ['activities', 'Artistry'], ['activities', 'Astronomy'], ['activities', 'Athletics'], ['activities', 'Baseball'], ['activities', 'Basketball'], ['activities', 'Billiards'], ['activities', 'Books'], ['activities', 'Boxing'], ['activities', 'Boy Scouts'], ['activities', 'Buddhism'], ['activities', 'Canoes'], ['activities', 'Car-race'], ['activities', 'Carousel'], ['activities', 'Carpentry'], ['activities', 'Chess'], ['activities', 'Cigarettes'], ['activities', 'Cycling'], ['activities', 'Dance'], ['activities', 'Diving'], ['activities', 'Fencing'], ['activities', 'Fishing'], ['activities', 'Football'], ['activities', 'Games'], ['activities', 'Golf'], ['activities', 'Gymnastics'], ['activities', 'Hockey'], ['activities', 'Hunting'], ['activities', 'Mountaineering'], ['activities', 'Painting'], ['activities', 'Parachuting'], ['activities', 'Playing Cards'], ['activities', 'Pottery'], ['activities', 'Rugby'], ['activities', 'Saddle'], ['activities', 'Sailing'], ['activities', 'Seesaws'], ['activities', 'Skating'], ['activities', 'Skiing'], ['activities', 'Smoking'], ['activities', 'Soccer'], ['activities', 'Sports'], ['activities', 'Swimming Pool'], ['activities', 'Swings'], ['activities', 'Tanning'], ['activities', 'Tattoos'], ['activities', 'Tennis'], ['activities', 'Olympic Games'], ['activities', 'Tobacco'], ['activities', 'Treadmill'], ['activities', 'Volleyball'], ['activities', 'Water Skiing'], ['activities', 'Weaving'], ['activities', 'Whistling'], ['activities', 'Wrestling'], ['animals', 'Aardvark'], ['animals', 'Alligators'], ['animals', 'Alpacas'], ['animals', 'Ants'], ['animals', 'Armadillos'], ['animals', 'Baboons'], ['animals', 'Badger'], ['animals', 'Bats'], ['animals', 'Bears'], ['animals', 'Bees'], ['animals', 'Beetles'], ['animals', 'Birds'], ['animals', 'Buffaloes'], ['animals', 'Butterflies'], ['animals', 'Camels'], ['animals', 'Cats'], ['animals', 'Caterpillars'], ['animals', 'Cheetahs'], ['animals', 'Chipmunk'], ['animals', 'Cows'], ['animals', 'Coyotes'], ['animals', 'Cricket'], ['animals', 'Crocodiles'], ['animals', 'Deer'], ['animals', 'Dinosaurs'], ['animals', 'Dogs'], ['animals', 'Dolphins'], ['animals', 'Donkeys'], ['animals', 'Doves'], ['animals', 'Ducks'], ['animals', 'Eagle'], ['animals', 'Eels'], ['animals', 'Elephants'], ['animals', 'Ferrets'], ['animals', 'Fish'], ['animals', 'Flamingos'], ['animals', 'Foxes'], ['animals', 'Frogs'], ['animals', 'Geese'], ['animals', 'Giraffes'], ['animals', 'Goats'], ['animals', 'Goldfish'], ['animals', 'Gorillas'], ['animals', 'Hamsters'], ['animals', 'Hippopotamus'], ['animals', 'Horses'], ['animals', 'Hornets'], ['animals', 'Hummingbirds'], ['animals', 'Hyenas'], ['animals', 'Iguanas'], ['animals', 'Insects'], ['animals', 'Jaguars'], ['animals', 'Jellyfish'], ['animals', 'Kangaroos'], ['animals', 'Koalas'], ['animals', 'Komodo Dragons'], ['animals', 'Ladybugs'], ['animals', 'Leeches'], ['animals', 'Lemurs'], ['animals', 'Lions'], ['animals', 'Lizards'], ['animals', 'Llamas'], ['animals', 'Lobsters'], ['animals', 'Macaws'], ['animals', 'Manta Rays'], ['animals', 'Mastadons'], ['animals', 'Mice'], ['animals', 'Mollusks'], ['animals', 'Monkeys'], ['animals', 'Mosquitoes'], ['animals', 'Moths'], ['animals', 'Mules'], ['animals', 'Octopuses'], ['animals', 'Ostriches'], ['animals', 'Otters'], ['animals', 'Owls'], ['animals', 'Oxen'], ['animals', 'Pandas'], ['animals', 'Panthers'], ['animals', 'Peacocks'], ['animals', 'Pelicans'], ['animals', 'Penguins'], ['animals', 'Pigeons'], ['animals', 'Pigs'], ['animals', 'Piranhas'], ['animals', 'Porcupines'], ['animals', 'Possums'], ['animals', 'Pythons'], ['animals', 'Rabbits'], ['animals', 'Raccoons'], ['animals', 'Ravens'], ['animals', 'Rhinoceroses'], ['animals', 'Roosters'], ['animals', 'Scorpions'], ['animals', 'Sharks'], ['animals', 'Sheep'], ['animals', 'Shrimp'], ['animals', 'Snail'], ['animals', 'Snakes'], ['animals', 'Sparrows'], ['animals', 'Squids'], ['animals', 'Swans'], ['animals', 'Tarantulas'], ['animals', 'Tigers'], ['animals', 'Toads'], ['animals', 'Turkeys'], ['animals', 'Turtles'], ['animals', 'Vulture'], ['animals', 'Walruses'], ['animals', 'Whales'], ['animals', 'Wolves'], ['animals', 'Worms'], ['animals', 'Zebras'], ['art', 'Accordions'], ['art', 'Albums'], ['art', 'Artists'], ['art', 'Bass'], ['art', 'Bohemians'], ['art', 'Cameras'], ['art', 'Cellos'], ['art', 'Compact Discs'], ['art', 'Drawings'], ['art', 'Drums'], ['art', 'Films'], ['art', 'Flutes'], ['art', 'Guitars'], ['art', 'Harps'], ['art', 'Hieroglyphics'], ['art', 'Jewelery'], ['art', 'Mandolins'], ['art', 'Marionettes'], ['art', 'Movies'], ['art', 'Music'], ['art', 'Novels'], ['art', 'Pianos'], ['art', 'Pipe Organs'], ['art', 'Pottery'], ['art', 'Puppets'], ['art', 'Records'], ['art', 'Saxophones'], ['art', 'Sculpture'], ['art', 'Singing'], ['art', 'Sketching'], ['art', 'Synthesizers'], ['art', 'Trumpets'], ['art', 'Typewriters'], ['art', 'Ukuleles'], ['art', 'Violas'], ['art', 'Violins'], ['art', 'Writing'], ['art', 'Yodeling'], ['fiction', 'Aladdin'], ['fiction', 'Aliens'], ['fiction', 'Alice in Wonderland'], ['fiction', 'Bambi'], ['fiction', 'Batman'], ['fiction', 'Bilbo Baggins'], ['fiction', 'Boogeyman'], ['fiction', 'Cinderella'], ['fiction', 'Donald Duck'], ['fiction', 'E.T.'], ['fiction', 'Fairies'], ['fiction', 'Forrest Gump'], ['fiction', 'Freaks'], ['fiction', 'Gandalf'], ['fiction', 'Giants'], ['fiction', 'Harry Potter'], ['fiction', 'Hermione Granger'], ['fiction', 'Horoscope'], ['fiction', 'James Bond'], ['fiction', 'Luke Skywalker'], ['fiction', 'Mickey Mouse'], ['fiction', 'Minnie Mouse'], ['fiction', 'Monsters'], ['fiction', 'Mother Goose'], ['fiction', 'Mummies'], ['fiction', 'Muppets'], ['fiction', 'Optimus Prime'], ['fiction', 'Peter Pan'], ['fiction', 'Princess Leia'], ['fiction', 'Santa'], ['fiction', 'Shrek'], ['fiction', 'Snow White'], ['fiction', 'Superman'], ['fiction', 'The Joker'], ['fiction', 'Vampire'], ['fiction', 'Werewolves'], ['fiction', 'Winnie the Pooh'], ['fiction', 'Witch'], ['fiction', 'Wolverine'], ['fiction', 'Wonder Woman'], ['fiction', 'Yoda'], ['fiction', 'Zombies'], ['food', 'Apples'], ['food', 'Bakeries'], ['food', 'Bananas'], ['food', 'Barbecue'], ['food', 'Beef Jerky'], ['food', 'Beekeeping'], ['food', 'Breads'], ['food', 'Breastfeeding'], ['food', 'Cappuccino'], ['food', 'Carrots'], ['food', 'Cheeseburger'], ['food', 'Cheeses'], ['food', 'Chocolates'], ['food', 'Cocoa'], ['food', 'Coffee'], ['food', 'Cookies'], ['food', 'Doughnut'], ['food', 'Drink'], ['food', 'Eggs'], ['food', 'Fortune Cookies'], ['food', 'Fried Chicken'], ['food', 'Fruit'], ['food', 'Garden'], ['food', 'Grapes'], ['food', 'Grits'], ['food', 'Hot Dog'], ['food', 'Ice-cream'], ['food', 'Jello'], ['food', 'Meat'], ['food', 'Milkshake'], ['food', 'Onion'], ['food', 'Pancake'], ['food', 'Pepper'], ['food', 'Pineapple'], ['food', 'Pizza'], ['food', 'Pork'], ['food', 'Potatoes'], ['food', 'Rice'], ['food', 'Salt'], ['food', 'Sandwich'], ['food', 'Sausages'], ['food', 'Spice'], ['food', 'Sugar'], ['food', 'Tomatoes'], ['food', 'Vanilla'], ['food', 'Vegetables'], ['government', 'Agriculture'], ['government', 'Aircraft Carrier'], ['government', 'Airforce'], ['government', 'Army'], ['government', 'Budget'], ['government', 'CIA'], ['government', 'Communism'], ['government', 'Congress'], ['government', 'Crime'], ['government', 'Criminals'], ['government', 'Democracy'], ['government', 'Execution'], ['government', 'Health Insurance'], ['government', 'Homeland Security'], ['government', 'Judges'], ['government', 'Justice'], ['government', 'Mayors'], ['government', 'Military'], ['government', 'Monarchy'], ['government', 'Money'], ['government', 'Napoleon'], ['government', 'Native Americans'], ['government', 'Navy'], ['government', 'President'], ['government', 'Public Education'], ['government', 'Racism'], ['government', 'Red Cross'], ['government', 'Royalty'], ['government', 'Senate'], ['government', 'Slavery'], ['government', 'Socialism'], ['government', 'Spies'], ['government', 'Taxes'], ['government', 'The Economy'], ['government', 'Torture'], ['government', 'World War II'], ['household', 'Backpack'], ['household', 'Bathtub'], ['household', 'Beds'], ['household', 'Bible'], ['household', 'Bottle'], ['household', 'Bowl'], ['household', 'Boxes'], ['household', 'Button'], ['household', 'Cards'], ['household', 'Carpet'], ['household', 'Chair'], ['household', 'Checkbook'], ['household', 'Clock'], ['household', 'Coins'], ['household', 'Computer'], ['household', 'Cups'], ['household', 'Desk'], ['household', 'Disney Movies'], ['household', 'Dress'], ['household', 'Drill'], ['household', 'Eraser'], ['household', 'Fans'], ['household', 'Floodlight'], ['household', 'Fork'], ['household', 'Gate'], ['household', 'Gloves'], ['household', 'Hammer'], ['household', 'Hammocks'], ['household', 'Hats'], ['household', 'Hose'], ['household', 'Junk'], ['household', 'Kaleidoscope'], ['household', 'Knife'], ['household', 'Laundry'], ['household', 'Leather jacket'], ['household', 'Lighters'], ['household', 'Matches'], ['household', 'Nail'], ['household', 'Necklace'], ['household', 'Needle'], ['household', 'Newspapers'], ['household', 'Pants'], ['household', 'Perfume'], ['household', 'Pillar'], ['household', 'Pillow'], ['household', 'Pipes'], ['household', 'Postcards'], ['household', 'Printer'], ['household', 'Radio'], ['household', 'Ring'], ['household', 'Roof'], ['household', 'Rope'], ['household', 'Sandpaper'], ['household', 'Sewing Machines'], ['household', 'Shoes'], ['household', 'Shovels'], ['household', 'Shower'], ['household', 'Spoon'], ['household', 'Spotlight'], ['household', 'Staircase'], ['household', 'Sunglasses'], ['household', 'Table'], ['household', 'Tapestry'], ['household', 'Television'], ['household', 'Toilet'], ['household', 'Umbrella'], ['household', 'Vacuum'], ['household', 'Wheelchair'], ['household', 'Window'], ['nature', 'Adult'], ['nature', 'Arms'], ['nature', 'Baby'], ['nature', 'Boys'], ['nature', 'Brain'], ['nature', 'Breeze'], ['nature', 'Cactus'], ['nature', 'Caves'], ['nature', 'Child'], ['nature', 'Coal'], ['nature', 'Comet'], ['nature', 'Cotton'], ['nature', 'Crystal'], ['nature', 'Diamonds'], ['nature', 'Disasters'], ['nature', 'Dung'], ['nature', 'Ears'], ['nature', 'Earthquake'], ['nature', 'Electricity'], ['nature', 'Eyes'], ['nature', 'Family'], ['nature', 'Feather'], ['nature', 'Finger'], ['nature', 'Fire'], ['nature', 'Flood'], ['nature', 'Flower'], ['nature', 'Foot'], ['nature', 'Fungus'], ['nature', 'Gases'], ['nature', 'Gemstone'], ['nature', 'Girl'], ['nature', 'God'], ['nature', 'Gold'], ['nature', 'Hurricanes'], ['nature', 'Icicle'], ['nature', 'Jungles'], ['nature', 'Leather'], ['nature', 'Legs'], ['nature', 'Liquid'], ['nature', 'Magnet'], ['nature', 'Meteor'], ['nature', 'Meteorology'], ['nature', 'Mist'], ['nature', 'Moon'], ['nature', 'Motherhood'], ['nature', 'Mouth'], ['nature', 'Oil'], ['nature', 'Outer Space'], ['nature', 'Pebble'], ['nature', 'Rainbow'], ['nature', 'Rock'], ['nature', 'Seashells'], ['nature', 'Shells'], ['nature', 'Skeleton'], ['nature', 'Skull'], ['nature', 'Snow'], ['nature', 'Spirits'], ['nature', 'Star'], ['nature', 'Stomach'], ['nature', 'Sun'], ['nature', 'Teeth'], ['nature', 'Tongue'], ['nature', 'Vaccines'], ['nature', 'Volcanoes'], ['nature', 'Water'], ['nature', 'Winter'], ['nature', 'Woman'], ['nature', 'Wood'], ['occupations', 'Accountant'], ['occupations', 'Archaeologist'], ['occupations', 'Architect'], ['occupations', 'Banker'], ['occupations', 'Boss'], ['occupations', 'Botanist'], ['occupations', 'Butler'], ['occupations', 'Chief'], ['occupations', 'Clowns'], ['occupations', 'Cobblers'], ['occupations', 'Electrician'], ['occupations', 'Engineering'], ['occupations', 'Fireman'], ['occupations', 'Fortune Tellers'], ['occupations', 'Journalism'], ['occupations', 'Librarians'], ['occupations', 'Magicians'], ['occupations', 'Mailperson'], ['occupations', 'Masonry'], ['occupations', 'Mechanic'], ['occupations', 'Medicine'], ['occupations', 'Mining'], ['occupations', 'Nurses'], ['occupations', 'Paper Delivery'], ['occupations', 'Pilot'], ['occupations', 'Plumber'], ['occupations', 'Police Officer'], ['occupations', 'Psychiatrists'], ['occupations', 'Shipping'], ['occupations', 'Surveyor'], ['occupations', 'Tax Collector'], ['occupations', 'Teacher'], ['occupations', 'Veterinarians'], ['occupations', 'Waiters'], ['occupations', 'Zookeepers'], ['personalities', 'Abraham Lincoln'], ['personalities', 'Adolf Hitler'], ['personalities', 'Albert Einstein'], ['personalities', 'Alfred Hitchcock'], ['personalities', 'Angelina Jolie'], ['personalities', 'Anne Frank'], ['personalities', 'Arnold Schwarzenegger'], ['personalities', 'Audrey Hepburn'], ['personalities', 'Barack Obama'], ['personalities', 'Bill Gates'], ['personalities', 'Charles Darwin'], ['personalities', 'Dalai Lama'], ['personalities', 'Donald Trump'], ['personalities', 'Elvis Presley'], ['personalities', 'George W Bush'], ['personalities', 'Jesse Owens'], ['personalities', 'John F Kennedy'], ['personalities', 'Lance Armstrong'], ['personalities', 'Madonna'], ['personalities', 'Marilyn Monroe'], ['personalities', 'Martin Luther King Jr'], ['personalities', 'Michael Jackson'], ['personalities', 'Michael Jordan'], ['personalities', 'Muhammad Ali'], ['personalities', 'Nelson Mandela'], ['personalities', 'Oprah Winfrey'], ['personalities', 'Pablo Picasso'], ['personalities', 'Paul McCartney'], ['personalities', 'Princess Diana'], ['personalities', 'Queen Elizabeth II'], ['personalities', 'Rosa Parks'], ['personalities', 'Steve Jobs'], ['personalities', 'Thomas Edison'], ['personalities', 'Tom Cruise'], ['personalities', 'Vincent Van Gogh'], ['personalities', 'Vladimir Putin'], ['places', 'Africa'], ['places', 'America'], ['places', 'Amusement Parks'], ['places', 'Asia'], ['places', 'Bank'], ['places', 'Barber'], ['places', 'Bathroom'], ['places', 'Blacksmiths'], ['places', 'Brewery'], ['places', 'Bridge'], ['places', 'Cemetery'], ['places', 'Central America'], ['places', 'Church'], ['places', 'Circus'], ['places', 'Coffee-shop'], ['places', 'Dentist'], ['places', 'Drugstores'], ['places', 'Earth'], ['places', 'Egypt'], ['places', 'Europe'], ['places', 'Farm'], ['places', 'Farmers Markets'], ['places', 'Festival'], ['places', 'France'], ['places', 'Freeway'], ['places', 'Funerals'], ['places', 'Gas Station'], ['places', 'Highway'], ['places', 'Hotels'], ['places', 'Jamaica'], ['places', 'Kitchen'], ['places', 'Library'], ['places', 'Lighthouses'], ['places', 'Mass'], ['places', 'Movie Theaters'], ['places', 'North Africa'], ['places', 'Pharmacy'], ['places', 'Planet'], ['places', 'Post-office'], ['places', 'Prisons'], ['places', 'Restaurant'], ['places', 'Room'], ['places', 'Salvation Army'], ['places', 'School'], ['places', 'Shop'], ['places', 'South America'], ['places', 'Spas'], ['places', 'Stadiums'], ['places', 'The Post Office'], ['places', 'Theme Parks'], ['places', 'Wedding'], ['places', 'Windmills'], ['sciences', 'Antennas'], ['sciences', 'Cable'], ['sciences', 'Cancer'], ['sciences', 'Climate Change'], ['sciences', 'Code'], ['sciences', 'Databases'], ['sciences', 'Disease'], ['sciences', 'Internet'], ['sciences', 'Internet Providers'], ['sciences', 'Microscope'], ['sciences', 'Microsoft'], ['sciences', 'Programming'], ['sciences', 'Radar'], ['sciences', 'Radiology'], ['sciences', 'Robot'], ['sciences', 'Satellite'], ['sciences', 'Software'], ['sciences', 'Telephone'], ['sciences', 'Telescope'], ['sciences', 'The Cloud'], ['sciences', 'Thermometer'], ['sciences', 'Videotape'], ['sciences', 'X-rays'], ['travel', 'Airplane'], ['travel', 'Airports'], ['travel', 'Boats'], ['travel', 'Cars'], ['travel', 'Compass'], ['travel', 'Ferries'], ['travel', 'Flight'], ['travel', 'Jet fighter'], ['travel', 'Maps'], ['travel', 'Motorcycles'], ['travel', 'Passport'], ['travel', 'Plane'], ['travel', 'Railroads'], ['travel', 'Rocket'], ['travel', 'Ship'], ['travel', 'Shipwreck'], ['travel', 'Space Shuttle'], ['travel', 'Sports-car'], ['travel', 'Submarines'], ['travel', 'Train'], ['travel', 'Tunnel'], ['travel', 'Zeppelins'], ['violence', 'Atomic Bomb'], ['violence', 'Axes'], ['violence', 'Coffin'], ['violence', 'Death'], ['violence', 'Explosive'], ['violence', 'Grenade'], ['violence', 'Hatchet'], ['violence', 'Machine Gun'], ['violence', 'Murder'], ['violence', 'Ninja Star'], ['violence', 'Pistol'], ['violence', 'Poison'], ['violence', 'Rifle'], ['violence', 'Spear'], ['violence', 'Sword'], ['violence', 'Torch'], ['violence', 'Torpedo'], ['violence', 'Weapon']];
     }
   }]);
 

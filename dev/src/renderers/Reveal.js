@@ -23,7 +23,7 @@ export default class Reveal extends Renderer {
       );
       let proceed = new Button({
         content: 'Proceed',
-        clickEvent: this.events.dispatchVotes.bind(this)
+        clickEvent: this.events.dispatchActions.bind(this)
       });
       this.append(this.$footer, [$inst, proceed.$el]);
     }
@@ -58,6 +58,6 @@ export default class Reveal extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchVotes'];
+    return ['dispatchActions'];
   }
 }

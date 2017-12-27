@@ -81,19 +81,21 @@ export default class Players extends Adapter {
     });
   }
 
-  masterKillPlayers(gameId, playerIds) {
+  masterActOnPlayers(gameId, players, killedIds, confusionIds) {
     return new Promise((resolve, reject) => {
-      let playerCount = playerIds.length;
-      playerIds.forEach(playerId => {
+      let playerCount = Object.keys(players).length;
+      for (let playerId in players) {
+        let params = { confused: confusionIds.includes(playerId) };
+        if (killedIds.includes(playerId)) params.alive = false;
         this.db
           .ref(this.r([gameId, playerId]))
-          .update({ alive: false })
+          .update(params)
           .then(() => {
             playerCount--;
             if (playerCount <= 0) resolve();
           })
           .catch(reject);
-      });
+      }
     });
   }
 
@@ -145,6 +147,7 @@ export default class Players extends Adapter {
       for (let playerId in players) {
         let player = players[playerId];
         let role,
+          confused = false,
           alive = true,
           scoreRound = 0;
         if (playerIdsImposters.includes(playerId)) role = 'imposter';
@@ -152,7 +155,7 @@ export default class Players extends Adapter {
         else role = 'agent';
         this.db
           .ref(this.r([player.gameId, playerId]))
-          .update({ role, alive, scoreRound })
+          .update({ role, alive, confused, scoreRound })
           .then(() => {
             playerCount--;
             if (playerCount <= 0) resolve();

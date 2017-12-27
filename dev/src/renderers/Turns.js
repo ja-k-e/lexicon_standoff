@@ -35,17 +35,24 @@ export default class Turns extends Renderer {
     this.$h1.innerHTML = `
       <span class="status">Turns</span> <span class="info"><span class="throb">${role}</span></span>`;
     if (this.player._.alive) {
-      let descHtml, topicsHtml;
+      let descHtml = '',
+        topicsHtml;
+      if (this.player._.confused)
+        descHtml += 'You have been confused by a dead Player! ';
       if (this.player._.role === 'imposter') {
-        descHtml = `On your turn, say one word that you associate with the <strong>two</strong> Agent Topics.
+        if (this.player._.confused)
+          topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);
+        else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
+      } else {
+        if (this.player._.confused)
+          topicsHtml = this._shuffledHtml([0, 1, 4], topics);
+        else topicsHtml = this._shuffledHtml([0, 1], topics);
+      }
+      if (this.player._.confused || this.player._.role === 'imposter') {
+        descHtml += `On your turn, say one word that you associate with the <strong>two</strong> Agent Topics.
           They are two of the above.`;
-        let shuffled = shuffle([0, 1, 2, 3]).map(idx => topics[idx][1]);
-        topicsHtml = `
-          “${shuffled[0]}”, “${shuffled[1]}”, “${shuffled[2]}”, or “${shuffled[3]}”
-        `;
       } else {
         descHtml = `On your turn, say one word that you associate with both of the Topics above.`;
-        topicsHtml = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
       }
       this.$topics.innerHTML = topicsHtml;
       this.$desc.innerHTML = descHtml;
@@ -54,6 +61,20 @@ export default class Turns extends Renderer {
       this.renderDead(this.$desc);
     }
     this.toggleSections();
+  }
+
+  _shuffledHtml(arr, topics) {
+    if (arr.length === 2) {
+      return `“${topics[arr[0]][1]}” &amp; “${topics[arr[1]][1]}”`;
+    } else {
+      let shuffled = shuffle(arr).map(idx => topics[idx][1]);
+      let html = '';
+      shuffled.forEach((topic, i) => {
+        if (i < shuffled.length - 1) html += `“${topic}”, `;
+        else html += `or “${topic}”`;
+      });
+      return html;
+    }
   }
 
   get _name() {

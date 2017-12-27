@@ -91,7 +91,7 @@ export default class Results extends Renderer {
         roundText = this._roundPointsText(aliveCounts);
       this.$desc.innerHTML = `
         <p class="description">
-          ${winnerText} ${this._playerPoints()} ${roundText}
+          ${winnerText} ${this._playerPoints(true)} ${roundText}
         </p>
       `;
       let playerIds = Object.keys(players);
@@ -117,7 +117,7 @@ export default class Results extends Renderer {
       this.extra2.$ul.classList.remove('flex-list-half');
       this.$desc.innerHTML = `
         <p class="description">The Round is still in progress. Player roles will stay the same.
-        ${this._playerPoints()}</p>
+        ${this._playerPoints(false)}</p>
       `;
       for (let playerId in players) {
         let player = players[playerId],
@@ -170,13 +170,14 @@ export default class Results extends Renderer {
     return 'No one scores additional points.';
   }
 
-  _playerPoints() {
+  _playerPoints(roundOver) {
     let { scoreRound, role, alive } = this.player._,
       scoreTurn = alive ? Game.survivePoints[role] : 0,
       reason = alive ? 'survived' : 'died',
-      points = this._points(scoreTurn);
+      points = this._points(scoreTurn),
+      extra = roundOver ? 'in total' : 'so far';
     return `You scored ${points} this Turn because you ${reason},
-      and have scored ${this._points(scoreRound)} this Round.`;
+      and scored ${this._points(scoreRound)} ${extra} this Round.`;
   }
 
   _success() {

@@ -2,7 +2,7 @@ import Renderer from './Renderer';
 import Button from './modules/Button';
 import List from './modules/List';
 
-export default class Votes extends Renderer {
+export default class Actions extends Renderer {
   renderInitial() {
     this.$h1 = this.el('h1');
     this.$header.appendChild(this.$h1);
@@ -17,10 +17,10 @@ export default class Votes extends Renderer {
     this.append(this.$main, this.graveyard.elements);
 
     this.vote = new Button({
-      content: 'Vote',
+      content: '',
       clickEvent: () => {
         let playerId = this.$section.querySelector(':checked').value;
-        this.events.dispatchVote(playerId);
+        this.events.dispatchAction(playerId);
         this.vote.disable();
         this.$main.classList.add('inactive');
       }
@@ -34,45 +34,44 @@ export default class Votes extends Renderer {
     this.votes.reset();
     this.graveyard.reset();
     this.toggleSections();
+    let alive = this.player._.alive;
 
     this.graveyard.title('Graveyard');
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
-      <span class="status">Votes</span> <span class="info"><span class="throb">${role}</span></span>`;
+      <span class="status">Actions</span> <span class="info"><span class="throb">${role}</span></span>`;
     // If this player has already voted (refreshed the vote page after voting)
     if (votes && votes[this.player.id]) {
       this.votes.title('You have already voted!');
-      this.$footer.classList.add('hide');
       this.vote.disable();
+      this.$footer.classList.add('hide');
     } else {
-      if (this.player._.alive) {
-        this.$footer.classList.remove('hide');
-        this.votes.title('Select a Player');
-        let agentCount = Object.keys(players).length - imposterCount,
-          isAre = imposterCount === 1 ? 'is' : 'are',
-          imposterS = this._pluralize(imposterCount, 'Imposter'),
-          agentS = this._pluralize(agentCount, 'Agent');
-        this.$desc.innerHTML = `
-          Vote for the Player you want to Kill. There ${isAre} a total of ${imposterS} and ${agentS}.`;
-
-        let first = true;
-        for (let playerId in players) {
-          if (playerId !== this.player.id) {
-            let player = players[playerId];
-            if (player._.alive) {
-              let selected = first ? 'checked' : '';
-              if (first) first = false;
-              this.votes.add(`
-                <input id="${playerId}" value="${playerId}"
-                  type="radio" name="votes" ${selected} />
-                <label for="${playerId}">${this.userSpan(player)}</label>
-              `);
-            }
+      this.$footer.classList.remove('hide');
+      this.votes.title('Select a Player');
+      let agentCount = Object.keys(players).length - imposterCount,
+        isAre = imposterCount === 1 ? 'is' : 'are',
+        imposterS = this._pluralize(imposterCount, 'Imposter'),
+        agentS = this._pluralize(agentCount, 'Agent'),
+        term = this.player._.alive ? 'Kill' : 'Confuse',
+        extra = this.player._.alive ? '' : 'You are Dead.';
+      this.vote.content(term);
+      this.$desc.innerHTML = `
+        ${extra} Vote for the Player you want to <strong>${term}</strong>.
+        There ${isAre} a total of ${imposterS} and ${agentS}.`;
+      let first = true;
+      for (let playerId in players) {
+        if (playerId !== this.player.id) {
+          let player = players[playerId];
+          if (player._.alive) {
+            let selected = first ? 'checked' : '';
+            if (first) first = false;
+            this.votes.add(`
+              <input id="${playerId}" value="${playerId}"
+                type="radio" name="votes" ${selected} />
+              <label for="${playerId}">${this.userSpan(player)}</label>
+            `);
           }
         }
-      } else {
-        this.renderDead(this.$desc);
-        this.$footer.classList.add('hide');
       }
     }
 
@@ -97,10 +96,10 @@ export default class Votes extends Renderer {
   }
 
   get _name() {
-    return 'votes';
+    return 'actions';
   }
 
   get _eventsList() {
-    return ['dispatchVote'];
+    return ['dispatchAction'];
   }
 }

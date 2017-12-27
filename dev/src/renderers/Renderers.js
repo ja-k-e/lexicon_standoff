@@ -4,7 +4,7 @@ import Launch from './Launch';
 import Start from './Start';
 import Turns from './Turns';
 import Reveal from './Reveal';
-import Votes from './Votes';
+import Actions from './Actions';
 import Results from './Results';
 
 const Renderers = {
@@ -14,7 +14,7 @@ const Renderers = {
   Start,
   Turns,
   Reveal,
-  Votes,
+  Actions,
   Results
 };
 
