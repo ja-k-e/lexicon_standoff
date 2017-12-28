@@ -62,6 +62,26 @@ export default class Launch extends Renderer {
 
   renderEditor(user) {
     this.$editor.innerHTML = '';
+    this._renderImageSelector(user);
+    this._renderNameInput(user);
+  }
+
+  _renderNameInput(user) {
+    let $grp = this.el('div', null, 'item-group'),
+      $input = this.el('input'),
+      save = new Button({
+        content: 'Save Name',
+        clickEvent: () => this.handleName($input.value)
+      });
+    $input.setAttribute('type', 'text');
+    $input.setAttribute('placeholder', 'Your Name (10 char max)');
+    $input.setAttribute('maxlength', 10);
+    $input.value = user.name;
+    this.append($grp, [$input, save.$el]);
+    this.$editor.appendChild($grp);
+  }
+
+  _renderImageSelector(user) {
     let $images = this.el('ul', null, 'image-select'),
       existing = user.avatar;
     Launch._avatars.forEach(name => {
@@ -96,6 +116,12 @@ export default class Launch extends Renderer {
     $li.classList.add('active');
     this.$editor.classList.remove('active');
     this.events.updateUser({ avatar });
+  }
+
+  handleName(name) {
+    name = name.substring(0, 12);
+    this.$editor.classList.remove('active');
+    this.events.updateUser({ name });
   }
 
   static _avatarUrl(name) {

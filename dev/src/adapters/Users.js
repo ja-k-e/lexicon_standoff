@@ -72,7 +72,7 @@ export default class Users extends Adapter {
     let id = params.uid,
       image = params.photoURL,
       avatar = image,
-      name = params.displayName.replace(/ .+$/, '');
+      name = params.displayName.replace(/ .+$/, '').substring(0, 12);
     return { id, avatar, image, name };
   }
 }

@@ -1516,7 +1516,7 @@ var Users = function (_Adapter) {
       var id = params.uid,
           image = params.photoURL,
           avatar = image,
-          name = params.displayName.replace(/ .+$/, '');
+          name = params.displayName.replace(/ .+$/, '').substring(0, 12);
       return { id: id, avatar: avatar, image: image, name: name };
     }
   }, {
@@ -2278,18 +2278,44 @@ var Launch = function (_Renderer) {
   }, {
     key: 'renderEditor',
     value: function renderEditor(user) {
+      this.$editor.innerHTML = '';
+      this._renderImageSelector(user);
+      this._renderNameInput(user);
+    }
+  }, {
+    key: '_renderNameInput',
+    value: function _renderNameInput(user) {
       var _this4 = this;
 
-      this.$editor.innerHTML = '';
+      var $grp = this.el('div', null, 'item-group'),
+          $input = this.el('input'),
+          save = new _Button2.default({
+        content: 'Save Name',
+        clickEvent: function clickEvent() {
+          return _this4.handleName($input.value);
+        }
+      });
+      $input.setAttribute('type', 'text');
+      $input.setAttribute('placeholder', 'Your Name (10 char max)');
+      $input.setAttribute('maxlength', 10);
+      $input.value = user.name;
+      this.append($grp, [$input, save.$el]);
+      this.$editor.appendChild($grp);
+    }
+  }, {
+    key: '_renderImageSelector',
+    value: function _renderImageSelector(user) {
+      var _this5 = this;
+
       var $images = this.el('ul', null, 'image-select'),
           existing = user.avatar;
       Launch._avatars.forEach(function (name) {
-        var $li = _this4.el('li'),
+        var $li = _this5.el('li'),
             url = Launch._avatarUrl(name),
             $button = new _Button2.default({
           content: '<img src="' + url + '" />',
           clickEvent: function clickEvent() {
-            return _this4.handleAvatar($li, url);
+            return _this5.handleAvatar($li, url);
           }
         });
         if (existing === url) $li.className = 'active';
@@ -2302,7 +2328,7 @@ var Launch = function (_Renderer) {
             $button = new _Button2.default({
           content: '<img src="' + user.image + '" />',
           clickEvent: function clickEvent() {
-            return _this4.handleAvatar($li, user.image);
+            return _this5.handleAvatar($li, user.image);
           }
         });
         if (existing === user.image) $li.className = 'active';
@@ -2319,6 +2345,13 @@ var Launch = function (_Renderer) {
       $li.classList.add('active');
       this.$editor.classList.remove('active');
       this.events.updateUser({ avatar: avatar });
+    }
+  }, {
+    key: 'handleName',
+    value: function handleName(name) {
+      name = name.substring(0, 12);
+      this.$editor.classList.remove('active');
+      this.events.updateUser({ name: name });
     }
   }, {
     key: '_name',
