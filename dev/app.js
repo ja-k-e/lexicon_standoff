@@ -853,9 +853,12 @@ function handleError(error) {
 }
 
 function validAvatar(user) {
+  var def = 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
   if (user.avatar) return user.avatar;
-  if (user.image) return user.image;
-  return '/assets/avatar-dog.svg';
+  if (user.image && user.image !== def) return user.image;
+  var avatars = _Renderers2.default.Launch._avatars,
+      name = avatars[Math.floor(Math.random() * avatars.length)];
+  return _Renderers2.default.Launch._avatarUrl(name);
 }
 
 /***/ }),
@@ -1510,9 +1513,6 @@ var Users = function (_Adapter) {
   }, {
     key: '_userDataFromParams',
     value: function _userDataFromParams(params) {
-      // Default Google image (can replace?):
-      // https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg
-
       var id = params.uid,
           image = params.photoURL,
           avatar = image,
@@ -2296,7 +2296,8 @@ var Launch = function (_Renderer) {
         $li.appendChild($button.$el);
         $images.appendChild($li);
       });
-      if (user.image) {
+      var def = 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
+      if (user.image && user.image !== def) {
         var $li = this.el('li'),
             $button = new _Button2.default({
           content: '<img src="' + user.image + '" />',

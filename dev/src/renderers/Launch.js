@@ -75,7 +75,9 @@ export default class Launch extends Renderer {
       $li.appendChild($button.$el);
       $images.appendChild($li);
     });
-    if (user.image) {
+    let def =
+      'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
+    if (user.image && user.image !== def) {
       let $li = this.el('li'),
         $button = new Button({
           content: `<img src="${user.image}" />`,

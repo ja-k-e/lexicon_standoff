@@ -94,7 +94,11 @@ function handleError(error) {
 }
 
 function validAvatar(user) {
+  let def =
+    'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
   if (user.avatar) return user.avatar;
-  if (user.image) return user.image;
-  return '/assets/avatar-dog.svg';
+  if (user.image && user.image !== def) return user.image;
+  let avatars = Renderers.Launch._avatars,
+    name = avatars[Math.floor(Math.random() * avatars.length)];
+  return Renderers.Launch._avatarUrl(name);
 }
