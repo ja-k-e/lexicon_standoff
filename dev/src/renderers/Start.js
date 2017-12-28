@@ -11,7 +11,7 @@ export default class Start extends Renderer {
     this.$secret = this.el('p', null, 'secret');
     this.append(this.$main, [this.$secretLabel, this.$secret]);
 
-    this.players = new List();
+    this.players = new List('flex-list flex-list-small flex-list-quarter');
     this.append(this.$main, this.players.elements);
 
     this.$roles = this.el('p', null, 'description');

@@ -84,30 +84,22 @@ export default class Game {
     } = this._generateRoles(playerIds);
     this.imposterCount = imposterCount;
     let playerCount = playerIds.length,
-      topics = this.generateTopics(),
-      playerCountAlive = playerCount,
-      votes = {},
-      killVotes = {},
-      killedIds = [],
-      roundOver = false,
-      aliveCounts = { imposter: 0, agent: 0 },
-      aliveIds = [],
-      deadCounts = { imposter: 0, agent: 0 },
-      deadIds = [];
+      topics = this.generateTopics();
     return {
       game: {
-        playerCountAlive,
+        playerCountAlive: playerCount,
         playerCount,
-        votes,
-        killVotes,
-        killedIds,
-        aliveCounts,
-        aliveIds,
-        deadCounts,
-        deadIds,
+        inProgress: true,
+        votes: {},
+        killVotes: {},
+        killedIds: [],
+        aliveCounts: { imposter: 0, agent: 0 },
+        aliveIds: [],
+        deadCounts: { imposter: 0, agent: 0 },
+        deadIds: [],
         imposterCount,
         topics,
-        roundOver
+        roundOver: false
       },
       players: { playerIdsImposters, playerIdsAgents }
     };

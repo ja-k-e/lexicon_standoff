@@ -5,15 +5,17 @@ import Adapter from './Adapter';
 export default class Games extends Adapter {
   // Global Actions
 
-  globalFind(gameId) {
+  globalFind(gameId, playerExists = false) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
         .once('value')
         .then(snap => {
           let game = snap.val();
-          if (game !== null) resolve({ game });
-          else reject(`No Game Found with name ${gameId}`);
+          if (game === null) reject(`No Game Found with name ${gameId}`);
+          else if (game.inProgress === true && !playerExists)
+            reject(`Game ${gameId} is already in progress`);
+          else resolve({ game });
         })
         .catch(reject);
     });

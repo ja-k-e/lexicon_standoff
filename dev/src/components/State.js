@@ -28,7 +28,7 @@ export default class State {
   initialize() {
     if (this.user.currentGameId) {
       Adapters.Games
-        .globalFind(this.user.currentGameId)
+        .globalFind(this.user.currentGameId, true)
         .then(this.initializeGame.bind(this))
         .catch(() => {
           this.launch.render({ user: this.user });
@@ -47,7 +47,7 @@ export default class State {
 
   findGame(slug) {
     Adapters.Games
-      .globalFind(slug)
+      .globalFind(slug, false)
       .then(this.initializeGame.bind(this))
       .catch(this.handleError.bind(this));
   }

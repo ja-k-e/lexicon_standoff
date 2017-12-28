@@ -633,30 +633,22 @@ var Game = function () {
 
       this.imposterCount = imposterCount;
       var playerCount = playerIds.length,
-          topics = this.generateTopics(),
-          playerCountAlive = playerCount,
-          votes = {},
-          killVotes = {},
-          killedIds = [],
-          roundOver = false,
-          aliveCounts = { imposter: 0, agent: 0 },
-          aliveIds = [],
-          deadCounts = { imposter: 0, agent: 0 },
-          deadIds = [];
+          topics = this.generateTopics();
       return {
         game: {
-          playerCountAlive: playerCountAlive,
+          playerCountAlive: playerCount,
           playerCount: playerCount,
-          votes: votes,
-          killVotes: killVotes,
-          killedIds: killedIds,
-          aliveCounts: aliveCounts,
-          aliveIds: aliveIds,
-          deadCounts: deadCounts,
-          deadIds: deadIds,
+          inProgress: true,
+          votes: {},
+          killVotes: {},
+          killedIds: [],
+          aliveCounts: { imposter: 0, agent: 0 },
+          aliveIds: [],
+          deadCounts: { imposter: 0, agent: 0 },
+          deadIds: [],
           imposterCount: imposterCount,
           topics: topics,
-          roundOver: roundOver
+          roundOver: false
         },
         players: { playerIdsImposters: playerIdsImposters, playerIdsAgents: playerIdsAgents }
       };
@@ -963,10 +955,12 @@ var Games = function (_Adapter) {
     value: function globalFind(gameId) {
       var _this2 = this;
 
+      var playerExists = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
       return new Promise(function (resolve, reject) {
         _this2.db.ref(_this2.r(gameId)).once('value').then(function (snap) {
           var game = snap.val();
-          if (game !== null) resolve({ game: game });else reject('No Game Found with name ' + gameId);
+          if (game === null) reject('No Game Found with name ' + gameId);else if (game.inProgress === true && !playerExists) reject('Game ' + gameId + ' is already in progress');else resolve({ game: game });
         }).catch(reject);
       });
     }
@@ -1617,7 +1611,7 @@ var State = function () {
       var _this = this;
 
       if (this.user.currentGameId) {
-        _Adapters2.default.Games.globalFind(this.user.currentGameId).then(this.initializeGame.bind(this)).catch(function () {
+        _Adapters2.default.Games.globalFind(this.user.currentGameId, true).then(this.initializeGame.bind(this)).catch(function () {
           _this.launch.render({ user: _this.user });
         });
       } else {
@@ -1636,7 +1630,7 @@ var State = function () {
   }, {
     key: 'findGame',
     value: function findGame(slug) {
-      _Adapters2.default.Games.globalFind(slug).then(this.initializeGame.bind(this)).catch(this.handleError.bind(this));
+      _Adapters2.default.Games.globalFind(slug, false).then(this.initializeGame.bind(this)).catch(this.handleError.bind(this));
     }
 
     // Handlers
@@ -2237,7 +2231,7 @@ var Start = function (_Renderer) {
       this.$secret = this.el('p', null, 'secret');
       this.append(this.$main, [this.$secretLabel, this.$secret]);
 
-      this.players = new _List2.default();
+      this.players = new _List2.default('flex-list flex-list-small flex-list-quarter');
       this.append(this.$main, this.players.elements);
 
       this.$roles = this.el('p', null, 'description');
