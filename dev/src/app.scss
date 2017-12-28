@@ -305,6 +305,9 @@ section.auth {
 }
 section.launch {
   text-align: center;
+  a {
+    color: white;
+  }
   button + p {
     margin: 1rem 0 0;
   }

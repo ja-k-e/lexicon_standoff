@@ -2212,6 +2212,7 @@ var Launch = function (_Renderer) {
 
       var $inst = this.el('p', 'If you are on a mobile device, add this site to your home screen to get full screen.\n          iOS can only do this through Safari.', 'instruction'),
           $or = this.el('p', 'Enter a Secret to Join'),
+          $link = this.el('p', '<a href="/instructions/">Instructions</a>', 'instruction'),
           $slug = this.el('input'),
           $grp = this.el('div', null, 'item-group');
       this.new = new _Button2.default({
@@ -2229,7 +2230,7 @@ var Launch = function (_Renderer) {
       $slug.setAttribute('type', 'text');
       $slug.setAttribute('placeholder', 'gamesecret');
       this.append($grp, [$slug, this.join.$el]);
-      this.append(this.$main, [this.$user, this.new.$el, $or, $grp]);
+      this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $link]);
       this.$footer.appendChild($inst);
     }
   }, {
