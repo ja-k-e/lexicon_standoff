@@ -42,21 +42,24 @@ export default class Games extends Adapter {
 
   masterCreate(userId) {
     return new Promise((resolve, reject) => {
-      let id = new Slugs().loadSlug();
-      // Set listener
-      this.db.ref(this.r(id)).on('value', snap => {
-        let game = snap.val();
-        if (game && game.id === id) {
-          // Kill listener
-          this.db.ref(this.r(id)).off();
-          // Return the Game
-          resolve({ game });
-        }
-      });
-      // Create Game
-      this.db
-        .ref(this.r(id))
-        .set({ id, status: 'start', inProgress: false, masterId: userId })
+      this._generateUniqueId()
+        .then(id => {
+          // Set listener
+          this.db.ref(this.r(id)).on('value', snap => {
+            let game = snap.val();
+            if (game && game.id === id) {
+              // Kill listener
+              this.db.ref(this.r(id)).off();
+              // Return the Game
+              resolve({ game });
+            }
+          });
+          // Create Game
+          this.db
+            .ref(this.r(id))
+            .set({ id, status: 'start', inProgress: false, masterId: userId })
+            .catch(reject);
+        })
         .catch(reject);
     });
   }
@@ -145,6 +148,21 @@ export default class Games extends Adapter {
   }
 
   // Private
+
+  // Recursively finding a unique id
+  _generateUniqueId() {
+    return new Promise((resolve, reject) => {
+      let slug = new Slugs().loadSlug();
+      this.db
+        .ref(this.r(`games/${slug}`))
+        .once('value')
+        .then(snap => {
+          if (snap.val() === null) resolve(slug);
+          else resolve(this._generateUniqueId());
+        })
+        .catch(reject);
+    });
+  }
 
   get _key() {
     return 'games';
