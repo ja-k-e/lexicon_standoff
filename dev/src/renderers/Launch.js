@@ -12,7 +12,7 @@ export default class Launch extends Renderer {
       $or = this.el('p', 'Enter a Secret to Join'),
       $link = this.el(
         'p',
-        '<a href="/instructions/">Instructions</a>',
+        '<br><a href="/instructions/">Instructions</a>',
         'instruction'
       ),
       $slug = this.el('input'),
