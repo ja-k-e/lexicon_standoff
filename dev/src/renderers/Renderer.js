@@ -31,7 +31,7 @@ export default class Renderer {
     let classname = player.id === this.player.id ? 'you' : '',
       name = player.id === this.player.id ? 'You' : player.name;
     if (extraClassname) classname += ` ${extraClassname}`;
-    return `<span class="user ${classname}"><img src="${player.image}" /> ${name}</span>`;
+    return `<span class="user ${classname}"><img src="${player.avatar}" /> ${name}</span>`;
   }
 
   renderDead($el) {

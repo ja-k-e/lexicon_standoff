@@ -74,7 +74,8 @@ export default class Users extends Adapter {
 
     let id = params.uid,
       image = params.photoURL,
+      avatar = image,
       name = params.displayName.replace(/ .+$/, '');
-    return { id, image, name };
+    return { id, avatar, image, name };
   }
 }

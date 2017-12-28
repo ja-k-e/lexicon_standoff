@@ -223,14 +223,17 @@ ul.flex-list {
   &.flex-list-quarter {
     li {
       flex-basis: calc(25% - 0.1875rem);
-      &:nth-child(odd) {
-        margin-right: 0.125rem;
+      &:nth-child(4n + 2),
+      &:nth-child(4n + 3),
+      &:nth-child(4n + 4) {
+        margin-left: 0.25rem;
       }
-      &:nth-child(even) {
-        margin-left: 0.125rem;
-      }
-      &:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)) {
-        margin-top: 0.25rem;
+      margin-top: 0.25rem;
+      &:nth-child(1),
+      &:nth-child(2),
+      &:nth-child(3),
+      &:nth-child(4) {
+        margin-top: 0;
       }
     }
   }
@@ -313,6 +316,11 @@ section.launch {
   }
   .user-info {
     margin-bottom: 1rem;
+    button {
+      width: auto;
+      background: transparent;
+      display: inline-block;
+    }
     img {
       display: block;
       height: auto;
@@ -324,24 +332,61 @@ section.launch {
       margin-top: 0.25rem;
     }
   }
+  .editor {
+    position: fixed;
+    z-index: 9;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    margin: 0;
+    box-sizing: border-box;
+    padding: 1rem;
+    background: black;
+    transform: translateY(-100%);
+    transition: transform 250ms ease-in-out;
+    &.active {
+      transform: translateY(0);
+    }
+    li,
+    button {
+      padding: 0;
+      height: auto;
+    }
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: center;
+      justify-content: center;
+      li {
+        opacity: 0.5;
+        box-sizing: border-box;
+        border: $border solid #fff;
+        &.active {
+          opacity: 1;
+        }
+        flex-basis: calc(16.666666667% - 0.25rem);
+        &:nth-child(6n + 2),
+        &:nth-child(6n + 3),
+        &:nth-child(6n + 4),
+        &:nth-child(6n + 5),
+        &:nth-child(6n + 6) {
+          margin-left: 0.3rem;
+        }
+        margin-top: 0.3rem;
+        &:nth-child(1),
+        &:nth-child(2),
+        &:nth-child(3),
+        &:nth-child(4),
+        &:nth-child(5),
+        &:nth-child(6) {
+          margin-top: 0;
+        }
+      }
+    }
+  }
 }
-// section.reveal {
-//   background: white;
-//   color: black;
-//   button {
-//     color: black;
-//     border-color: black;
-//   }
-//   ul {
-//     li {
-//       border-color: black;
-//       span.user {
-//         background: white;
-//         color: black;
-//       }
-//     }
-//   }
-// }
+
 section.actions {
   li {
     label {
@@ -383,8 +428,6 @@ input[type='text'] {
   padding: 0.25rem 0.5rem;
   box-sizing: border-box;
   text-align: center;
-  // border-radius: $corner;
-  // border: $border solid white;
   border: none;
   color: white;
   background: $offblack;
@@ -403,7 +446,7 @@ img {
   height: auto;
   max-width: 100%;
   vertical-align: middle;
-  filter: grayscale(50%);
+  filter: grayscale(20%);
 }
 
 ul,

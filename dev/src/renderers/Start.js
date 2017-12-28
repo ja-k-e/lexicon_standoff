@@ -61,9 +61,9 @@ export default class Start extends Renderer {
     this.$secret.innerHTML = `“${gameId}”`;
     this.toggleSections();
     for (let playerId in players) {
-      let { image, name } = players[playerId];
+      let { avatar, name } = players[playerId];
       let you = playerId === this.player.id ? 'you' : '';
-      let html = `<span class="user ${you}"><img src="${image}" /> <span>${name}</span></span>`;
+      let html = `<span class="user ${you}"><img src="${avatar}" /> <span>${name}</span></span>`;
       this.players.add(html);
     }
   }

@@ -31,10 +31,6 @@ AUTH.detectExisting()
       .catch(handleNoUser);
   });
 
-function authFacebook() {
-  AUTH.authenticate('FacebookAuthProvider');
-}
-
 function authGoogle() {
   AUTH.authenticate('GoogleAuthProvider');
 }
@@ -52,7 +48,6 @@ function handleNewVersion() {
 function handleNoUser() {
   let renderer = new Renderers.Auth(null, {
     authTwitter,
-    authFacebook,
     authGoogle
   });
   renderer.renderInitial();
@@ -62,7 +57,18 @@ function handleNoUser() {
 function initializeState(existingUser) {
   Adapters.Users
     .globalFindOrCreate(existingUser)
-    .then(({ user }) => new State({ user }))
+    .then(({ user }) => {
+      let avatar = validAvatar(user);
+      Adapters.Users
+        .globalUpdate(user.id, { avatar })
+        .then(() => {
+          Adapters.Users
+            .globalFind(user.id)
+            .then(user => new State({ user }))
+            .catch(handleError);
+        })
+        .catch(handleError);
+    })
     .catch(handleError);
 }
 
@@ -84,5 +90,11 @@ function initializeUser(existingUser) {
 }
 
 function handleError(error) {
-  alert(error);
+  console.error(error);
+}
+
+function validAvatar(user) {
+  if (user.avatar) return user.avatar;
+  if (user.image) return user.image;
+  return '/assets/avatar-dog.svg';
 }

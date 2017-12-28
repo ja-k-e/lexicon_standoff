@@ -1,8 +1,8 @@
 export default class Player {
-  constructor(state, { id, gameId, name, image, master }) {
+  constructor(state, { id, gameId, name, avatar, master }) {
     this.id = id;
     this.name = name;
-    this.image = image;
+    this.avatar = avatar;
     this.gameId = gameId;
     this.state = state;
     this._ = {};

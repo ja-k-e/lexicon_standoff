@@ -119,7 +119,7 @@ var Renderer = function () {
       var classname = player.id === this.player.id ? 'you' : '',
           name = player.id === this.player.id ? 'You' : player.name;
       if (extraClassname) classname += ' ' + extraClassname;
-      return '<span class="user ' + classname + '"><img src="' + player.image + '" /> ' + name + '</span>';
+      return '<span class="user ' + classname + '"><img src="' + player.avatar + '" /> ' + name + '</span>';
     }
   }, {
     key: 'renderDead',
@@ -804,10 +804,6 @@ AUTH.detectExisting().then(initializeUser).catch(function () {
   AUTH.detectRedirectResult().then(initializeUser).catch(handleNoUser);
 });
 
-function authFacebook() {
-  AUTH.authenticate('FacebookAuthProvider');
-}
-
 function authGoogle() {
   AUTH.authenticate('GoogleAuthProvider');
 }
@@ -825,7 +821,6 @@ function handleNewVersion() {
 function handleNoUser() {
   var renderer = new _Renderers2.default.Auth(null, {
     authTwitter: authTwitter,
-    authFacebook: authFacebook,
     authGoogle: authGoogle
   });
   renderer.renderInitial();
@@ -835,7 +830,13 @@ function handleNoUser() {
 function initializeState(existingUser) {
   _Adapters2.default.Users.globalFindOrCreate(existingUser).then(function (_ref) {
     var user = _ref.user;
-    return new _State2.default({ user: user });
+
+    var avatar = validAvatar(user);
+    _Adapters2.default.Users.globalUpdate(user.id, { avatar: avatar }).then(function () {
+      _Adapters2.default.Users.globalFind(user.id).then(function (user) {
+        return new _State2.default({ user: user });
+      }).catch(handleError);
+    }).catch(handleError);
   }).catch(handleError);
 }
 
@@ -848,7 +849,13 @@ function initializeUser(existingUser) {
 }
 
 function handleError(error) {
-  alert(error);
+  console.error(error);
+}
+
+function validAvatar(user) {
+  if (user.avatar) return user.avatar;
+  if (user.image) return user.image;
+  return '/assets/avatar-dog.svg';
 }
 
 /***/ }),
@@ -1237,13 +1244,13 @@ var Players = function (_Adapter) {
       return new Promise(function (resolve, reject) {
         var id = user.id,
             name = user.name,
-            image = user.image,
+            avatar = user.avatar,
             alive = user.alive,
             params = {
           id: id,
           gameId: gameId,
           name: name,
-          image: image,
+          avatar: avatar,
           master: master,
           score: 0,
           scoreRound: 0
@@ -1508,8 +1515,9 @@ var Users = function (_Adapter) {
 
       var id = params.uid,
           image = params.photoURL,
+          avatar = image,
           name = params.displayName.replace(/ .+$/, '');
-      return { id: id, image: image, name: name };
+      return { id: id, avatar: avatar, image: image, name: name };
     }
   }, {
     key: '_key',
@@ -1650,7 +1658,8 @@ var State = function () {
     value: function initializeLaunch() {
       this.launch = new _Renderers2.default.Launch(null, {
         createGame: this.createGame.bind(this),
-        findGame: this.findGame.bind(this)
+        findGame: this.findGame.bind(this),
+        updateUser: this.updateUser.bind(this)
       });
       this.launch.renderInitial();
     }
@@ -1681,6 +1690,18 @@ var State = function () {
     value: function findGame(slug) {
       _Adapters2.default.Games.globalFind(slug, false).then(this.initializeGame.bind(this)).catch(this.handleError.bind(this));
     }
+  }, {
+    key: 'updateUser',
+    value: function updateUser(params) {
+      var _this3 = this;
+
+      _Adapters2.default.Users.globalUpdate(this.user.id, params).then(function () {
+        _Adapters2.default.Users.globalFind(_this3.user.id).then(function (user) {
+          _this3.user = user;
+          _this3.launch.render({ user: user });
+        });
+      });
+    }
 
     // Handlers
 
@@ -1701,7 +1722,7 @@ var State = function () {
   }, {
     key: 'handleKilledIdsChange',
     value: function handleKilledIdsChange() {
-      var _this3 = this;
+      var _this4 = this;
 
       var roundOverData = this.game.calculateRoundOverData(this.players),
           points = this.game.calculatePoints(this.players, roundOverData);
@@ -1721,13 +1742,13 @@ var State = function () {
           roundOver: roundOver
         };
 
-        _Adapters2.default.Games.masterUpdateResults(_this3.game.id, params);
+        _Adapters2.default.Games.masterUpdateResults(_this4.game.id, params);
       });
     }
   }, {
     key: 'handleActionsChange',
     value: function handleActionsChange() {
-      var _this4 = this;
+      var _this5 = this;
 
       if (this.game._.status === 'actions') {
         if (this.master) {
@@ -1741,9 +1762,9 @@ var State = function () {
                 killedIds = _game$generateActionI.killedIds;
 
             _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds, confusionIds).then(function () {
-              var playerCountAlive = _this4.game._.playerCountAlive - killedIds.length;
-              _Adapters2.default.Games.masterUpdateActionIds(_this4.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
-                _this4.actionLock = false;
+              var playerCountAlive = _this5.game._.playerCountAlive - killedIds.length;
+              _Adapters2.default.Games.masterUpdateActionIds(_this5.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
+                _this5.actionLock = false;
               });
             });
           }
@@ -1767,7 +1788,7 @@ var State = function () {
   }, {
     key: 'initializeGame',
     value: function initializeGame(_ref2) {
-      var _this5 = this;
+      var _this6 = this;
 
       var game = _ref2.game;
       var newGame = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
@@ -1778,22 +1799,22 @@ var State = function () {
       this.master = game.masterId === this.playerId;
       this.players = {};
       _Adapters2.default.Players.globalListenerAdded(this.gameId, function (player) {
-        _this5.initializePlayer(player);
+        _this6.initializePlayer(player);
       });
       _Adapters2.default.Players.globalListenerRemoved(this.gameId, function (player) {
-        _this5.removePlayer(player);
+        _this6.removePlayer(player);
       });
       _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: this.gameId });
       _Adapters2.default.Players.globalFindOrCreate(this.user, this.gameId, this.master).then(function (player) {
-        _this5.game = new _Game2.default({ state: _this5 });
-        _Adapters2.default.Games.globalListener(_this5.gameId, function (game) {
+        _this6.game = new _Game2.default({ state: _this6 });
+        _Adapters2.default.Games.globalListener(_this6.gameId, function (game) {
           if (game) {
-            _this5.game.update(game);
-            _this5.handleGameChanges();
+            _this6.game.update(game);
+            _this6.handleGameChanges();
           } else {
-            _this5.rendered = false;
-            _Adapters2.default.Users.globalUpdate(_this5.playerId, { currentGameId: null });
-            _this5.launch.render({ user: _this5.user });
+            _this6.rendered = false;
+            _Adapters2.default.Users.globalUpdate(_this6.playerId, { currentGameId: null });
+            _this6.launch.render({ user: _this6.user });
           }
         });
       });
@@ -1801,11 +1822,11 @@ var State = function () {
   }, {
     key: 'initializePlayer',
     value: function initializePlayer(player) {
-      var _this6 = this;
+      var _this7 = this;
 
       this.players[player.id] = new _Player2.default(this, player);
       _Adapters2.default.Players.globalListenerPlayer(this.gameId, player.id, function (player) {
-        if (player && _this6.players[player.id]) _this6.players[player.id].update(player);
+        if (player && _this7.players[player.id]) _this7.players[player.id].update(player);
       });
       if (!this.rendered && this.player) this.initializeRenderers();
       if (this.player) {
@@ -1825,7 +1846,7 @@ var State = function () {
   }, {
     key: 'initializeRenderers',
     value: function initializeRenderers() {
-      var _this7 = this;
+      var _this8 = this;
 
       if (this.renderers) {
         for (var key in this.renderers) {
@@ -1835,39 +1856,39 @@ var State = function () {
       this.renderers = {
         start: new _Renderers2.default.Start(this.player, {
           dispatchStart: function dispatchStart() {
-            return _this7.dispatchStart();
+            return _this8.dispatchStart();
           },
           dispatchEnd: function dispatchEnd() {
-            return _this7.dispatchEnd();
+            return _this8.dispatchEnd();
           }
         }),
         turns: new _Renderers2.default.Turns(this.player, {
           dispatchReveal: function dispatchReveal() {
-            return _this7.dispatchReveal();
+            return _this8.dispatchReveal();
           }
         }),
         reveal: new _Renderers2.default.Reveal(this.player, {
           dispatchActions: function dispatchActions() {
-            return _this7.dispatchActions();
+            return _this8.dispatchActions();
           }
         }),
         actions: new _Renderers2.default.Actions(this.player, {
           dispatchAction: function dispatchAction(p, a) {
-            return _this7.dispatchAction(p, a);
+            return _this8.dispatchAction(p, a);
           }
         }),
         results: new _Renderers2.default.Results(this.player, {
           dispatchEnd: function dispatchEnd() {
-            return _this7.dispatchEnd();
+            return _this8.dispatchEnd();
           },
           dispatchLeave: function dispatchLeave() {
-            return _this7.dispatchLeave();
+            return _this8.dispatchLeave();
           },
           dispatchTurns: function dispatchTurns() {
-            return _this7.dispatchTurns();
+            return _this8.dispatchTurns();
           },
           dispatchNewRound: function dispatchNewRound() {
-            return _this7.dispatchNewRound();
+            return _this8.dispatchNewRound();
           }
         })
       };
@@ -1884,21 +1905,21 @@ var State = function () {
   }, {
     key: 'dispatchStart',
     value: function dispatchStart() {
-      var _this8 = this;
+      var _this9 = this;
 
       _Adapters2.default.Players.masterResetStart(this.players).then(function () {
-        _this8.dispatchNewRound();
+        _this9.dispatchNewRound();
       });
     }
   }, {
     key: 'dispatchTurns',
     value: function dispatchTurns() {
-      var _this9 = this;
+      var _this10 = this;
 
       var topics = this.game.generateTopics(),
           keyMasterId = this.game.generateKeyMasterId();
       _Adapters2.default.Games.masterResetRound(this.game.id, topics, keyMasterId).then(function () {
-        _Adapters2.default.Games.masterUpdateStatus(_this9.game.id, 'turns');
+        _Adapters2.default.Games.masterUpdateStatus(_this10.game.id, 'turns');
       });
     }
   }, {
@@ -1914,36 +1935,36 @@ var State = function () {
   }, {
     key: 'dispatchNewRound',
     value: function dispatchNewRound() {
-      var _this10 = this;
+      var _this11 = this;
 
       var roundData = this.game.generateRoundData();
       _Adapters2.default.Games.masterUpdateRoundData(this.game.id, roundData.game).then(function () {
-        _Adapters2.default.Players.masterUpdateRoundData(_this10.players, roundData.players).then(function () {
-          _Adapters2.default.Games.masterUpdateStatus(_this10.game.id, 'turns');
+        _Adapters2.default.Players.masterUpdateRoundData(_this11.players, roundData.players).then(function () {
+          _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'turns');
         });
       });
     }
   }, {
     key: 'dispatchEnd',
     value: function dispatchEnd() {
-      var _this11 = this;
+      var _this12 = this;
 
       _Adapters2.default.Players.masterDelete(this.game.id).then(function () {
-        _Adapters2.default.Games.masterDelete(_this11.game.id);
+        _Adapters2.default.Games.masterDelete(_this12.game.id);
       });
     }
   }, {
     key: 'dispatchLeave',
     value: function dispatchLeave() {
-      var _this12 = this;
+      var _this13 = this;
 
       if (this.game._.playerCount <= 3) {
         this.dispatchEnd();
       } else {
         _Adapters2.default.Games.globalKill(this.game.id);
         _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: null }).then(function () {
-          _Adapters2.default.Players.globalLeave(_this12.game.id, _this12.user.id).then(function () {
-            _this12.launch.render({ user: _this12.user });
+          _Adapters2.default.Players.globalLeave(_this13.game.id, _this13.user.id).then(function () {
+            _this13.launch.render({ user: _this13.user });
           });
         });
       }
@@ -1970,28 +1991,28 @@ var State = function () {
   }, {
     key: 'render',
     value: function render() {
-      var _this13 = this;
+      var _this14 = this;
 
       var status = this.game._.status;
       var map = {
         turns: function turns() {
-          return _this13.renderers.turns.render(_this13.game._);
+          return _this14.renderers.turns.render(_this14.game._);
         },
         reveal: function reveal() {
-          return _this13.renderers.reveal.render(_this13.game._, _this13.players);
+          return _this14.renderers.reveal.render(_this14.game._, _this14.players);
         },
         actions: function actions() {
-          return _this13.renderers.actions.render({
-            players: _this13.players,
-            imposterCount: _this13.game._.imposterCount,
-            playerCountAlive: _this13.game._.playerCountAlive,
-            votes: _this13.game._.votes
+          return _this14.renderers.actions.render({
+            players: _this14.players,
+            imposterCount: _this14.game._.imposterCount,
+            playerCountAlive: _this14.game._.playerCountAlive,
+            votes: _this14.game._.votes
           });
         },
         results: function results() {
-          return _this13.renderers.results.render({
-            players: _this13.players,
-            gameData: _this13.game._
+          return _this14.renderers.results.render({
+            players: _this14.players,
+            gameData: _this14.game._
           });
         }
       };
@@ -2004,12 +2025,14 @@ var State = function () {
     // Private
 
     value: function _devCreateStubbedPlayers(gameId) {
-      var image = 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
+      var avatars = _Renderers2.default.Launch._avatars;
       for (var i = 0; i < STUB_COUNT; i++) {
+        var name = avatars[Math.floor(Math.random() * avatars.length)],
+            avatar = _Renderers2.default.Launch._avatarUrl(name);
         _Adapters2.default.Players.globalCreate(gameId, {
           id: '' + STUB_PREFIX + (i + 1),
           name: 'Player' + (i + 1),
-          image: image
+          avatar: avatar
         }, false);
       }
     }
@@ -2130,17 +2153,11 @@ var Auth = function (_Renderer) {
       var $h1 = this.el('h1', 'Lexicon Standoff'),
           $desc = this.el('p', 'Please Sign In', 'description'),
           $google = this.el('button', 'Google'),
-
-      // $facebook = this.el('button', 'Facebook'),
-      $twitter = this.el('button', 'Twitter');
-      // this.append(this.$main, [$h1, $desc, $google, $facebook, $twitter]);
+          $twitter = this.el('button', 'Twitter');
       this.append(this.$main, [$h1, $desc, $google, $twitter]);
       $google.addEventListener('click', function () {
         _this2.events.authGoogle();
       });
-      // $facebook.addEventListener('click', () => {
-      //   this.events.authFacebook();
-      // });
       $twitter.addEventListener('click', function () {
         _this2.events.authTwitter();
       });
@@ -2158,7 +2175,7 @@ var Auth = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['authTwitter', 'authGoogle', 'authFacebook'];
+      return ['authTwitter', 'authGoogle'];
     }
   }]);
 
@@ -2215,6 +2232,7 @@ var Launch = function (_Renderer) {
           $link = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
           $slug = this.el('input'),
           $grp = this.el('div', null, 'item-group');
+      this.$editor = this.el('div', null, 'editor');
       this.new = new _Button2.default({
         content: 'Create a Game',
         clickEvent: this.events.createGame.bind(this)
@@ -2230,16 +2248,76 @@ var Launch = function (_Renderer) {
       $slug.setAttribute('type', 'text');
       $slug.setAttribute('placeholder', 'gamesecret');
       this.append($grp, [$slug, this.join.$el]);
-      this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $link]);
+      this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $link, this.$editor]);
       this.$footer.appendChild($inst);
     }
   }, {
     key: 'render',
     value: function render(_ref) {
+      var _this3 = this;
+
       var user = _ref.user;
 
+      this.renderEditor(user);
       this.toggleSections();
-      this.$user.innerHTML = '<img src="' + user.image + '" /> <span>' + user.name + '</span>';
+      this.$avatar = this.el('img');
+      this.$avatar.src = user.avatar;
+      this.$name = this.el('span', user.name);
+      var edit = new _Button2.default({
+        content: '',
+        clickEvent: function clickEvent() {
+          return _this3.$editor.classList.add('active');
+        }
+      });
+      edit.$el.appendChild(this.$avatar);
+      edit.$el.appendChild(this.$name);
+
+      this.$user.innerHTML = '';
+      this.$user.appendChild(edit.$el);
+    }
+  }, {
+    key: 'renderEditor',
+    value: function renderEditor(user) {
+      var _this4 = this;
+
+      this.$editor.innerHTML = '';
+      var $images = this.el('ul', null, 'image-select'),
+          existing = user.avatar;
+      Launch._avatars.forEach(function (name) {
+        var $li = _this4.el('li'),
+            url = Launch._avatarUrl(name),
+            $button = new _Button2.default({
+          content: '<img src="' + url + '" />',
+          clickEvent: function clickEvent() {
+            return _this4.handleAvatar($li, url);
+          }
+        });
+        if (existing === url) $li.className = 'active';
+        $li.appendChild($button.$el);
+        $images.appendChild($li);
+      });
+      if (user.image) {
+        var $li = this.el('li'),
+            $button = new _Button2.default({
+          content: '<img src="' + user.image + '" />',
+          clickEvent: function clickEvent() {
+            return _this4.handleAvatar($li, user.image);
+          }
+        });
+        if (existing === user.image) $li.className = 'active';
+        $li.appendChild($button.$el);
+        $images.appendChild($li);
+      }
+      this.$editor.appendChild($images);
+    }
+  }, {
+    key: 'handleAvatar',
+    value: function handleAvatar($li, avatar) {
+      var $existing = this.$editor.querySelector('li.active');
+      if ($existing) $existing.classList.remove('active');
+      $li.classList.add('active');
+      this.$editor.classList.remove('active');
+      this.events.updateUser({ avatar: avatar });
     }
   }, {
     key: '_name',
@@ -2249,7 +2327,22 @@ var Launch = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['createGame', 'findGame'];
+      return ['createGame', 'findGame', 'updateUser'];
+    }
+  }], [{
+    key: '_avatarUrl',
+    value: function _avatarUrl(name) {
+      return Launch._avatarBase + '/' + name;
+    }
+  }, {
+    key: '_avatarBase',
+    get: function get() {
+      return '/assets';
+    }
+  }, {
+    key: '_avatars',
+    get: function get() {
+      return ['avatar-bear.svg', 'avatar-donkey.svg', 'avatar-raccoon.svg', 'avatar-squirrel.svg', 'avatar-elephant.svg', 'avatar-mouse.svg', 'avatar-panda.svg', 'avatar-deer.svg', 'avatar-pig.svg', 'avatar-cat.svg', 'avatar-dog.svg', 'avatar-wolf.svg', 'avatar-monkey.svg', 'avatar-fox.svg', 'avatar-zebra.svg', 'avatar-rabbit.svg'];
     }
   }]);
 
@@ -2358,11 +2451,11 @@ var Start = function (_Renderer) {
       this.toggleSections();
       for (var playerId in players) {
         var _players$playerId = players[playerId],
-            image = _players$playerId.image,
+            avatar = _players$playerId.avatar,
             name = _players$playerId.name;
 
         var you = playerId === this.player.id ? 'you' : '';
-        var html = '<span class="user ' + you + '"><img src="' + image + '" /> <span>' + name + '</span></span>';
+        var html = '<span class="user ' + you + '"><img src="' + avatar + '" /> <span>' + name + '</span></span>';
         this.players.add(html);
       }
     }
@@ -3137,14 +3230,14 @@ var Player = function () {
     var id = _ref.id,
         gameId = _ref.gameId,
         name = _ref.name,
-        image = _ref.image,
+        avatar = _ref.avatar,
         master = _ref.master;
 
     _classCallCheck(this, Player);
 
     this.id = id;
     this.name = name;
-    this.image = image;
+    this.avatar = avatar;
     this.gameId = gameId;
     this.state = state;
     this._ = {};

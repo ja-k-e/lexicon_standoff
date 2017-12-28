@@ -20,7 +20,8 @@ export default class State {
   initializeLaunch() {
     this.launch = new Renderers.Launch(null, {
       createGame: this.createGame.bind(this),
-      findGame: this.findGame.bind(this)
+      findGame: this.findGame.bind(this),
+      updateUser: this.updateUser.bind(this)
     });
     this.launch.renderInitial();
   }
@@ -50,6 +51,15 @@ export default class State {
       .globalFind(slug, false)
       .then(this.initializeGame.bind(this))
       .catch(this.handleError.bind(this));
+  }
+
+  updateUser(params) {
+    Adapters.Users.globalUpdate(this.user.id, params).then(() => {
+      Adapters.Users.globalFind(this.user.id).then(user => {
+        this.user = user;
+        this.launch.render({ user });
+      });
+    });
   }
 
   // Handlers
@@ -331,15 +341,16 @@ export default class State {
   // Private
 
   _devCreateStubbedPlayers(gameId) {
-    let image =
-      'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
+    let avatars = Renderers.Launch._avatars;
     for (let i = 0; i < STUB_COUNT; i++) {
+      let name = avatars[Math.floor(Math.random() * avatars.length)],
+        avatar = Renderers.Launch._avatarUrl(name);
       Adapters.Players.globalCreate(
         gameId,
         {
           id: `${STUB_PREFIX}${i + 1}`,
           name: `Player${i + 1}`,
-          image
+          avatar
         },
         false
       );

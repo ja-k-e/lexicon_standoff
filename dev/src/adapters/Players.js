@@ -25,12 +25,12 @@ export default class Players extends Adapter {
 
   globalCreate(gameId, user, master) {
     return new Promise((resolve, reject) => {
-      let { id, name, image, alive } = user,
+      let { id, name, avatar, alive } = user,
         params = {
           id,
           gameId,
           name,
-          image,
+          avatar,
           master,
           score: 0,
           scoreRound: 0

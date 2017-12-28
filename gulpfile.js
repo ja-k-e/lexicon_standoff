@@ -78,6 +78,10 @@ gulp.task('publish', () => {
   gulp
     .src(`${settings.dest.dev}/instructions/index.html`)
     .pipe(gulp.dest(`${settings.dest.prod}/instructions`));
+
+  gulp
+    .src(`${settings.dest.dev}/assets/*`)
+    .pipe(gulp.dest(`${settings.dest.prod}/assets`));
 });
 
 gulp.task('default', () => {
