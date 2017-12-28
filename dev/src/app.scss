@@ -317,9 +317,22 @@ section.launch {
   .user-info {
     margin-bottom: 1rem;
     button {
+      position: relative;
+      padding: 0;
       width: auto;
-      background: transparent;
       display: inline-block;
+      background: transparent;
+      &::after {
+        content: 'Edit';
+        position: absolute;
+        font-size: 0.7rem;
+        left: 0;
+        width: 100%;
+        top: 100%;
+        text-align: center;
+        line-height: 1rem;
+        color: $gray;
+      }
     }
     img {
       display: block;
@@ -345,6 +358,10 @@ section.launch {
     background: black;
     transform: translateY(-100%);
     transition: transform 250ms ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
     &.active {
       transform: translateY(0);
     }
@@ -353,7 +370,25 @@ section.launch {
       padding: 0;
       height: auto;
     }
+    .item-group {
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      &::before {
+        content: 'Change your Name (12 Character Max)';
+        display: block;
+        flex-basis: 100%;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+      }
+    }
     ul {
+      &::before {
+        content: 'Select an Avatar';
+        display: block;
+        flex-basis: 100%;
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+      }
       display: flex;
       flex-wrap: wrap;
       align-content: center;

@@ -9,7 +9,7 @@ export default class Launch extends Renderer {
           iOS can only do this through Safari.`,
         'instruction'
       ),
-      $or = this.el('p', 'Enter a Secret to Join'),
+      $or = this.el('p', 'Enter a Secret to Join', 'instruction'),
       $link = this.el(
         'p',
         '<br><a href="/instructions/">Instructions</a>',
@@ -70,12 +70,12 @@ export default class Launch extends Renderer {
     let $grp = this.el('div', null, 'item-group'),
       $input = this.el('input'),
       save = new Button({
-        content: 'Save Name',
+        content: 'Save',
         clickEvent: () => this.handleName($input.value)
       });
     $input.setAttribute('type', 'text');
-    $input.setAttribute('placeholder', 'Your Name (10 char max)');
-    $input.setAttribute('maxlength', 10);
+    $input.setAttribute('placeholder', 'Your Name');
+    $input.setAttribute('maxlength', 12);
     $input.value = user.name;
     this.append($grp, [$input, save.$el]);
     this.$editor.appendChild($grp);

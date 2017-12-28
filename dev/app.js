@@ -2228,7 +2228,7 @@ var Launch = function (_Renderer) {
       var _this2 = this;
 
       var $inst = this.el('p', 'If you are on a mobile device, add this site to your home screen to get full screen.\n          iOS can only do this through Safari.', 'instruction'),
-          $or = this.el('p', 'Enter a Secret to Join'),
+          $or = this.el('p', 'Enter a Secret to Join', 'instruction'),
           $link = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
           $slug = this.el('input'),
           $grp = this.el('div', null, 'item-group');
@@ -2290,14 +2290,14 @@ var Launch = function (_Renderer) {
       var $grp = this.el('div', null, 'item-group'),
           $input = this.el('input'),
           save = new _Button2.default({
-        content: 'Save Name',
+        content: 'Save',
         clickEvent: function clickEvent() {
           return _this4.handleName($input.value);
         }
       });
       $input.setAttribute('type', 'text');
-      $input.setAttribute('placeholder', 'Your Name (10 char max)');
-      $input.setAttribute('maxlength', 10);
+      $input.setAttribute('placeholder', 'Your Name');
+      $input.setAttribute('maxlength', 12);
       $input.value = user.name;
       this.append($grp, [$input, save.$el]);
       this.$editor.appendChild($grp);
