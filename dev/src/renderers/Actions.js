@@ -13,8 +13,8 @@ export default class Actions extends Renderer {
     this.votes = new List();
     this.append(this.$main, this.votes.elements);
 
-    this.graveyard = new List();
-    this.append(this.$main, this.graveyard.elements);
+    this.waiting = new List('flex-list flex-list-small flex-list-quarter');
+    this.append(this.$main, this.waiting.elements);
 
     this.vote = new Button({
       content: '',
@@ -32,11 +32,9 @@ export default class Actions extends Renderer {
     this.$main.classList.remove('inactive');
     this.vote.enable();
     this.votes.reset();
-    this.graveyard.reset();
     this.toggleSections();
     let alive = this.player._.alive;
 
-    this.graveyard.title('Graveyard');
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
       <span class="status">Actions</span> <span class="info"><span class="throb">${role}</span></span>`;
@@ -56,7 +54,7 @@ export default class Actions extends Renderer {
         extra = this.player._.alive ? '' : 'You are Dead.';
       this.vote.content(term);
       this.$desc.innerHTML = `
-        ${extra} Vote for the Player you want to <strong>${term}</strong>.
+        ${extra} Select the Player you want to <strong>${term}</strong>.
         There ${isAre} a total of ${imposterS} and ${agentS}.`;
       let first = true;
       for (let playerId in players) {
@@ -75,16 +73,15 @@ export default class Actions extends Renderer {
       }
     }
 
-    let graveyard = false;
-    for (let playerId in players) {
-      let player = players[playerId];
-      if (!player._.alive) {
-        graveyard = true;
-        this.graveyard.add(this.userSpan(player));
-      }
-    }
-    if (!graveyard)
-      this.graveyard.$ul.innerHTML = '<li class="empty">Empty</li>';
+    this.renderWaiting({ players, votes });
+  }
+
+  renderWaiting({ players, votes }) {
+    this.waiting.reset();
+    this.waiting.title('Waiting on...');
+    for (let playerId in players)
+      if (!votes || !votes[playerId])
+        this.waiting.add(this.userSpan(players[playerId]));
   }
 
   _pluralize(count, word) {

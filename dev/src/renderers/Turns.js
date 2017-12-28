@@ -29,7 +29,7 @@ export default class Turns extends Renderer {
     this.append(this.$footer, [$inst, this.proceed.$el]);
   }
 
-  render({ topics }) {
+  render({ topics, confusionVotes }) {
     let role = this.player.capitalizedRole;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
     this.$h1.innerHTML = `
@@ -37,8 +37,11 @@ export default class Turns extends Renderer {
     if (this.player._.alive) {
       let descHtml = '',
         topicsHtml;
-      if (this.player._.confused)
-        descHtml += 'You have been confused by a dead Player! ';
+      if (this.player._.confused) {
+        let confusionVoteCount = confusionVotes[this.player.id],
+          confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
+        descHtml += `You have been confused by ${confusionVoteCount} dead ${confusionPlayers}! `;
+      }
       if (this.player._.role === 'imposter') {
         if (this.player._.confused)
           topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);
@@ -57,7 +60,7 @@ export default class Turns extends Renderer {
       this.$topics.innerHTML = topicsHtml;
       this.$desc.innerHTML = descHtml;
     } else {
-      this.$topics.innerHTML = '';
+      this.$topics.innerHTML = this._shuffledHtml([0, 1], topics);
       this.renderDead(this.$desc);
     }
     this.toggleSections();

@@ -42,9 +42,7 @@ export default class Game {
       winRole = null;
     if (roundOver) {
       if (aliveCounts.imposter === 1 && aliveCounts.agent === 1);
-      else if (aliveCounts.imposter > 0)
-        // Nothing. Draw.
-        winRole = 'imposter';
+      else if (aliveCounts.imposter > 0) winRole = 'imposter';
       else if (aliveCounts.agent > 0) winRole = 'agent';
     }
     // Alive Imposters score two, alive Agents score one

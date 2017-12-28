@@ -8,19 +8,19 @@ export default class Results extends Renderer {
     this.$h1 = this.el('h1');
     this.$header.appendChild(this.$h1);
 
-    this.killed = new List('flex-list flex-list-large');
+    this.killed = new List();
     this.append(this.$main, this.killed.elements);
+
+    this.survivors = new List('flex-list flex-list-small flex-list-quarter');
+    this.append(this.$main, this.survivors.elements);
+
+    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
+    this.append(this.$main, this.imposters.elements);
 
     this.$desc = this.el('div');
     this.$main.appendChild(this.$desc);
 
-    this.players = new List();
-    this.append(this.$main, this.players.elements);
-
-    this.extra1 = new List();
-    this.append(this.$main, this.extra1.elements);
-
-    this.extra2 = new List();
+    this.extra2 = new List('flex-list flex-list-small');
     this.append(this.$main, this.extra2.elements);
 
     this.$score = this.el('p', null, 'description');
@@ -32,7 +32,7 @@ export default class Results extends Renderer {
   renderInitialMaster() {
     let $inst = this.el(
         'p',
-        'Once everyone is ready, you may proceed below.',
+        'Once everyone is ready, proceed below.',
         'instruction'
       ),
       round = new Button({
@@ -63,8 +63,8 @@ export default class Results extends Renderer {
       killedIds
     } = gameData;
     this.killed.reset();
-    this.players.reset();
-    this.extra1.reset();
+    this.survivors.reset();
+    this.imposters.reset();
     this.extra2.reset();
     this.$score.innerHTML = '';
 
@@ -83,10 +83,10 @@ export default class Results extends Renderer {
       this.killed.add(this.userSpan(players[key], 'dead'));
     });
 
+    this.survivors.title('Survivors');
     if (roundOver) {
-      this.extra1.title('Imposters');
+      this.imposters.title('Imposters');
       this.extra2.title('Standings');
-      this.extra2.$ul.classList.add('flex-list-half');
       let winnerText = this._winnerText(aliveCounts),
         roundText = this._roundPointsText(aliveCounts);
       this.$desc.innerHTML = `
@@ -94,6 +94,7 @@ export default class Results extends Renderer {
           ${winnerText} ${this._playerPoints(true)} ${roundText}
         </p>
       `;
+      let survivors = false;
       let playerIds = Object.keys(players);
       playerIds
         .sort((a, b) => {
@@ -109,23 +110,28 @@ export default class Results extends Renderer {
             html = `${this.userSpan(player)} ${score}`;
           this.extra2.add(html);
           if (player._.role === 'imposter')
-            this.extra1.add(this.userSpan(player));
+            this.imposters.add(this.userSpan(player));
+          if (player._.alive) {
+            this.survivors.add(this.userSpan(player));
+            survivors = true;
+          }
         });
+      if (!survivors)
+        this.survivors.$ul.innerHTML = '<li class="empty">None</li>';
     } else {
-      this.extra1.title('Survivors');
       this.extra2.title('Graveyard');
       this.extra2.$ul.classList.remove('flex-list-half');
       this.$desc.innerHTML = `
-        <p class="description">The Round is still in progress. Player roles will stay the same.
-        ${this._playerPoints(false)}</p>
+        <p class="description">${this._playerPoints(false)}
+          The Round is still in progress, roles will stay the same.</p>
       `;
       for (let playerId in players) {
         let player = players[playerId],
           alive = player._.alive;
         if (alive) {
-          this.extra1.add(this.userSpan(player));
+          this.survivors.add(this.userSpan(player));
         } else {
-          this.extra2.add(this.userSpan(player));
+          this.extra2.add(this.userSpan(player, 'dead'));
         }
       }
     }
@@ -150,7 +156,7 @@ export default class Results extends Renderer {
   _winnerText({ imposter, agent }) {
     let role = this.player._.role;
     if (imposter === 1 && agent === 1) {
-      return 'One Imposter and one Agent are left so it is a draw!';
+      return 'It is a draw!';
     } else if (imposter > 0) {
       let prefix = role === 'imposter' ? this._success() : this._failure();
       return `${prefix} The <span class="role">Imposters</span> won.`;
@@ -177,7 +183,7 @@ export default class Results extends Renderer {
       points = this._points(scoreTurn),
       extra = roundOver ? 'in total' : 'so far';
     return `You scored ${points} this Turn because you ${reason},
-      and scored ${this._points(scoreRound)} ${extra} this Round.`;
+      and ${this._points(scoreRound)} ${extra} this Round.`;
   }
 
   _success() {

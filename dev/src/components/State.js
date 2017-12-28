@@ -7,7 +7,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 3,
+  STUB_COUNT = 14,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -56,8 +56,8 @@ export default class State {
 
   handleGameChanges() {
     if (this.game.changes.status) this.handleStatusChange();
+    if (this.game.changes.votes) this.handleActionsChange();
     if (this.master) {
-      if (this.game.changes.votes) this.handleActionsChange();
       if (this.game._.status === 'actions' && this.game.changes.killedIds)
         this.handleKilledIdsChange();
     }
@@ -93,38 +93,46 @@ export default class State {
 
   handleActionsChange() {
     if (this.game._.status === 'actions') {
-      if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
-        this.actionLock = true;
-        let {
-          confusionVotes,
-          confusionIds,
-          killVotes,
-          killedIds
-        } = this.game.generateActionIds();
-        Adapters.Players
-          .masterActOnPlayers(
-            this.game.id,
-            this.players,
-            killedIds,
-            confusionIds
-          )
-          .then(() => {
-            let playerCountAlive =
-              this.game._.playerCountAlive - killedIds.length;
-            Adapters.Games
-              .masterUpdateActionIds(
-                this.game.id,
-                confusionVotes,
-                confusionIds,
-                killVotes,
-                killedIds,
-                playerCountAlive
-              )
-              .then(() => {
-                this.actionLock = false;
-              });
-          });
+      if (this.master) {
+        if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
+          this.actionLock = true;
+          let {
+            confusionVotes,
+            confusionIds,
+            killVotes,
+            killedIds
+          } = this.game.generateActionIds();
+          Adapters.Players
+            .masterActOnPlayers(
+              this.game.id,
+              this.players,
+              killedIds,
+              confusionIds
+            )
+            .then(() => {
+              let playerCountAlive =
+                this.game._.playerCountAlive - killedIds.length;
+              Adapters.Games
+                .masterUpdateActionIds(
+                  this.game.id,
+                  confusionVotes,
+                  confusionIds,
+                  killVotes,
+                  killedIds,
+                  playerCountAlive
+                )
+                .then(() => {
+                  this.actionLock = false;
+                });
+            });
+        }
       }
+
+      // Update everyone with who hasnt voted
+      this.renderers.actions.renderWaiting({
+        players: this.players,
+        votes: this.game._.votes
+      });
     }
   }
 
@@ -254,15 +262,16 @@ export default class State {
 
   dispatchAction(playerId) {
     Adapters.Games.globalVote(this.game.id, this.user.id, playerId);
-    if (STUB) this.devDispatchVote(playerId);
+    if (STUB) this.devDispatchAction(playerId);
   }
 
-  devDispatchVote(playerId) {
+  devDispatchAction(playerId) {
     let spoofs = this.game._.playerCount - STUB_COUNT;
     if (this.player._.master)
       for (let i = 0; i < this.game._.playerCount - 2; i++) {
-        let id = `${STUB_PREFIX}${i + 1}`;
-        Adapters.Games.globalVote(this.game.id, id, playerId);
+        let id = `${STUB_PREFIX}${i + 1}`,
+          victimId = this.players[id]._.alive ? playerId : this.player.id;
+        Adapters.Games.globalVote(this.game.id, id, victimId);
       }
   }
 

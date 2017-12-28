@@ -11,9 +11,10 @@ body {
   }
 }
 
-$li-h: 1.5rem;
+$li-h: 1.3rem;
 $border: 2px;
 $corner: 2px;
+$offblack: #292929;
 $gray: #696969;
 $highlight: #ff4000;
 $sections: (new-version, auth, launch, start, turns, reveal, actions, results);
@@ -97,7 +98,12 @@ section {
       margin-top: 0.5rem;
     }
     &.inactive {
-      opacity: 0.5;
+      p.description,
+      p.description + p,
+      p.description + p + ul,
+      footer {
+        opacity: 0.5;
+      }
       pointer-events: none;
       cursor: default;
     }
@@ -127,7 +133,7 @@ section {
   p {
     &.secret,
     &.topics {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       margin-bottom: 0.5rem;
       + * {
         margin-top: 0;
@@ -142,7 +148,7 @@ section {
       }
     }
     &.description {
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
     &.instruction {
       font-size: 0.8rem;
@@ -179,7 +185,26 @@ ul.hint-list {
 ul.flex-list {
   display: flex;
   flex-wrap: wrap;
-  &.flex-list-large,
+  &.flex-list-small {
+    li {
+      $size: $li-h * 0.75;
+      line-height: $size;
+      height: $size;
+      font-size: 0.7rem;
+      span.user,
+      span.score {
+        line-height: $size;
+      }
+      span.user {
+        height: $size;
+        padding-left: $size + 0.25rem;
+        img {
+          height: $size;
+          width: $size;
+        }
+      }
+    }
+  }
   &.flex-list-half {
     li {
       flex-basis: calc(50% - 0.25rem);
@@ -194,6 +219,20 @@ ul.flex-list {
       }
     }
   }
+  &.flex-list-quarter {
+    li {
+      flex-basis: calc(25% - 0.1875rem);
+      &:nth-child(odd) {
+        margin-right: 0.125rem;
+      }
+      &:nth-child(even) {
+        margin-left: 0.125rem;
+      }
+      &:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)) {
+        margin-top: 0.25rem;
+      }
+    }
+  }
   &.flex-list-large {
     li {
       $size: $li-h * 1.5;
@@ -201,17 +240,17 @@ ul.flex-list {
       height: $size;
       font-size: 0.9rem;
       span.user {
-        line-height: calc(#{$size} - #{$border * 2});
-        height: calc(#{$size} - #{$border * 2});
+        line-height: $size;
+        height: $size;
         padding-left: $size + 0.25rem;
         img {
-          height: calc(#{$size} - #{$border * 2});
-          width: calc(#{$size} - #{$border * 2});
+          height: $size;
+          width: $size;
         }
       }
     }
   }
-  &:not(.flex-list-half):not(.flex-list-large) {
+  &:not(.flex-list-half):not(.flex-list-quarter) {
     li {
       flex-basis: calc(33.33% - 0.166666667rem);
       &:nth-child(3n + 2) {
@@ -282,29 +321,30 @@ section.launch {
     }
   }
 }
-section.reveal {
-  background: white;
-  color: black;
-  button {
-    color: black;
-    border-color: black;
-  }
-  ul {
-    li {
-      border-color: black;
-      span.user {
-        background: white;
-        color: black;
-      }
-    }
-  }
-}
+// section.reveal {
+//   background: white;
+//   color: black;
+//   button {
+//     color: black;
+//     border-color: black;
+//   }
+//   ul {
+//     li {
+//       border-color: black;
+//       span.user {
+//         background: white;
+//         color: black;
+//       }
+//     }
+//   }
+// }
 section.actions {
   li {
     label {
       display: block;
       position: relative;
       cursor: pointer;
+      background: $offblack;
     }
     input {
       position: absolute;
@@ -339,10 +379,11 @@ input[type='text'] {
   padding: 0.25rem 0.5rem;
   box-sizing: border-box;
   text-align: center;
-  border-radius: $corner;
+  // border-radius: $corner;
+  // border: $border solid white;
+  border: none;
   color: white;
-  background: transparent;
-  border: $border solid white;
+  background: $offblack;
   font-weight: 300;
 }
 button {
@@ -369,9 +410,7 @@ ol {
     height: $li-h;
     overflow: hidden;
     color: white;
-    border: $border solid white;
     box-sizing: border-box;
-    border-radius: $corner;
     position: relative;
     font-size: 0.8rem;
     letter-spacing: 0.03125em;
@@ -384,30 +423,27 @@ ol {
       color: $gray;
       // font-style: italic;
     }
-    span.votes,
     span.score {
       position: absolute;
       top: 0;
       right: $li-h * 0.25;
-      line-height: calc(#{$li-h} - #{$border * 2});
+      line-height: $li-h;
       text-align: right;
-      font-weight: 500;
     }
     span.user {
-      line-height: calc(#{$li-h} - #{$border * 2});
-      height: calc(#{$li-h} - #{$border * 2});
+      line-height: $li-h;
+      height: $li-h;
       width: 100%;
       position: relative;
       padding-left: $li-h + 0.25rem;
       display: block;
       box-sizing: border-box;
       color: white;
-      background: black;
+      // background: $offblack;
       &.you {
-        background: white;
-        color: black;
+        font-weight: bold;
         ~ * {
-          color: black;
+          font-weight: bold;
         }
       }
       &.dead {
@@ -418,8 +454,8 @@ ol {
         }
       }
       img {
-        height: calc(#{$li-h} - #{$border * 2});
-        width: calc(#{$li-h} - #{$border * 2});
+        height: $li-h;
+        width: $li-h;
         position: absolute;
         top: 0;
         left: 0;
