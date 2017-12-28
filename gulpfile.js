@@ -72,7 +72,12 @@ gulp.task('publish', () => {
     .pipe(autoprefixer(settings.autoprefixer))
     .pipe(cleanCSS(settings.cleanCSS))
     .pipe(gulp.dest(settings.dest.prod));
+
   gulp.src(globs.copy).pipe(gulp.dest(settings.dest.prod));
+
+  gulp
+    .src(`${settings.dest.dev}/instructions/index.html`)
+    .pipe(gulp.dest(`${settings.dest.prod}/instructions`));
 });
 
 gulp.task('default', () => {
