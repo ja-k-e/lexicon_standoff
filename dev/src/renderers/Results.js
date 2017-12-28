@@ -27,6 +27,7 @@ export default class Results extends Renderer {
     this.$main.appendChild(this.$score);
 
     if (this.player._.master) this.renderInitialMaster();
+    else this.renderInitialLeave();
   }
 
   renderInitialMaster() {
@@ -52,6 +53,22 @@ export default class Results extends Renderer {
     this.append(this.$footer, [$inst, this.$group, this.continue.$el]);
   }
 
+  renderInitialLeave() {
+    let self = this;
+    this.leave = new Button({
+      content: 'Leave Game',
+      clickEvent: () => {
+        this.confirmLeave();
+      }
+    });
+    this.append(this.$footer, [this.leave.$el]);
+  }
+
+  confirmLeave() {
+    if (window.confirm('Are you sure you want to leave the game?'))
+      this.events.dispatchLeave();
+  }
+
   render({ players, gameData }) {
     let {
       aliveCounts,
@@ -72,7 +89,9 @@ export default class Results extends Renderer {
 
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
-      <span class="status">Results</span> <span class="info"><span class="throb">${role}</span></span>`;
+      <span class="status">Results</span>
+      <span class="info"><span class="${this.player._
+        .role}">${role}</span></span>`;
 
     let killedVotes = killVotes[killedIds[0]];
 
@@ -85,6 +104,7 @@ export default class Results extends Renderer {
 
     this.survivors.title('Survivors');
     if (roundOver) {
+      if (this.leave) this.leave.enable();
       this.imposters.title('Imposters');
       this.extra2.title('Standings');
       let winnerText = this._winnerText(aliveCounts),
@@ -119,6 +139,7 @@ export default class Results extends Renderer {
       if (!survivors)
         this.survivors.$ul.innerHTML = '<li class="empty">None</li>';
     } else {
+      if (this.leave) this.leave.disable();
       this.extra2.title('Graveyard');
       this.extra2.$ul.classList.remove('flex-list-half');
       this.$desc.innerHTML = `
@@ -155,9 +176,7 @@ export default class Results extends Renderer {
 
   _winnerText({ imposter, agent }) {
     let role = this.player._.role;
-    if (imposter === 1 && agent === 1) {
-      return 'It is a draw!';
-    } else if (imposter > 0) {
+    if (imposter > 0) {
       let prefix = role === 'imposter' ? this._success() : this._failure();
       return `${prefix} The <span class="role">Imposters</span> won.`;
     } else if (agent > 0) {
@@ -169,8 +188,6 @@ export default class Results extends Renderer {
 
   _roundPointsText({ imposter, agent }) {
     let addl = this._points(Game.winPoints);
-    if (imposter === 1 && agent === 1)
-      return 'No one scores additional points.';
     if (imposter > 0) return `Each Imposter scored an additional ${addl}.`;
     if (agent > 0) return `Each Agent scored an additional ${addl}.`;
     return 'No one scores additional points.';
@@ -201,6 +218,11 @@ export default class Results extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchEnd', 'dispatchTurns', 'dispatchNewRound'];
+    return [
+      'dispatchEnd',
+      'dispatchTurns',
+      'dispatchNewRound',
+      'dispatchLeave'
+    ];
   }
 }

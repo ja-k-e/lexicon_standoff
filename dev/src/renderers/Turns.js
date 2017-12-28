@@ -8,8 +8,9 @@ export default class Turns extends Renderer {
     this.$h1 = this.el('h1');
     this.$topics = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
+    this.$keyMaster = this.el('div');
     this.$header.appendChild(this.$h1);
-    this.append(this.$main, [this.$topics, this.$desc]);
+    this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
     if (this.player._.master) this.renderInitialMaster();
   }
@@ -29,11 +30,30 @@ export default class Turns extends Renderer {
     this.append(this.$footer, [$inst, this.proceed.$el]);
   }
 
-  render({ topics, confusionVotes }) {
+  render({
+    topics,
+    confusionVotes,
+    keyMasterId,
+    playerCount,
+    playerCountAlive
+  }) {
     let role = this.player.capitalizedRole;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
     this.$h1.innerHTML = `
-      <span class="status">Turns</span> <span class="info"><span class="throb">${role}</span></span>`;
+      <span class="status">Turns</span>
+      <span class="info"><span class="${this.player._
+        .role}">${role}</span></span>`;
+
+    let deadPlayers = playerCount !== playerCountAlive;
+    if (this.player.id === keyMasterId && deadPlayers) {
+      this.$keyMaster.innerHTML = `
+        <p class="description">Lucky you! You are the <strong>Key Master</strong>. The Topic of confusion is:</p>
+        <p class="topics">“${topics[4][1]}”</p>
+      `;
+    } else {
+      this.$keyMaster.innerHTML = '';
+    }
+
     if (this.player._.alive) {
       let descHtml = '',
         topicsHtml;

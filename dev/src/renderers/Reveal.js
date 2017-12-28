@@ -11,9 +11,6 @@ export default class Reveal extends Renderer {
     this.$desc = this.el('p', null, 'description');
     this.append(this.$main, [this.$topics, this.$desc]);
 
-    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
-    this.append(this.$main, this.imposters.elements);
-
     if (this.player._.master) {
       let $inst = this.el(
         'p',
@@ -30,25 +27,16 @@ export default class Reveal extends Renderer {
   }
 
   render({ topics }, players) {
-    this.imposters.reset();
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
-      <span class="status">Reveal</span> <span class="info"><span class="throb">${role}</span></span>`;
+      <span class="status">Reveal</span>
+      <span class="info"><span class="${this.player._
+        .role}">${role}</span></span>`;
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
     if (this.player._.alive) {
       this.$desc.innerHTML = `These were the two Topics. Explain why you chose your word.`;
     } else {
       this.renderDead(this.$desc);
-    }
-    if (this.player._.role === 'imposter') {
-      this.imposters.title('Other Imposters');
-      for (let playerId in players) {
-        let player = players[playerId];
-        if (player._.role === 'imposter' && playerId !== this.player.id) {
-          let classname = player._.alive ? '' : 'dead';
-          this.imposters.add(this.userSpan(player, classname));
-        }
-      }
     }
     this.toggleSections();
   }

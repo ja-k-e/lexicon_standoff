@@ -7,7 +7,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 14,
+  STUB_COUNT = 2,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -151,6 +151,9 @@ export default class State {
     Adapters.Players.globalListenerAdded(this.gameId, player => {
       this.initializePlayer(player);
     });
+    Adapters.Players.globalListenerRemoved(this.gameId, player => {
+      this.removePlayer(player);
+    });
     Adapters.Users.globalUpdate(this.playerId, { currentGameId: this.gameId });
     Adapters.Players
       .globalFindOrCreate(this.user, this.gameId, this.master)
@@ -186,6 +189,10 @@ export default class State {
     }
   }
 
+  removePlayer(player) {
+    delete this.players[player.id];
+  }
+
   initializeRenderers() {
     if (this.renderers) {
       for (let key in this.renderers) this.renderers[key].remove();
@@ -206,6 +213,7 @@ export default class State {
       }),
       results: new Renderers.Results(this.player, {
         dispatchEnd: () => this.dispatchEnd(),
+        dispatchLeave: () => this.dispatchLeave(),
         dispatchTurns: () => this.dispatchTurns(),
         dispatchNewRound: () => this.dispatchNewRound()
       })
@@ -227,10 +235,13 @@ export default class State {
   }
 
   dispatchTurns() {
-    let topics = this.game.generateTopics();
-    Adapters.Games.masterResetRound(this.game.id, topics).then(() => {
-      Adapters.Games.masterUpdateStatus(this.game.id, 'turns');
-    });
+    let topics = this.game.generateTopics(),
+      keyMasterId = this.game.generateKeyMasterId();
+    Adapters.Games
+      .masterResetRound(this.game.id, topics, keyMasterId)
+      .then(() => {
+        Adapters.Games.masterUpdateStatus(this.game.id, 'turns');
+      });
   }
 
   dispatchReveal() {
@@ -260,6 +271,21 @@ export default class State {
     });
   }
 
+  dispatchLeave() {
+    if (this.game._.playerCount <= 3) {
+      this.dispatchEnd();
+    } else {
+      Adapters.Games.globalKill(this.game.id);
+      Adapters.Users
+        .globalUpdate(this.playerId, { currentGameId: null })
+        .then(() => {
+          Adapters.Players.globalLeave(this.game.id, this.user.id).then(() => {
+            this.launch.render({ user: this.user });
+          });
+        });
+    }
+  }
+
   dispatchAction(playerId) {
     Adapters.Games.globalVote(this.game.id, this.user.id, playerId);
     if (STUB) this.devDispatchAction(playerId);
@@ -286,6 +312,7 @@ export default class State {
         this.renderers.actions.render({
           players: this.players,
           imposterCount: this.game._.imposterCount,
+          playerCountAlive: this.game._.playerCountAlive,
           votes: this.game._.votes
         }),
       results: () =>

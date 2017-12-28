@@ -43,6 +43,16 @@ export default class Players extends Adapter {
     });
   }
 
+  globalLeave(gameId, playerId) {
+    return new Promise((resolve, reject) => {
+      this.db
+        .ref(this.r([gameId, playerId]))
+        .set(null)
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
   globalFind(gameId, userId) {
     return new Promise((resolve, reject) => {
       this.db
@@ -60,6 +70,14 @@ export default class Players extends Adapter {
   globalListenerAdded(gameId, handler) {
     this.db.ref(this.r(gameId)).on('child_added', snap => {
       handler(snap.val());
+    });
+  }
+
+  globalListenerRemoved(gameId, handler) {
+    this.db.ref(this.r(gameId)).on('child_removed', snap => {
+      let player = snap.val();
+      this.db.ref(this.r([gameId, player.id])).off();
+      handler(player);
     });
   }
 

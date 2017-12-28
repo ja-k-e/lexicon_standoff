@@ -30,10 +30,7 @@ export default class Game {
         deadIds.push(playerId);
       }
     }
-    let roundOver =
-      aliveCounts.imposter === 0 ||
-      aliveCounts.agent === 0 ||
-      (aliveCounts.imposter === 1 && aliveCounts.agent === 1);
+    let roundOver = aliveCounts.imposter === 0 || aliveCounts.agent === 0;
     return { aliveCounts, aliveIds, deadCounts, deadIds, roundOver };
   }
 
@@ -41,8 +38,7 @@ export default class Game {
     let points = {},
       winRole = null;
     if (roundOver) {
-      if (aliveCounts.imposter === 1 && aliveCounts.agent === 1);
-      else if (aliveCounts.imposter > 0) winRole = 'imposter';
+      if (aliveCounts.imposter > 0) winRole = 'imposter';
       else if (aliveCounts.agent > 0) winRole = 'agent';
     }
     // Alive Imposters score two, alive Agents score one
@@ -84,7 +80,8 @@ export default class Game {
     } = this._generateRoles(playerIds);
     this.imposterCount = imposterCount;
     let playerCount = playerIds.length,
-      topics = this.generateTopics();
+      topics = this.generateTopics(),
+      keyMasterId = this.generateKeyMasterId();
     return {
       game: {
         playerCountAlive: playerCount,
@@ -97,6 +94,7 @@ export default class Game {
         aliveIds: [],
         deadCounts: { imposter: 0, agent: 0 },
         deadIds: [],
+        keyMasterId,
         imposterCount,
         topics,
         roundOver: false
@@ -107,6 +105,11 @@ export default class Game {
 
   generateTopics() {
     return [1, 2, 3, 4, 5].map(_ => this.topicGenerator.loadTopic());
+  }
+
+  generateKeyMasterId() {
+    let playerIds = Object.keys(this.state.players);
+    return playerIds[Math.floor(Math.random() * playerIds.length)];
   }
 
   generateActionIds() {

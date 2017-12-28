@@ -16,7 +16,8 @@ $border: 2px;
 $corner: 2px;
 $offblack: #292929;
 $gray: #696969;
-$highlight: #ff4000;
+$red: #f44336;
+$green: #66bb6a;
 $sections: (new-version, auth, launch, start, turns, reveal, actions, results);
 
 * {
@@ -358,7 +359,7 @@ section.actions {
       &:checked {
         + label,
         + label .user {
-          background: $highlight;
+          background: $red;
         }
       }
     }
@@ -399,6 +400,7 @@ img {
   height: auto;
   max-width: 100%;
   vertical-align: middle;
+  filter: grayscale(50%);
 }
 
 ul,
@@ -447,7 +449,7 @@ ol {
         }
       }
       &.dead {
-        background: $highlight;
+        background: $red;
         color: white;
         ~ * {
           color: white;
@@ -471,16 +473,9 @@ button + input {
   margin-top: 0.5rem;
 }
 
-span.throb {
-  animation: throb 250ms ease-in-out alternate infinite;
-  display: inline-block;
+span.imposter {
+  color: $red;
 }
-
-@keyframes throb {
-  from {
-    transform: translateZ(0) scale(1);
-  }
-  to {
-    transform: translateZ(0) scale(1.05);
-  }
+span.agent {
+  color: $green;
 }

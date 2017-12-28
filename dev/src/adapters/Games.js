@@ -38,6 +38,10 @@ export default class Games extends Adapter {
     });
   }
 
+  globalKill(gameId) {
+    this.db.ref(this.r(gameId)).off();
+  }
+
   // Master Actions
 
   masterCreate(userId) {
@@ -107,7 +111,7 @@ export default class Games extends Adapter {
     });
   }
 
-  masterResetRound(gameId, topics) {
+  masterResetRound(gameId, topics, keyMasterId) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
@@ -116,6 +120,7 @@ export default class Games extends Adapter {
           killedIds: [],
           killVotes: {},
           roundOver: false,
+          keyMasterId,
           aliveCounts: { imposter: 0, agent: 0 },
           aliveIds: [],
           deadCounts: { imposter: 0, agent: 0 },

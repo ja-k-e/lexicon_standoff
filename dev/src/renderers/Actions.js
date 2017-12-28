@@ -28,7 +28,7 @@ export default class Actions extends Renderer {
     this.append(this.$footer, [this.vote.$el]);
   }
 
-  render({ players, votes, imposterCount }) {
+  render({ players, votes, imposterCount, playerCountAlive }) {
     this.$main.classList.remove('inactive');
     this.vote.enable();
     this.votes.reset();
@@ -37,7 +37,9 @@ export default class Actions extends Renderer {
 
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
-      <span class="status">Actions</span> <span class="info"><span class="throb">${role}</span></span>`;
+      <span class="status">Actions</span>
+      <span class="info"><span class="${this.player._
+        .role}">${role}</span></span>`;
     // If this player has already voted (refreshed the vote page after voting)
     if (votes && votes[this.player.id]) {
       this.votes.title('You have already voted!');
@@ -50,10 +52,12 @@ export default class Actions extends Renderer {
         isAre = imposterCount === 1 ? 'is' : 'are',
         imposterS = this._pluralize(imposterCount, 'Imposter'),
         agentS = this._pluralize(agentCount, 'Agent'),
-        term = this.player._.alive ? 'Kill' : 'Confuse',
-        extra = this.player._.alive ? '' : 'You are Dead.';
+        alive = this.player._.alive,
+        last = playerCountAlive === 2,
+        term = alive || last ? 'Kill' : 'Confuse',
+        extra = alive || last ? '' : 'You are Dead.';
       this.vote.content(term);
-      this.$desc.innerHTML = `
+      this.$desc.innerHTML = ` ${last ? 'This is the final vote!' : ''}
         ${extra} Select the Player you want to <strong>${term}</strong>.
         There ${isAre} a total of ${imposterS} and ${agentS}.`;
       let first = true;

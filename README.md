@@ -43,8 +43,7 @@ A Round is split into four stages:
   - Players can ask other players why they chose their word.
   - **Agents** are trying to figure out who are **Imposters** and vice versa.
   - You want your team to survive.
-  - **Imposters** will see who the other **Imposters** are
-  - Everyone is trying to appear confident in their decision.
+  - Everyone is trying to appear confident in their decision and find their teammates.
   - Players that were confused may explain their selection relative to the extra word they were presented.
 
 Players may give any explanation as to why they chose their word, even if it is a lie.
@@ -57,6 +56,7 @@ This is about trying to figure out who is on your team, not about who chose the 
 ### 3. Actions
   - Every living Player votes on their device for who they want to kill.
   - Every dead Player selects a Player to confuse. The next Round, that Player will have an extra fake Topic.
+    - On the last Round, dead Players are also voting to kill a Player with everyone else.
   - After every Player submits their action, the Round will progress on its own.
 
 ### 4. Results
@@ -64,7 +64,6 @@ This is about trying to figure out who is on your team, not about who chose the 
   - The Round is over when 
     - **Imposters** win (only **Imposters** remain)
     - **Agents** win (only **Agents** remain)
-    - It is a draw (there is one **Imposter** and one **Agent** left)
     - Everyone dies
   - If the Round is still active
     - **Scoring** 
@@ -80,7 +79,7 @@ This is about trying to figure out who is on your team, not about who chose the 
       - If one group wins, all Players on that team receive three points. For example:
         - If two of three **Agents** survive, all three **Agents** receive three additional points
         - If two of three **Imposters** survive, all three **Imposters** receive three additional points
-      - If it is a draw or everyone dies, no one receives the extra points.
+      - If everyone dies, no one receives the extra points.
     - **Imposters** are revealed at this time.
     - Game Standings will be displayed
     - The Host can start a new Round which will assign new roles for each Player, or they can end the Game.
