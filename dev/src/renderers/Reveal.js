@@ -11,6 +11,9 @@ export default class Reveal extends Renderer {
     this.$desc = this.el('p', null, 'description');
     this.append(this.$main, [this.$topics, this.$desc]);
 
+    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
+    this.append(this.$main, this.imposters.elements);
+
     if (this.player.isMaster) {
       let $inst = this.el(
         'p',
@@ -26,12 +29,14 @@ export default class Reveal extends Renderer {
     }
   }
 
-  render({ topics }, players) {
-    let role = this.player.capitalizedRole;
-    this.$h1.innerHTML = `
-      <span class="status">Reveal</span>
-      <span class="info"><span class="${this.player._
-        .role}">${role}</span></span>`;
+  render(game, players) {
+    let { topics, playerCount } = game;
+
+    this.imposters.reset();
+    if (this.player.isDead || (playerCount > 4 && this.player.isImposter))
+      this.renderImposters(players);
+
+    this.$h1.innerHTML = this.roleHeader('Reveal');
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
     if (this.player.isAlive) {
       this.$desc.innerHTML = `These were the two Topics. Explain why you chose your word.`;

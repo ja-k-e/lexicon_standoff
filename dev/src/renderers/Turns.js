@@ -9,8 +9,12 @@ export default class Turns extends Renderer {
     this.$topics = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
     this.$keyMaster = this.el('div', null, 'key-master');
+
     this.$header.appendChild(this.$h1);
     this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
+
+    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
+    this.append(this.$main, this.imposters.elements);
 
     if (this.player.isMaster) this.renderInitialMaster();
   }
@@ -30,20 +34,17 @@ export default class Turns extends Renderer {
     this.append(this.$footer, [$inst, this.proceed.$el]);
   }
 
-  render({
-    turns,
-    topics,
-    confusionVotes,
-    keyMasterId,
-    playerCount,
-    playerCountAlive
-  }) {
-    let role = this.player.role,
-      capRole = this.player.capitalizedRole;
+  render(game, players) {
+    let {
+      turns,
+      topics,
+      confusionVotes,
+      keyMasterId,
+      playerCount,
+      playerCountAlive
+    } = game;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
-    this.$h1.innerHTML = `
-      <span class="status">Turns</span>
-      <span class="info"><span class="${role}">${capRole}</span></span>`;
+    this.$h1.innerHTML = this.roleHeader('Turns');
 
     if (this.player.id === keyMasterId && turns > 2) {
       this.$keyMaster.innerHTML = `
@@ -53,6 +54,10 @@ export default class Turns extends Renderer {
     } else {
       this.$keyMaster.innerHTML = '';
     }
+
+    this.imposters.reset();
+    if (this.player.isDead || (playerCount > 4 && this.player.isImposter))
+      this.renderImposters(players);
 
     if (this.player.isAlive) {
       let descHtml = '',

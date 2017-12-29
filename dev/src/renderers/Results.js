@@ -69,7 +69,7 @@ export default class Results extends Renderer {
       this.events.dispatchLeave();
   }
 
-  render({ players, gameData }) {
+  render(game, players) {
     let {
       aliveCounts,
       aliveIds,
@@ -78,7 +78,7 @@ export default class Results extends Renderer {
       roundOver,
       killVotes,
       killedIds
-    } = gameData;
+    } = game;
     this.killed.reset();
     this.survivors.reset();
     this.imposters.reset();
@@ -91,17 +91,11 @@ export default class Results extends Renderer {
 
     this.toggleSections();
 
-    let role = this.player.capitalizedRole;
-    this.$h1.innerHTML = `
-      <span class="status">Results</span>
-      <span class="info"><span class="${this.player._
-        .role}">${role}</span></span>`;
+    this.$h1.innerHTML = this.roleHeader('Results');
 
-    let killedVotes = killVotes[killedIds[0]];
-
-    this.killed.title(`
-      Killed this Round by ${killedVotes} Vote${killedVotes > 1 ? 's' : ''}`);
-
+    let killedVotes = killVotes[killedIds[0]],
+      voteS = killedVotes === 1 ? 'Vote' : 'Votes';
+    this.killed.title(`Killed this Round by ${killedVotes} ${voteS}`);
     killedIds.forEach(key => {
       this.killed.add(this.userSpan(players[key], 'dead'));
     });
@@ -120,8 +114,8 @@ export default class Results extends Renderer {
           ${winnerText} ${this._playerPoints(true)} ${roundText}
         </p>
       `;
-      let survivors = false;
-      let playerIds = Object.keys(players);
+      let survivors = false,
+        playerIds = Object.keys(players);
       playerIds
         .sort((a, b) => {
           let aScore = players[a].score,
@@ -192,13 +186,15 @@ export default class Results extends Renderer {
   }
 
   _winnerText({ imposter, agent }) {
-    let role = this.player.role;
+    let role = this.player.capitalizedRole;
     if (imposter > 0) {
-      let prefix = role === 'imposter' ? this._success() : this._failure();
-      return `${prefix} The <span class="role">Imposters</span> won.`;
+      let prefix = this.player.isImposter ? this._success() : this._failure(),
+        wonLost = this.player.isImposter ? 'won' : 'lost';
+      return `${prefix} The <span class="role">${role}s</span> ${wonLost}.`;
     } else if (agent > 0) {
-      let prefix = role === 'agent' ? this._success() : this._failure();
-      return `${prefix} The <span class="role">Agents</span> won.`;
+      let prefix = this.player.isAgent ? this._success() : this._failure(),
+        wonLost = this.player.isAgent ? 'won' : 'lost';
+      return `${prefix} The <span class="role">${role}s</span> ${wonLost}.`;
     }
     return 'Everyone died!';
   }

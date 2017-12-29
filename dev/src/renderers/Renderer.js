@@ -27,11 +27,26 @@ export default class Renderer {
     this.$section.remove();
   }
 
+  renderImposters(players) {
+    this.imposters.title('Imposters');
+    for (let playerId in players) {
+      let player = players[playerId];
+      if (player.isImposter)
+        this.imposters.add(this.userSpan(player), player.isDead ? 'dead' : '');
+    }
+  }
+
   userSpan(player, extraClassname) {
     let classname = player.id === this.player.id ? 'you' : '',
       name = player.id === this.player.id ? 'You' : player.name;
     if (extraClassname) classname += ` ${extraClassname}`;
     return `<span class="user ${classname}"><img src="${player.avatar}" /> ${name}</span>`;
+  }
+
+  roleHeader(title) {
+    let { role, capitalizedRole } = this.player;
+    return `<span class="status">${title}</span>
+      <span class="info"><span class="${role}">${capitalizedRole}</span></span>`;
   }
 
   el(tagname, inner, classname) {

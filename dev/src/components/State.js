@@ -7,7 +7,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 2,
+  STUB_COUNT = 3,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -317,20 +317,10 @@ export default class State {
   render() {
     let status = this.game.status;
     let map = {
-      turns: () => this.renderers.turns.render(this.game._),
-      reveal: () => this.renderers.reveal.render(this.game._, this.players),
-      actions: () =>
-        this.renderers.actions.render({
-          players: this.players,
-          imposterCount: this.game.imposterCount,
-          playerCountAlive: this.game.playerCountAlive,
-          votes: this.game.votes
-        }),
-      results: () =>
-        this.renderers.results.render({
-          players: this.players,
-          gameData: this.game._
-        })
+      turns: () => this.renderers.turns.render(this.game, this.players),
+      reveal: () => this.renderers.reveal.render(this.game, this.players),
+      actions: () => this.renderers.actions.render(this.game, this.players),
+      results: () => this.renderers.results.render(this.game, this.players)
     };
     return map[status] ? map[status]() : null;
   }

@@ -31,19 +31,19 @@ export default class Actions extends Renderer {
     this.append(this.$footer, [this.vote.$el]);
   }
 
-  render({ players, votes, imposterCount, playerCountAlive }) {
+  render(game, players) {
+    let { votes, imposterCount, playerCount, playerCountAlive } = game;
     this.$main.classList.remove('inactive');
     this.vote.enable();
     this.votes.reset();
     this.imposters.reset();
     this.toggleSections();
-    let alive = this.player.isAlive;
 
-    let role = this.player.capitalizedRole;
-    this.$h1.innerHTML = `
-      <span class="status">Actions</span>
-      <span class="info">
-        <span class="${this.player.role}">${role}</span></span>`;
+    this.$h1.innerHTML = this.roleHeader('Actions');
+
+    if (this.player.isDead || (playerCount > 4 && this.player.isImposter))
+      this.renderImposters(players);
+
     // If this player has already voted (refreshed the vote page after voting)
     if (votes && votes[this.player.id]) {
       this.votes.title('You have already voted!');
@@ -78,18 +78,6 @@ export default class Actions extends Renderer {
             `);
           }
         }
-      }
-    }
-
-    if (this.player.isDead) {
-      this.imposters.title('Imposters');
-      for (let playerId in players) {
-        let player = players[playerId];
-        if (player.isImposter)
-          this.imposters.add(
-            this.userSpan(player),
-            player.isDead ? 'dead' : ''
-          );
       }
     }
 

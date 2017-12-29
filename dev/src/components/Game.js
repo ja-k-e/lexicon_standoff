@@ -78,7 +78,6 @@ export default class Game {
       playerIdsAgents,
       imposterCount
     } = this._generateRoles(playerIds);
-    this.imposterCount = imposterCount;
     let playerCount = playerIds.length,
       topics = this.generateTopics(),
       keyMasterId = this.generateKeyMasterId();
@@ -164,31 +163,54 @@ export default class Game {
   }
 
   // Getters
-
+  get aliveCounts() {
+    return this._.aliveCounts;
+  }
+  get aliveIds() {
+    return this._.aliveIds;
+  }
+  get confusionVotes() {
+    return this._.confusionVotes;
+  }
+  get deadCounts() {
+    return this._.deadCounts;
+  }
+  get deadIds() {
+    return this._.deadIds;
+  }
   get imposterCount() {
     return this._.imposterCount;
   }
-
+  get keyMasterId() {
+    return this._.keyMasterId;
+  }
+  get killedIds() {
+    return this._.killedIds;
+  }
+  get killVotes() {
+    return this._.killVotes;
+  }
   get playerCount() {
     return this._.playerCount;
   }
-
   get playerCountAlive() {
     return this._.playerCountAlive;
   }
-
+  get roundOver() {
+    return this._.roundOver;
+  }
   get status() {
     return this._.status;
   }
-
+  get topics() {
+    return this._.topics;
+  }
   get turns() {
     return this._.turns;
   }
-
   get votes() {
     return this._.votes;
   }
-
   get isActions() {
     return this.status === 'actions';
   }

@@ -497,13 +497,18 @@ section.results {
     p.instruction {
       color: white;
     }
-  }
-  * {
-    text-shadow: 1px 1px 4px black;
-  }
-  button,
-  img {
-    box-shadow: 1px 1px 4px black;
+    * {
+      text-shadow: 1px 1px 4px black;
+    }
+    button,
+    img {
+      box-shadow: 0px 2px 4px black;
+    }
+    button {
+      background: white;
+      color: black;
+      text-shadow: none;
+    }
   }
 }
 
