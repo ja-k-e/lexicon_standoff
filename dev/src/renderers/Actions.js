@@ -13,6 +13,9 @@ export default class Actions extends Renderer {
     this.votes = new List();
     this.append(this.$main, this.votes.elements);
 
+    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
+    this.append(this.$main, this.imposters.elements);
+
     this.waiting = new List('flex-list flex-list-small flex-list-quarter');
     this.append(this.$main, this.waiting.elements);
 
@@ -32,14 +35,15 @@ export default class Actions extends Renderer {
     this.$main.classList.remove('inactive');
     this.vote.enable();
     this.votes.reset();
+    this.imposters.reset();
     this.toggleSections();
-    let alive = this.player._.alive;
+    let alive = this.player.isAlive;
 
     let role = this.player.capitalizedRole;
     this.$h1.innerHTML = `
       <span class="status">Actions</span>
-      <span class="info"><span class="${this.player._
-        .role}">${role}</span></span>`;
+      <span class="info">
+        <span class="${this.player.role}">${role}</span></span>`;
     // If this player has already voted (refreshed the vote page after voting)
     if (votes && votes[this.player.id]) {
       this.votes.title('You have already voted!');
@@ -51,19 +55,20 @@ export default class Actions extends Renderer {
       let agentCount = Object.keys(players).length - imposterCount,
         imposterS = this._pluralize(imposterCount, 'Imposter'),
         agentS = this._pluralize(agentCount, 'Agent'),
-        alive = this.player._.alive,
+        alive = this.player.isAlive,
         last = playerCountAlive === 2,
         term = alive || last ? 'Kill' : 'Confuse',
-        extra = alive || last ? '' : 'You are Dead.';
+        extra = alive || last ? '' : 'You’re Dead.';
       this.vote.content(term);
       this.$desc.innerHTML = ` ${last ? 'This is the final vote!' : ''}
-        ${extra} Select who you want to <strong>${term}</strong>.
-        There ${imposterS} and ${agentS} in total.`;
+        ${extra} Select a Player to <strong>${term}</strong>.`;
+      if (this.player.isAlive)
+        this.$desc.innerHTML += ` There ${imposterS} and ${agentS} in total.`;
       let first = true;
       for (let playerId in players) {
         if (playerId !== this.player.id) {
           let player = players[playerId];
-          if (player._.alive) {
+          if (player.isAlive) {
             let selected = first ? 'checked' : '';
             if (first) first = false;
             this.votes.add(`
@@ -73,6 +78,18 @@ export default class Actions extends Renderer {
             `);
           }
         }
+      }
+    }
+
+    if (this.player.isDead) {
+      this.imposters.title('Imposters');
+      for (let playerId in players) {
+        let player = players[playerId];
+        if (player.isImposter)
+          this.imposters.add(
+            this.userSpan(player),
+            player.isDead ? 'dead' : ''
+          );
       }
     }
 

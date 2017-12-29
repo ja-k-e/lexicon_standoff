@@ -17,7 +17,7 @@ export default class Start extends Renderer {
     this.$roles = this.el('p', null, 'description');
     this.$main.appendChild(this.$roles);
 
-    if (this.player._.master) {
+    if (this.player.isMaster) {
       let $inst = this.el(
         'p',
         'Once everyone is here, start the game. Players can join this Game using the Game Secret above.',
@@ -54,7 +54,7 @@ export default class Start extends Renderer {
       this.$roles.innerHTML = `There will be ${roles[0]} Agents and ${roles[1]} ${imposterS}.`;
     }
 
-    if (this.player._.master && this.start) {
+    if (this.player.isMaster && this.start) {
       if (waiting) this.start.disable();
       else this.start.enable();
     }

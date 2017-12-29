@@ -11,7 +11,7 @@ export default class Reveal extends Renderer {
     this.$desc = this.el('p', null, 'description');
     this.append(this.$main, [this.$topics, this.$desc]);
 
-    if (this.player._.master) {
+    if (this.player.isMaster) {
       let $inst = this.el(
         'p',
         `Players question each other and discuss who they think is an Imposter.
@@ -33,7 +33,7 @@ export default class Reveal extends Renderer {
       <span class="info"><span class="${this.player._
         .role}">${role}</span></span>`;
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
-    if (this.player._.alive) {
+    if (this.player.isAlive) {
       this.$desc.innerHTML = `These were the two Topics. Explain why you chose your word.`;
     } else {
       this.$desc.innerHTML = 'You are dead. You can still question Players.';

@@ -12,7 +12,7 @@ export default class Game {
   }
 
   detectAllActionsSubmitted() {
-    return Object.keys(this._.votes).length === this._.playerCount;
+    return Object.keys(this.votes).length === this.playerCount;
   }
 
   calculateRoundOverData(players) {
@@ -21,8 +21,8 @@ export default class Game {
       aliveIds = [],
       deadIds = [];
     for (let playerId in players) {
-      let role = players[playerId]._.role;
-      if (players[playerId]._.alive) {
+      let role = players[playerId].role;
+      if (players[playerId].isAlive) {
         aliveCounts[role]++;
         aliveIds.push(playerId);
       } else {
@@ -44,18 +44,18 @@ export default class Game {
     // Alive Imposters score two, alive Agents score one
     for (let playerId in players) {
       let player = players[playerId],
-        role = player._.role,
+        role = player.role,
         survivePts = Game.survivePoints[role];
       // If winning Team
       if (winRole && winRole === role) {
         // If alive, extra points
-        let pts = player._.alive ? Game.winPoints + survivePts : Game.winPoints;
+        let pts = player.isAlive ? Game.winPoints + survivePts : Game.winPoints;
         points[playerId] = pts;
       } else if (winRole) {
         // If Loser,
       } else {
         // Game Still playing
-        if (player._.alive) points[playerId] = survivePts;
+        if (player.isAlive) points[playerId] = survivePts;
       }
     }
     return points;
@@ -119,9 +119,9 @@ export default class Game {
       confusionVotes = {},
       confusionIds = [],
       most = 0;
-    for (let playerId in this._.votes) {
-      let actionId = this._.votes[playerId],
-        aliveAction = this.state.players[playerId]._.alive;
+    for (let playerId in this.votes) {
+      let actionId = this.votes[playerId],
+        aliveAction = this.state.players[playerId].isAlive;
       if (aliveAction) {
         killVotes[actionId] = killVotes[actionId] || 0;
         killVotes[actionId]++;
@@ -161,6 +161,36 @@ export default class Game {
       playerIdsAgents,
       imposterCount
     };
+  }
+
+  // Getters
+
+  get imposterCount() {
+    return this._.imposterCount;
+  }
+
+  get playerCount() {
+    return this._.playerCount;
+  }
+
+  get playerCountAlive() {
+    return this._.playerCountAlive;
+  }
+
+  get status() {
+    return this._.status;
+  }
+
+  get turns() {
+    return this._.turns;
+  }
+
+  get votes() {
+    return this._.votes;
+  }
+
+  get isActions() {
+    return this.status === 'actions';
   }
 
   // Private

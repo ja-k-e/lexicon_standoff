@@ -26,7 +26,7 @@ export default class Results extends Renderer {
     this.$score = this.el('p', null, 'description');
     this.$main.appendChild(this.$score);
 
-    if (this.player._.master) this.renderInitialMaster();
+    if (this.player.isMaster) this.renderInitialMaster();
     else this.renderInitialLeave();
   }
 
@@ -124,20 +124,19 @@ export default class Results extends Renderer {
       let playerIds = Object.keys(players);
       playerIds
         .sort((a, b) => {
-          let aScore = players[a]._.score,
-            bScore = players[b]._.score;
+          let aScore = players[a].score,
+            bScore = players[b].score;
           if (aScore > bScore) return -1;
           if (aScore < bScore) return 1;
           return 0;
         })
         .forEach(playerId => {
           let player = players[playerId],
-            score = `<span class="score">${player._.score}</span>`,
+            score = `<span class="score">${player.score}</span>`,
             html = `${this.userSpan(player)} ${score}`;
           this.extra2.add(html);
-          if (player._.role === 'imposter')
-            this.imposters.add(this.userSpan(player));
-          if (player._.alive) {
+          if (player.isImposter) this.imposters.add(this.userSpan(player));
+          if (player.isAlive) {
             this.survivors.add(this.userSpan(player));
             survivors = true;
           }
@@ -154,7 +153,7 @@ export default class Results extends Renderer {
       `;
       for (let playerId in players) {
         let player = players[playerId],
-          alive = player._.alive;
+          alive = player.isAlive;
         if (alive) {
           this.survivors.add(this.userSpan(player));
         } else {
@@ -163,7 +162,7 @@ export default class Results extends Renderer {
       }
     }
 
-    if (this.player._.master) this.renderMaster(roundOver);
+    if (this.player.isMaster) this.renderMaster(roundOver);
   }
 
   renderMaster(roundOver) {
@@ -183,7 +182,7 @@ export default class Results extends Renderer {
   _winLoseClass({ imposter, agent }) {
     let win = Math.ceil(Math.random() * 6),
       lose = Math.ceil(Math.random() * 10),
-      role = this.player._.role;
+      role = this.player.role;
     if (imposter > 0) {
       return role === 'imposter' ? `win-${win}` : `lose-${lose}`;
     } else if (agent > 0) {
@@ -193,7 +192,7 @@ export default class Results extends Renderer {
   }
 
   _winnerText({ imposter, agent }) {
-    let role = this.player._.role;
+    let role = this.player.role;
     if (imposter > 0) {
       let prefix = role === 'imposter' ? this._success() : this._failure();
       return `${prefix} The <span class="role">Imposters</span> won.`;

@@ -141,8 +141,8 @@ export default class Players extends Adapter {
         let pointsVal = points[playerId],
           player = players[playerId];
         if (pointsVal) {
-          let scoreRound = player._.scoreRound + pointsVal,
-            score = player._.score + pointsVal;
+          let scoreRound = player.scoreRound + pointsVal,
+            score = player.score + pointsVal;
           this.db
             .ref(this.r([player.gameId, playerId]))
             .update({ score, scoreRound })

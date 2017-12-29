@@ -12,7 +12,7 @@ export default class Turns extends Renderer {
     this.$header.appendChild(this.$h1);
     this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
-    if (this.player._.master) this.renderInitialMaster();
+    if (this.player.isMaster) this.renderInitialMaster();
   }
 
   renderInitialMaster() {
@@ -38,7 +38,7 @@ export default class Turns extends Renderer {
     playerCount,
     playerCountAlive
   }) {
-    let role = this.player._.role,
+    let role = this.player.role,
       capRole = this.player.capitalizedRole;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
     this.$h1.innerHTML = `
@@ -54,24 +54,24 @@ export default class Turns extends Renderer {
       this.$keyMaster.innerHTML = '';
     }
 
-    if (this.player._.alive) {
+    if (this.player.isAlive) {
       let descHtml = '',
         topicsHtml;
-      if (this.player._.confused) {
+      if (this.player.isConfused) {
         let confusionVoteCount = confusionVotes[this.player.id],
           confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
         descHtml += `You have been confused by ${confusionVoteCount} dead ${confusionPlayers}! `;
       }
-      if (this.player._.role === 'imposter') {
-        if (this.player._.confused)
+      if (this.player.isImposter) {
+        if (this.player.isConfused)
           topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);
         else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
       } else {
-        if (this.player._.confused)
+        if (this.player.isConfused)
           topicsHtml = this._shuffledHtml([0, 1, 4], topics);
         else topicsHtml = this._shuffledHtml([0, 1], topics);
       }
-      if (this.player._.confused || this.player._.role === 'imposter') {
+      if (this.player.isConfused || this.player.isImposter) {
         descHtml += `Say one word that you associate with the <strong>two</strong> Agent Topics.`;
       } else {
         descHtml = `Say one word that you associate with both of the Topics above.`;

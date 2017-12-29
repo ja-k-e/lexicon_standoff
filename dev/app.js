@@ -548,7 +548,7 @@ var Game = function () {
   _createClass(Game, [{
     key: 'detectAllActionsSubmitted',
     value: function detectAllActionsSubmitted() {
-      return Object.keys(this._.votes).length === this._.playerCount;
+      return Object.keys(this.votes).length === this.playerCount;
     }
   }, {
     key: 'calculateRoundOverData',
@@ -558,8 +558,8 @@ var Game = function () {
           aliveIds = [],
           deadIds = [];
       for (var playerId in players) {
-        var role = players[playerId]._.role;
-        if (players[playerId]._.alive) {
+        var role = players[playerId].role;
+        if (players[playerId].isAlive) {
           aliveCounts[role]++;
           aliveIds.push(playerId);
         } else {
@@ -585,18 +585,18 @@ var Game = function () {
       // Alive Imposters score two, alive Agents score one
       for (var playerId in players) {
         var player = players[playerId],
-            role = player._.role,
+            role = player.role,
             survivePts = Game.survivePoints[role];
         // If winning Team
         if (winRole && winRole === role) {
           // If alive, extra points
-          var pts = player._.alive ? Game.winPoints + survivePts : Game.winPoints;
+          var pts = player.isAlive ? Game.winPoints + survivePts : Game.winPoints;
           points[playerId] = pts;
         } else if (winRole) {
           // If Loser,
         } else {
           // Game Still playing
-          if (player._.alive) points[playerId] = survivePts;
+          if (player.isAlive) points[playerId] = survivePts;
         }
       }
       return points;
@@ -673,9 +673,9 @@ var Game = function () {
           confusionVotes = {},
           confusionIds = [],
           most = 0;
-      for (var playerId in this._.votes) {
-        var actionId = this._.votes[playerId],
-            aliveAction = this.state.players[playerId]._.alive;
+      for (var playerId in this.votes) {
+        var actionId = this.votes[playerId],
+            aliveAction = this.state.players[playerId].isAlive;
         if (aliveAction) {
           killVotes[actionId] = killVotes[actionId] || 0;
           killVotes[actionId]++;
@@ -719,15 +719,54 @@ var Game = function () {
       };
     }
 
-    // Private
+    // Getters
 
   }, {
     key: '_distributor',
+
+
+    // Private
+
     value: function _distributor(number) {
       // Going for 2 to 1
       var agents = Math.floor(number * 0.66667),
           imposters = number - agents;
       return [agents, imposters];
+    }
+  }, {
+    key: 'imposterCount',
+    get: function get() {
+      return this._.imposterCount;
+    }
+  }, {
+    key: 'playerCount',
+    get: function get() {
+      return this._.playerCount;
+    }
+  }, {
+    key: 'playerCountAlive',
+    get: function get() {
+      return this._.playerCountAlive;
+    }
+  }, {
+    key: 'status',
+    get: function get() {
+      return this._.status;
+    }
+  }, {
+    key: 'turns',
+    get: function get() {
+      return this._.turns;
+    }
+  }, {
+    key: 'votes',
+    get: function get() {
+      return this._.votes;
+    }
+  }, {
+    key: 'isActions',
+    get: function get() {
+      return this.status === 'actions';
     }
   }, {
     key: '_ref',
@@ -1360,8 +1399,8 @@ var Players = function (_Adapter) {
           var pointsVal = points[playerId],
               player = players[playerId];
           if (pointsVal) {
-            var scoreRound = player._.scoreRound + pointsVal,
-                score = player._.score + pointsVal;
+            var scoreRound = player.scoreRound + pointsVal,
+                score = player.score + pointsVal;
             _this10.db.ref(_this10.r([player.gameId, playerId])).update({ score: score, scoreRound: scoreRound }).then(function () {
               playerCount--;
               if (playerCount <= 0) resolve();
@@ -1707,7 +1746,7 @@ var State = function () {
       if (this.game.changes.status) this.handleStatusChange();
       if (this.game.changes.votes) this.handleActionsChange();
       if (this.master) {
-        if (this.game._.status === 'actions' && this.game.changes.killedIds) this.handleKilledIdsChange();
+        if (this.game.isActions && this.game.changes.killedIds) this.handleKilledIdsChange();
       }
     }
   }, {
@@ -1746,7 +1785,7 @@ var State = function () {
     value: function handleActionsChange() {
       var _this5 = this;
 
-      if (this.game._.status === 'actions') {
+      if (this.game.isActions) {
         if (this.master) {
           if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
             this.actionLock = true;
@@ -1758,7 +1797,7 @@ var State = function () {
                 killedIds = _game$generateActionI.killedIds;
 
             _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds, confusionIds).then(function () {
-              var playerCountAlive = _this5.game._.playerCountAlive - killedIds.length;
+              var playerCountAlive = _this5.game.playerCountAlive - killedIds.length;
               _Adapters2.default.Games.masterUpdateActionIds(_this5.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
                 _this5.actionLock = false;
               });
@@ -1769,7 +1808,7 @@ var State = function () {
         // Update everyone with who hasnt voted
         this.renderers.actions.renderWaiting({
           players: this.players,
-          votes: this.game._.votes
+          votes: this.game.votes
         });
       }
     }
@@ -1913,7 +1952,7 @@ var State = function () {
       var _this10 = this;
 
       var topics = this.game.generateTopics(),
-          turns = this.game._.turns + 1,
+          turns = this.game.turns + 1,
           keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
       _Adapters2.default.Games.masterResetTurns(this.game.id, topics, turns, keyMasterId).then(function () {
         _Adapters2.default.Games.masterUpdateStatus(_this10.game.id, 'turns');
@@ -1955,7 +1994,7 @@ var State = function () {
     value: function dispatchLeave() {
       var _this13 = this;
 
-      if (this.game._.playerCount <= 3) {
+      if (this.game.playerCount <= 3) {
         this.dispatchEnd();
       } else {
         _Adapters2.default.Games.globalKill(this.game.id);
@@ -1975,10 +2014,10 @@ var State = function () {
   }, {
     key: 'devDispatchAction',
     value: function devDispatchAction(playerId) {
-      var spoofs = this.game._.playerCount - STUB_COUNT;
-      if (this.player._.master) for (var i = 0; i < this.game._.playerCount - 2; i++) {
+      var spoofs = this.game.playerCount - STUB_COUNT;
+      if (this.player.isMaster) for (var i = 0; i < this.game.playerCount - 2; i++) {
         var id = '' + STUB_PREFIX + (i + 1),
-            victimId = this.players[id]._.alive ? playerId : this.player.id;
+            victimId = this.players[id].isAlive ? playerId : this.player.id;
         _Adapters2.default.Games.globalVote(this.game.id, id, victimId);
       }
     }
@@ -1990,7 +2029,7 @@ var State = function () {
     value: function render() {
       var _this14 = this;
 
-      var status = this.game._.status;
+      var status = this.game.status;
       var map = {
         turns: function turns() {
           return _this14.renderers.turns.render(_this14.game._);
@@ -2001,9 +2040,9 @@ var State = function () {
         actions: function actions() {
           return _this14.renderers.actions.render({
             players: _this14.players,
-            imposterCount: _this14.game._.imposterCount,
-            playerCountAlive: _this14.game._.playerCountAlive,
-            votes: _this14.game._.votes
+            imposterCount: _this14.game.imposterCount,
+            playerCountAlive: _this14.game.playerCountAlive,
+            votes: _this14.game.votes
           });
         },
         results: function results() {
@@ -2440,7 +2479,7 @@ var Start = function (_Renderer) {
       this.$roles = this.el('p', null, 'description');
       this.$main.appendChild(this.$roles);
 
-      if (this.player._.master) {
+      if (this.player.isMaster) {
         var $inst = this.el('p', 'Once everyone is here, start the game. Players can join this Game using the Game Secret above.', 'instruction');
         var $group = this.el('div', null, 'item-group');
         var cancel = new _Button2.default({
@@ -2475,7 +2514,7 @@ var Start = function (_Renderer) {
         this.$roles.innerHTML = 'There will be ' + roles[0] + ' Agents and ' + roles[1] + ' ' + imposterS + '.';
       }
 
-      if (this.player._.master && this.start) {
+      if (this.player.isMaster && this.start) {
         if (waiting) this.start.disable();else this.start.enable();
       }
       this.$secret.innerHTML = '\u201C' + gameId + '\u201D';
@@ -2571,7 +2610,7 @@ var Turns = function (_Renderer) {
       this.$header.appendChild(this.$h1);
       this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
-      if (this.player._.master) this.renderInitialMaster();
+      if (this.player.isMaster) this.renderInitialMaster();
     }
   }, {
     key: 'renderInitialMaster',
@@ -2593,7 +2632,7 @@ var Turns = function (_Renderer) {
           playerCount = _ref.playerCount,
           playerCountAlive = _ref.playerCountAlive;
 
-      var role = this.player._.role,
+      var role = this.player.role,
           capRole = this.player.capitalizedRole;
       topics = topics.map(function (i) {
         return [i[0], i[1].split(' ').join('&nbsp;')];
@@ -2606,20 +2645,20 @@ var Turns = function (_Renderer) {
         this.$keyMaster.innerHTML = '';
       }
 
-      if (this.player._.alive) {
+      if (this.player.isAlive) {
         var descHtml = '',
             topicsHtml = void 0;
-        if (this.player._.confused) {
+        if (this.player.isConfused) {
           var confusionVoteCount = confusionVotes[this.player.id],
               confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
           descHtml += 'You have been confused by ' + confusionVoteCount + ' dead ' + confusionPlayers + '! ';
         }
-        if (this.player._.role === 'imposter') {
-          if (this.player._.confused) topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
+        if (this.player.isImposter) {
+          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
         } else {
-          if (this.player._.confused) topicsHtml = this._shuffledHtml([0, 1, 4], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
+          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 4], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
         }
-        if (this.player._.confused || this.player._.role === 'imposter') {
+        if (this.player.isConfused || this.player.isImposter) {
           descHtml += 'Say one word that you associate with the <strong>two</strong> Agent Topics.';
         } else {
           descHtml = 'Say one word that you associate with both of the Topics above.';
@@ -2717,7 +2756,7 @@ var Reveal = function (_Renderer) {
       this.$desc = this.el('p', null, 'description');
       this.append(this.$main, [this.$topics, this.$desc]);
 
-      if (this.player._.master) {
+      if (this.player.isMaster) {
         var $inst = this.el('p', 'Players question each other and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
         var proceed = new _Button2.default({
           content: 'Proceed',
@@ -2734,7 +2773,7 @@ var Reveal = function (_Renderer) {
       var role = this.player.capitalizedRole;
       this.$h1.innerHTML = '\n      <span class="status">Reveal</span>\n      <span class="info"><span class="' + this.player._.role + '">' + role + '</span></span>';
       this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
-      if (this.player._.alive) {
+      if (this.player.isAlive) {
         this.$desc.innerHTML = 'These were the two Topics. Explain why you chose your word.';
       } else {
         this.$desc.innerHTML = 'You are dead. You can still question Players.';
@@ -2814,6 +2853,9 @@ var Actions = function (_Renderer) {
       this.votes = new _List2.default();
       this.append(this.$main, this.votes.elements);
 
+      this.imposters = new _List2.default('flex-list flex-list-small flex-list-quarter');
+      this.append(this.$main, this.imposters.elements);
+
       this.waiting = new _List2.default('flex-list flex-list-small flex-list-quarter');
       this.append(this.$main, this.waiting.elements);
 
@@ -2839,11 +2881,12 @@ var Actions = function (_Renderer) {
       this.$main.classList.remove('inactive');
       this.vote.enable();
       this.votes.reset();
+      this.imposters.reset();
       this.toggleSections();
-      var alive = this.player._.alive;
+      var alive = this.player.isAlive;
 
       var role = this.player.capitalizedRole;
-      this.$h1.innerHTML = '\n      <span class="status">Actions</span>\n      <span class="info"><span class="' + this.player._.role + '">' + role + '</span></span>';
+      this.$h1.innerHTML = '\n      <span class="status">Actions</span>\n      <span class="info">\n        <span class="' + this.player.role + '">' + role + '</span></span>';
       // If this player has already voted (refreshed the vote page after voting)
       if (votes && votes[this.player.id]) {
         this.votes.title('You have already voted!');
@@ -2855,22 +2898,31 @@ var Actions = function (_Renderer) {
         var agentCount = Object.keys(players).length - imposterCount,
             imposterS = this._pluralize(imposterCount, 'Imposter'),
             agentS = this._pluralize(agentCount, 'Agent'),
-            _alive = this.player._.alive,
+            _alive = this.player.isAlive,
             last = playerCountAlive === 2,
             term = _alive || last ? 'Kill' : 'Confuse',
-            extra = _alive || last ? '' : 'You are Dead.';
+            extra = _alive || last ? '' : 'You’re Dead.';
         this.vote.content(term);
-        this.$desc.innerHTML = ' ' + (last ? 'This is the final vote!' : '') + '\n        ' + extra + ' Select who you want to <strong>' + term + '</strong>.\n        There ' + imposterS + ' and ' + agentS + ' in total.';
+        this.$desc.innerHTML = ' ' + (last ? 'This is the final vote!' : '') + '\n        ' + extra + ' Select a Player to <strong>' + term + '</strong>.';
+        if (this.player.isAlive) this.$desc.innerHTML += ' There ' + imposterS + ' and ' + agentS + ' in total.';
         var first = true;
         for (var playerId in players) {
           if (playerId !== this.player.id) {
             var player = players[playerId];
-            if (player._.alive) {
+            if (player.isAlive) {
               var selected = first ? 'checked' : '';
               if (first) first = false;
               this.votes.add('\n              <input id="' + playerId + '" value="' + playerId + '"\n                type="radio" name="votes" ' + selected + ' />\n              <label for="' + playerId + '">' + this.userSpan(player) + '</label>\n            ');
             }
           }
+        }
+      }
+
+      if (this.player.isDead) {
+        this.imposters.title('Imposters');
+        for (var _playerId in players) {
+          var _player = players[_playerId];
+          if (_player.isImposter) this.imposters.add(this.userSpan(_player), _player.isDead ? 'dead' : '');
         }
       }
 
@@ -2984,7 +3036,7 @@ var Results = function (_Renderer) {
       this.$score = this.el('p', null, 'description');
       this.$main.appendChild(this.$score);
 
-      if (this.player._.master) this.renderInitialMaster();else this.renderInitialLeave();
+      if (this.player.isMaster) this.renderInitialMaster();else this.renderInitialLeave();
     }
   }, {
     key: 'renderInitialMaster',
@@ -3073,18 +3125,18 @@ var Results = function (_Renderer) {
         var survivors = false;
         var playerIds = Object.keys(players);
         playerIds.sort(function (a, b) {
-          var aScore = players[a]._.score,
-              bScore = players[b]._.score;
+          var aScore = players[a].score,
+              bScore = players[b].score;
           if (aScore > bScore) return -1;
           if (aScore < bScore) return 1;
           return 0;
         }).forEach(function (playerId) {
           var player = players[playerId],
-              score = '<span class="score">' + player._.score + '</span>',
+              score = '<span class="score">' + player.score + '</span>',
               html = _this3.userSpan(player) + ' ' + score;
           _this3.extra2.add(html);
-          if (player._.role === 'imposter') _this3.imposters.add(_this3.userSpan(player));
-          if (player._.alive) {
+          if (player.isImposter) _this3.imposters.add(_this3.userSpan(player));
+          if (player.isAlive) {
             _this3.survivors.add(_this3.userSpan(player));
             survivors = true;
           }
@@ -3097,7 +3149,7 @@ var Results = function (_Renderer) {
         this.$desc.innerHTML = '\n        <p class="description">' + this._playerPoints(false) + '\n          The Round is in progress, roles stay the same.</p>\n      ';
         for (var playerId in players) {
           var player = players[playerId],
-              alive = player._.alive;
+              alive = player.isAlive;
           if (alive) {
             this.survivors.add(this.userSpan(player));
           } else {
@@ -3106,7 +3158,7 @@ var Results = function (_Renderer) {
         }
       }
 
-      if (this.player._.master) this.renderMaster(roundOver);
+      if (this.player.isMaster) this.renderMaster(roundOver);
     }
   }, {
     key: 'renderMaster',
@@ -3132,7 +3184,7 @@ var Results = function (_Renderer) {
 
       var win = Math.ceil(Math.random() * 6),
           lose = Math.ceil(Math.random() * 10),
-          role = this.player._.role;
+          role = this.player.role;
       if (imposter > 0) {
         return role === 'imposter' ? 'win-' + win : 'lose-' + lose;
       } else if (agent > 0) {
@@ -3146,7 +3198,7 @@ var Results = function (_Renderer) {
       var imposter = _ref3.imposter,
           agent = _ref3.agent;
 
-      var role = this.player._.role;
+      var role = this.player.role;
       if (imposter > 0) {
         var prefix = role === 'imposter' ? this._success() : this._failure();
         return prefix + ' The <span class="role">Imposters</span> won.';
@@ -3293,24 +3345,69 @@ var Player = function () {
   }
 
   _createClass(Player, [{
-    key: "update",
+    key: 'update',
     value: function update(values) {
       this._ = values;
     }
   }, {
-    key: "capitalizedRole",
+    key: 'score',
+    get: function get() {
+      return this._.score;
+    }
+  }, {
+    key: 'scoreRound',
+    get: function get() {
+      return this._.scoreRound;
+    }
+  }, {
+    key: 'role',
+    get: function get() {
+      return this._.role;
+    }
+  }, {
+    key: 'isAgent',
+    get: function get() {
+      return this.role === 'agent';
+    }
+  }, {
+    key: 'isImposter',
+    get: function get() {
+      return !this.isAgent;
+    }
+  }, {
+    key: 'isAlive',
+    get: function get() {
+      return this._.alive;
+    }
+  }, {
+    key: 'isDead',
+    get: function get() {
+      return !this.isAlive;
+    }
+  }, {
+    key: 'isMaster',
+    get: function get() {
+      return this._.master;
+    }
+  }, {
+    key: 'isConfused',
+    get: function get() {
+      return this._.confused;
+    }
+  }, {
+    key: 'capitalizedRole',
     get: function get() {
       return this._.role.charAt(0).toUpperCase() + this._.role.slice(1);
     }
   }, {
-    key: "key",
+    key: 'key',
     get: function get() {
-      return this.gameId + "/" + this.id;
+      return this.gameId + '/' + this.id;
     }
   }, {
-    key: "_ref",
+    key: '_ref',
     get: function get() {
-      return "/players/" + this.key;
+      return '/players/' + this.key;
     }
   }]);
 

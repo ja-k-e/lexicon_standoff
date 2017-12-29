@@ -68,7 +68,7 @@ export default class State {
     if (this.game.changes.status) this.handleStatusChange();
     if (this.game.changes.votes) this.handleActionsChange();
     if (this.master) {
-      if (this.game._.status === 'actions' && this.game.changes.killedIds)
+      if (this.game.isActions && this.game.changes.killedIds)
         this.handleKilledIdsChange();
     }
   }
@@ -102,7 +102,7 @@ export default class State {
   }
 
   handleActionsChange() {
-    if (this.game._.status === 'actions') {
+    if (this.game.isActions) {
       if (this.master) {
         if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
           this.actionLock = true;
@@ -121,7 +121,7 @@ export default class State {
             )
             .then(() => {
               let playerCountAlive =
-                this.game._.playerCountAlive - killedIds.length;
+                this.game.playerCountAlive - killedIds.length;
               Adapters.Games
                 .masterUpdateActionIds(
                   this.game.id,
@@ -141,7 +141,7 @@ export default class State {
       // Update everyone with who hasnt voted
       this.renderers.actions.renderWaiting({
         players: this.players,
-        votes: this.game._.votes
+        votes: this.game.votes
       });
     }
   }
@@ -246,7 +246,7 @@ export default class State {
 
   dispatchTurns() {
     let topics = this.game.generateTopics(),
-      turns = this.game._.turns + 1,
+      turns = this.game.turns + 1,
       keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
     Adapters.Games
       .masterResetTurns(this.game.id, topics, turns, keyMasterId)
@@ -283,7 +283,7 @@ export default class State {
   }
 
   dispatchLeave() {
-    if (this.game._.playerCount <= 3) {
+    if (this.game.playerCount <= 3) {
       this.dispatchEnd();
     } else {
       Adapters.Games.globalKill(this.game.id);
@@ -303,11 +303,11 @@ export default class State {
   }
 
   devDispatchAction(playerId) {
-    let spoofs = this.game._.playerCount - STUB_COUNT;
-    if (this.player._.master)
-      for (let i = 0; i < this.game._.playerCount - 2; i++) {
+    let spoofs = this.game.playerCount - STUB_COUNT;
+    if (this.player.isMaster)
+      for (let i = 0; i < this.game.playerCount - 2; i++) {
         let id = `${STUB_PREFIX}${i + 1}`,
-          victimId = this.players[id]._.alive ? playerId : this.player.id;
+          victimId = this.players[id].isAlive ? playerId : this.player.id;
         Adapters.Games.globalVote(this.game.id, id, victimId);
       }
   }
@@ -315,16 +315,16 @@ export default class State {
   // Rendering
 
   render() {
-    let status = this.game._.status;
+    let status = this.game.status;
     let map = {
       turns: () => this.renderers.turns.render(this.game._),
       reveal: () => this.renderers.reveal.render(this.game._, this.players),
       actions: () =>
         this.renderers.actions.render({
           players: this.players,
-          imposterCount: this.game._.imposterCount,
-          playerCountAlive: this.game._.playerCountAlive,
-          votes: this.game._.votes
+          imposterCount: this.game.imposterCount,
+          playerCountAlive: this.game.playerCountAlive,
+          votes: this.game.votes
         }),
       results: () =>
         this.renderers.results.render({
