@@ -246,9 +246,10 @@ export default class State {
 
   dispatchTurns() {
     let topics = this.game.generateTopics(),
-      keyMasterId = this.game.generateKeyMasterId();
+      turns = this.game._.turns + 1,
+      keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
     Adapters.Games
-      .masterResetRound(this.game.id, topics, keyMasterId)
+      .masterResetTurns(this.game.id, topics, turns, keyMasterId)
       .then(() => {
         Adapters.Games.masterUpdateStatus(this.game.id, 'turns');
       });

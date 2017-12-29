@@ -31,23 +31,23 @@ export default class Turns extends Renderer {
   }
 
   render({
+    turns,
     topics,
     confusionVotes,
     keyMasterId,
     playerCount,
     playerCountAlive
   }) {
-    let role = this.player.capitalizedRole;
+    let role = this.player._.role,
+      capRole = this.player.capitalizedRole;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
     this.$h1.innerHTML = `
       <span class="status">Turns</span>
-      <span class="info"><span class="${this.player._
-        .role}">${role}</span></span>`;
+      <span class="info"><span class="${role}">${capRole}</span></span>`;
 
-    let deadPlayers = playerCount !== playerCountAlive;
-    if (this.player.id === keyMasterId && deadPlayers) {
+    if (this.player.id === keyMasterId && turns > 2) {
       this.$keyMaster.innerHTML = `
-        <p class="description">You’re the <strong>Key Master</strong>.<br>The Topic of confusion is</p>
+        <p class="description">You’re the <strong>Key Master</strong>.<br>The Topic of Confusion is</p>
         <p class="topics">“${topics[4][1]}”</p>
       `;
     } else {
@@ -93,7 +93,7 @@ export default class Turns extends Renderer {
       let html = '';
       shuffled.forEach((topic, i) => {
         if (i < shuffled.length - 1) html += `“${topic}”, `;
-        else html += `or “${topic}”`;
+        else html += ` “${topic}”`;
       });
       return html;
     }

@@ -94,6 +94,7 @@ export default class Game {
         aliveIds: [],
         deadCounts: { imposter: 0, agent: 0 },
         deadIds: [],
+        turns: 1,
         keyMasterId,
         imposterCount,
         topics,

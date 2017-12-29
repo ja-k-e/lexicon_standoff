@@ -641,6 +641,7 @@ var Game = function () {
           aliveIds: [],
           deadCounts: { imposter: 0, agent: 0 },
           deadIds: [],
+          turns: 1,
           keyMasterId: keyMasterId,
           imposterCount: imposterCount,
           topics: topics,
@@ -1056,8 +1057,8 @@ var Games = function (_Adapter) {
       });
     }
   }, {
-    key: 'masterResetRound',
-    value: function masterResetRound(gameId, topics, keyMasterId) {
+    key: 'masterResetTurns',
+    value: function masterResetTurns(gameId, topics, turns, keyMasterId) {
       var _this8 = this;
 
       return new Promise(function (resolve, reject) {
@@ -1067,6 +1068,7 @@ var Games = function (_Adapter) {
           killVotes: {},
           roundOver: false,
           keyMasterId: keyMasterId,
+          turns: turns,
           aliveCounts: { imposter: 0, agent: 0 },
           aliveIds: [],
           deadCounts: { imposter: 0, agent: 0 },
@@ -1911,8 +1913,9 @@ var State = function () {
       var _this10 = this;
 
       var topics = this.game.generateTopics(),
-          keyMasterId = this.game.generateKeyMasterId();
-      _Adapters2.default.Games.masterResetRound(this.game.id, topics, keyMasterId).then(function () {
+          turns = this.game._.turns + 1,
+          keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
+      _Adapters2.default.Games.masterResetTurns(this.game.id, topics, turns, keyMasterId).then(function () {
         _Adapters2.default.Games.masterUpdateStatus(_this10.game.id, 'turns');
       });
     }
@@ -2583,21 +2586,22 @@ var Turns = function (_Renderer) {
   }, {
     key: 'render',
     value: function render(_ref) {
-      var topics = _ref.topics,
+      var turns = _ref.turns,
+          topics = _ref.topics,
           confusionVotes = _ref.confusionVotes,
           keyMasterId = _ref.keyMasterId,
           playerCount = _ref.playerCount,
           playerCountAlive = _ref.playerCountAlive;
 
-      var role = this.player.capitalizedRole;
+      var role = this.player._.role,
+          capRole = this.player.capitalizedRole;
       topics = topics.map(function (i) {
         return [i[0], i[1].split(' ').join('&nbsp;')];
       });
-      this.$h1.innerHTML = '\n      <span class="status">Turns</span>\n      <span class="info"><span class="' + this.player._.role + '">' + role + '</span></span>';
+      this.$h1.innerHTML = '\n      <span class="status">Turns</span>\n      <span class="info"><span class="' + role + '">' + capRole + '</span></span>';
 
-      var deadPlayers = playerCount !== playerCountAlive;
-      if (this.player.id === keyMasterId && deadPlayers) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">You\u2019re the <strong>Key Master</strong>.<br>The Topic of confusion is</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
+      if (this.player.id === keyMasterId && turns > 2) {
+        this.$keyMaster.innerHTML = '\n        <p class="description">You\u2019re the <strong>Key Master</strong>.<br>The Topic of Confusion is</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
       } else {
         this.$keyMaster.innerHTML = '';
       }
@@ -2639,7 +2643,7 @@ var Turns = function (_Renderer) {
         });
         var html = '';
         shuffled.forEach(function (topic, i) {
-          if (i < shuffled.length - 1) html += '\u201C' + topic + '\u201D, ';else html += 'or \u201C' + topic + '\u201D';
+          if (i < shuffled.length - 1) html += '\u201C' + topic + '\u201D, ';else html += ' \u201C' + topic + '\u201D';
         });
         return html;
       }
