@@ -8,7 +8,7 @@ export default class Turns extends Renderer {
     this.$h1 = this.el('h1');
     this.$topics = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
-    this.$keyMaster = this.el('div');
+    this.$keyMaster = this.el('div', null, 'key-master');
     this.$header.appendChild(this.$h1);
     this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
@@ -18,8 +18,8 @@ export default class Turns extends Renderer {
   renderInitialMaster() {
     let $inst = this.el(
       'p',
-      `Take clockwise turns saying a word. You're first in round one.
-        After a round, the first turn moves clockwise to the next alive Player.
+      `Take clockwise turns saying a word. You're first.
+        After a Round, first turn moves to the next alive Player.
         Once everyone says a word, proceed.`,
       'instruction'
     );
@@ -47,7 +47,7 @@ export default class Turns extends Renderer {
     let deadPlayers = playerCount !== playerCountAlive;
     if (this.player.id === keyMasterId && deadPlayers) {
       this.$keyMaster.innerHTML = `
-        <p class="description">You are the <strong>Key Master</strong>. The Topic of confusion is:</p>
+        <p class="description">You’re the <strong>Key Master</strong>.<br>The Topic of confusion is</p>
         <p class="topics">“${topics[4][1]}”</p>
       `;
     } else {

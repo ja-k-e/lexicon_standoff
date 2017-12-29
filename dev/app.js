@@ -2564,7 +2564,7 @@ var Turns = function (_Renderer) {
       this.$h1 = this.el('h1');
       this.$topics = this.el('p', null, 'topics');
       this.$desc = this.el('p', null, 'description');
-      this.$keyMaster = this.el('div');
+      this.$keyMaster = this.el('div', null, 'key-master');
       this.$header.appendChild(this.$h1);
       this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
@@ -2573,7 +2573,7 @@ var Turns = function (_Renderer) {
   }, {
     key: 'renderInitialMaster',
     value: function renderInitialMaster() {
-      var $inst = this.el('p', 'Take clockwise turns saying a word. You\'re first in round one.\n        After a round, the first turn moves clockwise to the next alive Player.\n        Once everyone says a word, proceed.', 'instruction');
+      var $inst = this.el('p', 'Take clockwise turns saying a word. You\'re first.\n        After a Round, first turn moves to the next alive Player.\n        Once everyone says a word, proceed.', 'instruction');
       this.proceed = new _Button2.default({
         content: 'Proceed',
         clickEvent: this.events.dispatchReveal.bind(this)
@@ -2597,7 +2597,7 @@ var Turns = function (_Renderer) {
 
       var deadPlayers = playerCount !== playerCountAlive;
       if (this.player.id === keyMasterId && deadPlayers) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">You are the <strong>Key Master</strong>. The Topic of confusion is:</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
+        this.$keyMaster.innerHTML = '\n        <p class="description">You\u2019re the <strong>Key Master</strong>.<br>The Topic of confusion is</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
       } else {
         this.$keyMaster.innerHTML = '';
       }
@@ -2714,7 +2714,7 @@ var Reveal = function (_Renderer) {
       this.append(this.$main, [this.$topics, this.$desc]);
 
       if (this.player._.master) {
-        var $inst = this.el('p', 'Players question each other\'s word selections and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
+        var $inst = this.el('p', 'Players question each other and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
         var proceed = new _Button2.default({
           content: 'Proceed',
           clickEvent: this.events.dispatchActions.bind(this)
@@ -2849,7 +2849,6 @@ var Actions = function (_Renderer) {
         this.$footer.classList.remove('hide');
         this.votes.title('Select a Player');
         var agentCount = Object.keys(players).length - imposterCount,
-            isAre = imposterCount === 1 ? 'is' : 'are',
             imposterS = this._pluralize(imposterCount, 'Imposter'),
             agentS = this._pluralize(agentCount, 'Agent'),
             _alive = this.player._.alive,
@@ -2857,7 +2856,7 @@ var Actions = function (_Renderer) {
             term = _alive || last ? 'Kill' : 'Confuse',
             extra = _alive || last ? '' : 'You are Dead.';
         this.vote.content(term);
-        this.$desc.innerHTML = ' ' + (last ? 'This is the final vote!' : '') + '\n        ' + extra + ' Select the Player you want to <strong>' + term + '</strong>.\n        There ' + isAre + ' a total of ' + imposterS + ' and ' + agentS + '.';
+        this.$desc.innerHTML = ' ' + (last ? 'This is the final vote!' : '') + '\n        ' + extra + ' Select who you want to <strong>' + term + '</strong>.\n        There ' + imposterS + ' and ' + agentS + ' in total.';
         var first = true;
         for (var playerId in players) {
           if (playerId !== this.player.id) {
@@ -3091,7 +3090,7 @@ var Results = function (_Renderer) {
         if (this.leave) this.leave.disable();
         this.extra2.title('Graveyard');
         this.extra2.$ul.classList.remove('flex-list-half');
-        this.$desc.innerHTML = '\n        <p class="description">' + this._playerPoints(false) + '\n          The Round is still in progress, roles will stay the same.</p>\n      ';
+        this.$desc.innerHTML = '\n        <p class="description">' + this._playerPoints(false) + '\n          The Round is in progress, roles stay the same.</p>\n      ';
         for (var playerId in players) {
           var player = players[playerId],
               alive = player._.alive;
@@ -3172,11 +3171,10 @@ var Results = function (_Renderer) {
           role = _player$_.role,
           alive = _player$_.alive,
           scoreTurn = alive ? _Game2.default.survivePoints[role] : 0,
-          reason = alive ? 'survived' : 'died',
           points = this._points(scoreTurn),
           extra = roundOver ? 'in total' : 'so far';
 
-      return 'You scored ' + points + ' this Turn because you ' + reason + ',\n      and ' + this._points(scoreRound) + ' ' + extra + ' this Round.';
+      if (alive) return 'You scored ' + points + ' this Turn,\n        and ' + this._points(scoreRound) + ' ' + extra + ' this Round.';else return 'You are dead and scored ' + this._points(scoreRound) + ' ' + extra + ' this Round.';
     }
   }, {
     key: '_success',

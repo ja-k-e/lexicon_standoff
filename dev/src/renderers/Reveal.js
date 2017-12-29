@@ -14,7 +14,7 @@ export default class Reveal extends Renderer {
     if (this.player._.master) {
       let $inst = this.el(
         'p',
-        `Players question each other's word selections and discuss who they think is an Imposter.
+        `Players question each other and discuss who they think is an Imposter.
           Once everyone is ready to vote, proceed.`,
         'instruction'
       );

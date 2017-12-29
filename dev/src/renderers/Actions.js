@@ -49,7 +49,6 @@ export default class Actions extends Renderer {
       this.$footer.classList.remove('hide');
       this.votes.title('Select a Player');
       let agentCount = Object.keys(players).length - imposterCount,
-        isAre = imposterCount === 1 ? 'is' : 'are',
         imposterS = this._pluralize(imposterCount, 'Imposter'),
         agentS = this._pluralize(agentCount, 'Agent'),
         alive = this.player._.alive,
@@ -58,8 +57,8 @@ export default class Actions extends Renderer {
         extra = alive || last ? '' : 'You are Dead.';
       this.vote.content(term);
       this.$desc.innerHTML = ` ${last ? 'This is the final vote!' : ''}
-        ${extra} Select the Player you want to <strong>${term}</strong>.
-        There ${isAre} a total of ${imposterS} and ${agentS}.`;
+        ${extra} Select who you want to <strong>${term}</strong>.
+        There ${imposterS} and ${agentS} in total.`;
       let first = true;
       for (let playerId in players) {
         if (playerId !== this.player.id) {

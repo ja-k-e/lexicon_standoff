@@ -150,7 +150,7 @@ export default class Results extends Renderer {
       this.extra2.$ul.classList.remove('flex-list-half');
       this.$desc.innerHTML = `
         <p class="description">${this._playerPoints(false)}
-          The Round is still in progress, roles will stay the same.</p>
+          The Round is in progress, roles stay the same.</p>
       `;
       for (let playerId in players) {
         let player = players[playerId],
@@ -214,11 +214,15 @@ export default class Results extends Renderer {
   _playerPoints(roundOver) {
     let { scoreRound, role, alive } = this.player._,
       scoreTurn = alive ? Game.survivePoints[role] : 0,
-      reason = alive ? 'survived' : 'died',
       points = this._points(scoreTurn),
       extra = roundOver ? 'in total' : 'so far';
-    return `You scored ${points} this Turn because you ${reason},
-      and ${this._points(scoreRound)} ${extra} this Round.`;
+    if (alive)
+      return `You scored ${points} this Turn,
+        and ${this._points(scoreRound)} ${extra} this Round.`;
+    else
+      return `You are dead and scored ${this._points(
+        scoreRound
+      )} ${extra} this Round.`;
   }
 
   _success() {

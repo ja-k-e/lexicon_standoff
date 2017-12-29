@@ -171,6 +171,19 @@ section {
       }
     }
   }
+  .key-master:not(:empty) {
+    // background: $offblack;
+    border-radius: $corner;
+    border: $border solid white;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    text-align: center;
+    margin-top: 1rem;
+    .topics {
+      margin-top: 0.25rem;
+      margin-bottom: 0;
+    }
+  }
 }
 
 ul.hint-list {
@@ -481,6 +494,9 @@ section.results {
       background-size: cover;
       background-position: center;
     }
+    p.instruction {
+      color: white;
+    }
   }
   * {
     text-shadow: 1px 1px 4px black;
@@ -488,9 +504,6 @@ section.results {
   button,
   img {
     box-shadow: 1px 1px 4px black;
-  }
-  p.instruction {
-    color: white;
   }
 }
 
@@ -602,40 +615,14 @@ button + input {
 
 span.imposter,
 span.agent {
-  // font-weight: bold;
-  &::before,
-  &::after {
-    display: inline-block;
-  }
-  &::before {
-    content: '»';
-    animation: thrust-right 250ms ease-in-out infinite alternate;
-  }
-  &::after {
-    content: '«';
-    animation: thrust-left 250ms ease-in-out infinite alternate;
-  }
+  animation: glow 250ms ease-in-out infinite alternate;
 }
 
-@keyframes thrust-right {
+@keyframes glow {
   from {
-    transform: translateX(-0.25rem);
+    opacity: 1;
   }
   to {
-    transform: translateX(-0.1rem);
+    opacity: 0.7;
   }
 }
-@keyframes thrust-left {
-  from {
-    transform: translateX(0.25rem);
-  }
-  to {
-    transform: translateX(0.1rem);
-  }
-}
-// span.imposter {
-//   color: $red;
-// }
-// span.agent {
-//   color: $green;
-// }
