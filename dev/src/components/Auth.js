@@ -1,4 +1,4 @@
-const firebaseKeys = require('firebase-keys');
+const firebaseKeys = require('firebase-settings');
 
 export default class Auth {
   constructor() {

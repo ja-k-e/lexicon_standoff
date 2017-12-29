@@ -20,7 +20,7 @@ module.exports = {
     alias: {
       config: `${__dirname}/config/${process.env.NODE_ENV}`,
       globals: `${__dirname}/config/globals`,
-      'firebase-keys': `${__dirname}/config/firebase-keys`
+      'firebase-settings': `${__dirname}/config/firebase-settings`
     }
   }
 };
