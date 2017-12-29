@@ -134,7 +134,7 @@ section {
   p {
     &.secret,
     &.topics {
-      font-size: 1.1rem;
+      font-size: 1rem;
       margin-bottom: 0.5rem;
       + * {
         margin-top: 0;
@@ -149,7 +149,7 @@ section {
       }
     }
     &.description {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
     }
     &.instruction {
       font-size: 0.8rem;
@@ -374,7 +374,7 @@ section.launch {
       margin-top: 2rem;
       flex-wrap: wrap;
       &::before {
-        content: 'Change your Name (12 Character Max)';
+        content: 'Change your Name (8 Character Max)';
         display: block;
         flex-basis: 100%;
         font-size: 0.8rem;
@@ -442,10 +442,55 @@ section.actions {
       &:checked {
         + label,
         + label .user {
-          background: $red;
+          background: white;
+          color: black;
         }
       }
     }
+  }
+}
+
+$win: 6;
+$lose: 10;
+section.results {
+  @for $i from 1 through $win {
+    &.win-#{$i}::before {
+      background-image: url(/assets/win-#{$i}.gif);
+    }
+  }
+  @for $i from 1 through $lose {
+    &.lose-#{$i}::before {
+      background-image: url(/assets/lose-#{$i}.gif);
+    }
+  }
+  &[class*='win-'],
+  &[class*='lose-'] {
+    background: transparent !important;
+    &::before {
+      filter: grayscale(50%) brightness(40%);
+      z-index: -1;
+      // background-blend-mode: difference;
+      background-color: black;
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-size: cover;
+      background-position: center;
+    }
+  }
+  * {
+    text-shadow: 1px 1px 4px black;
+  }
+  button,
+  img {
+    box-shadow: 1px 1px 4px black;
+  }
+  p.instruction {
+    color: white;
   }
 }
 
@@ -530,11 +575,12 @@ ol {
         }
       }
       &.dead {
-        background: $red;
-        color: white;
-        ~ * {
-          color: white;
-        }
+        text-decoration: $red line-through;
+        // background: $red;
+        // color: white;
+        // ~ * {
+        //   color: white;
+        // }
       }
       img {
         height: $li-h;
@@ -554,9 +600,42 @@ button + input {
   margin-top: 0.5rem;
 }
 
-span.imposter {
-  color: $red;
-}
+span.imposter,
 span.agent {
-  color: $green;
+  // font-weight: bold;
+  &::before,
+  &::after {
+    display: inline-block;
+  }
+  &::before {
+    content: '»';
+    animation: thrust-right 250ms ease-in-out infinite alternate;
+  }
+  &::after {
+    content: '«';
+    animation: thrust-left 250ms ease-in-out infinite alternate;
+  }
 }
+
+@keyframes thrust-right {
+  from {
+    transform: translateX(-0.25rem);
+  }
+  to {
+    transform: translateX(-0.1rem);
+  }
+}
+@keyframes thrust-left {
+  from {
+    transform: translateX(0.25rem);
+  }
+  to {
+    transform: translateX(0.1rem);
+  }
+}
+// span.imposter {
+//   color: $red;
+// }
+// span.agent {
+//   color: $green;
+// }

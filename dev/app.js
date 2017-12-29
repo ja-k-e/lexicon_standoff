@@ -122,12 +122,6 @@ var Renderer = function () {
       return '<span class="user ' + classname + '"><img src="' + player.avatar + '" /> ' + name + '</span>';
     }
   }, {
-    key: 'renderDead',
-    value: function renderDead($el) {
-      var role = this.player.capitalizedRole;
-      $el.innerHTML = 'You\'re dead and will resurrect at the end of the Round.';
-    }
-  }, {
     key: 'el',
     value: function el(tagname, inner, classname) {
       var $el = document.createElement(tagname);
@@ -2297,7 +2291,7 @@ var Launch = function (_Renderer) {
       });
       $input.setAttribute('type', 'text');
       $input.setAttribute('placeholder', 'Your Name');
-      $input.setAttribute('maxlength', 12);
+      $input.setAttribute('maxlength', 8);
       $input.value = user.name;
       this.append($grp, [$input, save.$el]);
       this.$editor.appendChild($grp);
@@ -2349,7 +2343,7 @@ var Launch = function (_Renderer) {
   }, {
     key: 'handleName',
     value: function handleName(name) {
-      name = name.substring(0, 12);
+      name = name.substring(0, 8);
       this.$editor.classList.remove('active');
       this.events.updateUser({ name: name });
     }
@@ -2603,7 +2597,7 @@ var Turns = function (_Renderer) {
 
       var deadPlayers = playerCount !== playerCountAlive;
       if (this.player.id === keyMasterId && deadPlayers) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">Lucky you! You are the <strong>Key Master</strong>. The Topic of confusion is:</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
+        this.$keyMaster.innerHTML = '\n        <p class="description">You are the <strong>Key Master</strong>. The Topic of confusion is:</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
       } else {
         this.$keyMaster.innerHTML = '';
       }
@@ -2622,15 +2616,15 @@ var Turns = function (_Renderer) {
           if (this.player._.confused) topicsHtml = this._shuffledHtml([0, 1, 4], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
         }
         if (this.player._.confused || this.player._.role === 'imposter') {
-          descHtml += 'On your turn, say one word that you associate with the <strong>two</strong> Agent Topics.\n          They are two of the above.';
+          descHtml += 'Say one word that you associate with the <strong>two</strong> Agent Topics.';
         } else {
-          descHtml = 'On your turn, say one word that you associate with both of the Topics above.';
+          descHtml = 'Say one word that you associate with both of the Topics above.';
         }
         this.$topics.innerHTML = topicsHtml;
         this.$desc.innerHTML = descHtml;
       } else {
         this.$topics.innerHTML = this._shuffledHtml([0, 1], topics);
-        this.renderDead(this.$desc);
+        this.$desc.innerHTML = "You're dead. You don't get a turn.";
       }
       this.toggleSections();
     }
@@ -2739,7 +2733,7 @@ var Reveal = function (_Renderer) {
       if (this.player._.alive) {
         this.$desc.innerHTML = 'These were the two Topics. Explain why you chose your word.';
       } else {
-        this.renderDead(this.$desc);
+        this.$desc.innerHTML = 'You are dead. You can still question Players.';
       }
       this.toggleSections();
     }
@@ -3048,6 +3042,7 @@ var Results = function (_Renderer) {
       this.imposters.reset();
       this.extra2.reset();
       this.$score.innerHTML = '';
+      this.$section.className = this.$section.className.replace(/(win-\d+)|(lose-\d+)/g, '');
 
       this.toggleSections();
 
@@ -3067,8 +3062,10 @@ var Results = function (_Renderer) {
         if (this.leave) this.leave.enable();
         this.imposters.title('Imposters');
         this.extra2.title('Standings');
-        var winnerText = this._winnerText(aliveCounts),
+        var winClass = this._winLoseClass(aliveCounts),
+            winnerText = this._winnerText(aliveCounts),
             roundText = this._roundPointsText(aliveCounts);
+        this.$section.classList.add(winClass);
         this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + this._playerPoints(true) + ' ' + roundText + '\n        </p>\n      ';
         var survivors = false;
         var playerIds = Object.keys(players);
@@ -3125,10 +3122,26 @@ var Results = function (_Renderer) {
       return '<span class="points">' + count + '</span>';
     }
   }, {
-    key: '_winnerText',
-    value: function _winnerText(_ref2) {
+    key: '_winLoseClass',
+    value: function _winLoseClass(_ref2) {
       var imposter = _ref2.imposter,
           agent = _ref2.agent;
+
+      var win = Math.ceil(Math.random() * 6),
+          lose = Math.ceil(Math.random() * 10),
+          role = this.player._.role;
+      if (imposter > 0) {
+        return role === 'imposter' ? 'win-' + win : 'lose-' + lose;
+      } else if (agent > 0) {
+        return role === 'agent' ? 'win-' + win : 'lose-' + lose;
+      }
+      return 'lose-' + lose;
+    }
+  }, {
+    key: '_winnerText',
+    value: function _winnerText(_ref3) {
+      var imposter = _ref3.imposter,
+          agent = _ref3.agent;
 
       var role = this.player._.role;
       if (imposter > 0) {
@@ -3142,9 +3155,9 @@ var Results = function (_Renderer) {
     }
   }, {
     key: '_roundPointsText',
-    value: function _roundPointsText(_ref3) {
-      var imposter = _ref3.imposter,
-          agent = _ref3.agent;
+    value: function _roundPointsText(_ref4) {
+      var imposter = _ref4.imposter,
+          agent = _ref4.agent;
 
       var addl = this._points(_Game2.default.winPoints);
       if (imposter > 0) return 'Each Imposter scored an additional ' + addl + '.';

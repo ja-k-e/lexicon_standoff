@@ -34,11 +34,6 @@ export default class Renderer {
     return `<span class="user ${classname}"><img src="${player.avatar}" /> ${name}</span>`;
   }
 
-  renderDead($el) {
-    let role = this.player.capitalizedRole;
-    $el.innerHTML = `You're dead and will resurrect at the end of the Round.`;
-  }
-
   el(tagname, inner, classname) {
     let $el = document.createElement(tagname);
     if (inner) $el.innerHTML = inner;

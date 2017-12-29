@@ -47,7 +47,7 @@ export default class Turns extends Renderer {
     let deadPlayers = playerCount !== playerCountAlive;
     if (this.player.id === keyMasterId && deadPlayers) {
       this.$keyMaster.innerHTML = `
-        <p class="description">Lucky you! You are the <strong>Key Master</strong>. The Topic of confusion is:</p>
+        <p class="description">You are the <strong>Key Master</strong>. The Topic of confusion is:</p>
         <p class="topics">“${topics[4][1]}”</p>
       `;
     } else {
@@ -72,16 +72,15 @@ export default class Turns extends Renderer {
         else topicsHtml = this._shuffledHtml([0, 1], topics);
       }
       if (this.player._.confused || this.player._.role === 'imposter') {
-        descHtml += `On your turn, say one word that you associate with the <strong>two</strong> Agent Topics.
-          They are two of the above.`;
+        descHtml += `Say one word that you associate with the <strong>two</strong> Agent Topics.`;
       } else {
-        descHtml = `On your turn, say one word that you associate with both of the Topics above.`;
+        descHtml = `Say one word that you associate with both of the Topics above.`;
       }
       this.$topics.innerHTML = topicsHtml;
       this.$desc.innerHTML = descHtml;
     } else {
       this.$topics.innerHTML = this._shuffledHtml([0, 1], topics);
-      this.renderDead(this.$desc);
+      this.$desc.innerHTML = "You're dead. You don't get a turn.";
     }
     this.toggleSections();
   }

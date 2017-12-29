@@ -36,7 +36,7 @@ export default class Reveal extends Renderer {
     if (this.player._.alive) {
       this.$desc.innerHTML = `These were the two Topics. Explain why you chose your word.`;
     } else {
-      this.renderDead(this.$desc);
+      this.$desc.innerHTML = 'You are dead. You can still question Players.';
     }
     this.toggleSections();
   }

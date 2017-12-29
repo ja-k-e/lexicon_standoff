@@ -75,7 +75,7 @@ export default class Launch extends Renderer {
       });
     $input.setAttribute('type', 'text');
     $input.setAttribute('placeholder', 'Your Name');
-    $input.setAttribute('maxlength', 12);
+    $input.setAttribute('maxlength', 8);
     $input.value = user.name;
     this.append($grp, [$input, save.$el]);
     this.$editor.appendChild($grp);
@@ -119,7 +119,7 @@ export default class Launch extends Renderer {
   }
 
   handleName(name) {
-    name = name.substring(0, 12);
+    name = name.substring(0, 8);
     this.$editor.classList.remove('active');
     this.events.updateUser({ name });
   }

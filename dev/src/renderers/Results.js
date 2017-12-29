@@ -84,6 +84,10 @@ export default class Results extends Renderer {
     this.imposters.reset();
     this.extra2.reset();
     this.$score.innerHTML = '';
+    this.$section.className = this.$section.className.replace(
+      /(win-\d+)|(lose-\d+)/g,
+      ''
+    );
 
     this.toggleSections();
 
@@ -107,8 +111,10 @@ export default class Results extends Renderer {
       if (this.leave) this.leave.enable();
       this.imposters.title('Imposters');
       this.extra2.title('Standings');
-      let winnerText = this._winnerText(aliveCounts),
+      let winClass = this._winLoseClass(aliveCounts),
+        winnerText = this._winnerText(aliveCounts),
         roundText = this._roundPointsText(aliveCounts);
+      this.$section.classList.add(winClass);
       this.$desc.innerHTML = `
         <p class="description">
           ${winnerText} ${this._playerPoints(true)} ${roundText}
@@ -172,6 +178,18 @@ export default class Results extends Renderer {
 
   _points(count) {
     return `<span class="points">${count}</span>`;
+  }
+
+  _winLoseClass({ imposter, agent }) {
+    let win = Math.ceil(Math.random() * 6),
+      lose = Math.ceil(Math.random() * 10),
+      role = this.player._.role;
+    if (imposter > 0) {
+      return role === 'imposter' ? `win-${win}` : `lose-${lose}`;
+    } else if (agent > 0) {
+      return role === 'agent' ? `win-${win}` : `lose-${lose}`;
+    }
+    return `lose-${lose}`;
   }
 
   _winnerText({ imposter, agent }) {
