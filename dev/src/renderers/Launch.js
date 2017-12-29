@@ -10,11 +10,17 @@ export default class Launch extends Renderer {
         'instruction'
       ),
       $or = this.el('p', 'Enter a Secret to Join', 'instruction'),
-      $link = this.el(
+      $instructions = this.el(
         'p',
         '<br><a href="/instructions/">Instructions</a>',
         'instruction'
       ),
+      $signOut = this.el('div', null, 'instructions'),
+      signOut = new Button({
+        content: 'Sign Out',
+        classname: 'small link',
+        clickEvent: this.events.signOut.bind(this)
+      }),
       $slug = this.el('input'),
       $grp = this.el('div', null, 'item-group');
     this.$editor = this.el('div', null, 'editor');
@@ -31,13 +37,15 @@ export default class Launch extends Renderer {
     this.$user = this.el('p', null, 'user-info');
     $slug.setAttribute('type', 'text');
     $slug.setAttribute('placeholder', 'gamesecret');
+    this.append($signOut, [signOut.$el]);
     this.append($grp, [$slug, this.join.$el]);
     this.append(this.$main, [
       this.$user,
       this.new.$el,
       $or,
       $grp,
-      $link,
+      $instructions,
+      $signOut,
       this.$editor
     ]);
     this.$footer.appendChild($inst);
@@ -133,7 +141,7 @@ export default class Launch extends Renderer {
   }
 
   get _eventsList() {
-    return ['createGame', 'findGame', 'updateUser'];
+    return ['createGame', 'findGame', 'signOut', 'updateUser'];
   }
 
   static get _avatarBase() {

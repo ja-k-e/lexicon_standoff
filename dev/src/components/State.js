@@ -11,7 +11,8 @@ const //
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
-  constructor({ user }) {
+  constructor({ user, auth }) {
+    this.auth = auth;
     this.user = user;
     this.initializeLaunch();
     this.initialize();
@@ -21,6 +22,7 @@ export default class State {
     this.launch = new Renderers.Launch(null, {
       createGame: this.createGame.bind(this),
       findGame: this.findGame.bind(this),
+      signOut: this.signOut.bind(this),
       updateUser: this.updateUser.bind(this)
     });
     this.launch.renderInitial();
@@ -51,6 +53,14 @@ export default class State {
       .globalFind(slug, false)
       .then(this.initializeGame.bind(this))
       .catch(this.handleError.bind(this));
+  }
+
+  signOut() {
+    Adapters.Users.globalDelete(this.user.id).then(() => {
+      this.auth.signOut().then(() => {
+        window.location.reload(true);
+      });
+    });
   }
 
   updateUser(params) {

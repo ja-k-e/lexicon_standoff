@@ -5,6 +5,16 @@ export default class Auth {
     firebase.initializeApp(firebaseKeys);
   }
 
+  signOut() {
+    return new Promise((resolve, reject) => {
+      firebase
+        .auth()
+        .signOut()
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
   detectExisting() {
     return new Promise((resolve, reject) => {
       firebase.auth().onAuthStateChanged(existingUser => {

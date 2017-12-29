@@ -63,7 +63,7 @@ function initializeState(existingUser) {
         .then(() => {
           Adapters.Users
             .globalFind(user.id)
-            .then(user => new State({ user }))
+            .then(user => new State({ user, auth: AUTH }))
             .catch(handleError);
         })
         .catch(handleError);
@@ -95,7 +95,7 @@ function handleError(error) {
 function validAvatar(user) {
   let def =
     'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
-  if (user.avatar) return user.avatar;
+  if (user.avatar && user.avatar !== def) return user.avatar;
   if (user.image && user.image !== def) return user.image;
   let avatars = Renderers.Launch._avatars,
     name = avatars[Math.floor(Math.random() * avatars.length)];

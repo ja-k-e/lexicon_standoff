@@ -208,13 +208,15 @@ var Button = function (_Module) {
   function Button(_ref) {
     var clickEvent = _ref.clickEvent,
         _ref$content = _ref.content,
-        content = _ref$content === undefined ? '' : _ref$content;
+        content = _ref$content === undefined ? '' : _ref$content,
+        _ref$classname = _ref.classname,
+        classname = _ref$classname === undefined ? '' : _ref$classname;
 
     _classCallCheck(this, Button);
 
     var _this = _possibleConstructorReturn(this, (Button.__proto__ || Object.getPrototypeOf(Button)).call(this));
 
-    _this.$el = _this.el('button', content);
+    _this.$el = _this.el('button', content, classname);
     if (clickEvent) _this.$el.addEventListener('click', function () {
       return clickEvent();
     });
@@ -934,7 +936,7 @@ function initializeState(existingUser) {
     var avatar = validAvatar(user);
     _Adapters2.default.Users.globalUpdate(user.id, { avatar: avatar }).then(function () {
       _Adapters2.default.Users.globalFind(user.id).then(function (user) {
-        return new _State2.default({ user: user });
+        return new _State2.default({ user: user, auth: AUTH });
       }).catch(handleError);
     }).catch(handleError);
   }).catch(handleError);
@@ -954,7 +956,7 @@ function handleError(error) {
 
 function validAvatar(user) {
   var def = 'https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg';
-  if (user.avatar) return user.avatar;
+  if (user.avatar && user.avatar !== def) return user.avatar;
   if (user.image && user.image !== def) return user.image;
   var avatars = _Renderers2.default.Launch._avatars,
       name = avatars[Math.floor(Math.random() * avatars.length)];
@@ -1578,18 +1580,25 @@ var Users = function (_Adapter) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        _this3.db.ref(_this3.r(params.id)).set(params).then(function () {
-          resolve(true);
-        }).catch(reject);
+        _this3.db.ref(_this3.r(params.id)).set(params).then(resolve).catch(reject);
+      });
+    }
+  }, {
+    key: 'globalDelete',
+    value: function globalDelete(id) {
+      var _this4 = this;
+
+      return new Promise(function (resolve, reject) {
+        _this4.db.ref(_this4.r(id)).set(null).then(resolve).catch(reject);
       });
     }
   }, {
     key: 'globalFind',
     value: function globalFind(userId) {
-      var _this4 = this;
+      var _this5 = this;
 
       return new Promise(function (resolve, reject) {
-        _this4.db.ref(_this4.r(userId)).once('value').then(function (snap) {
+        _this5.db.ref(_this5.r(userId)).once('value').then(function (snap) {
           var value = snap.val();
           if (value !== null) resolve(value);else reject();
         }).catch(reject);
@@ -1598,14 +1607,10 @@ var Users = function (_Adapter) {
   }, {
     key: 'globalUpdate',
     value: function globalUpdate(userId, params) {
-      var _this5 = this;
+      var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        _this5.db.ref(_this5.r(userId)).update(params).then(function () {
-          resolve(true);
-        }).catch(function (error) {
-          return reject(error);
-        });
+        _this6.db.ref(_this6.r(userId)).update(params).then(resolve).catch(reject);
       });
     }
 
@@ -1657,6 +1662,13 @@ var Auth = function () {
   }
 
   _createClass(Auth, [{
+    key: 'signOut',
+    value: function signOut() {
+      return new Promise(function (resolve, reject) {
+        firebase.auth().signOut().then(resolve).catch(reject);
+      });
+    }
+  }, {
     key: 'detectExisting',
     value: function detectExisting() {
       return new Promise(function (resolve, reject) {
@@ -1745,10 +1757,12 @@ STUB = config.env === 'development',
 
 var State = function () {
   function State(_ref) {
-    var user = _ref.user;
+    var user = _ref.user,
+        auth = _ref.auth;
 
     _classCallCheck(this, State);
 
+    this.auth = auth;
     this.user = user;
     this.initializeLaunch();
     this.initialize();
@@ -1760,6 +1774,7 @@ var State = function () {
       this.launch = new _Renderers2.default.Launch(null, {
         createGame: this.createGame.bind(this),
         findGame: this.findGame.bind(this),
+        signOut: this.signOut.bind(this),
         updateUser: this.updateUser.bind(this)
       });
       this.launch.renderInitial();
@@ -1792,14 +1807,25 @@ var State = function () {
       _Adapters2.default.Games.globalFind(slug, false).then(this.initializeGame.bind(this)).catch(this.handleError.bind(this));
     }
   }, {
-    key: 'updateUser',
-    value: function updateUser(params) {
+    key: 'signOut',
+    value: function signOut() {
       var _this3 = this;
 
+      _Adapters2.default.Users.globalDelete(this.user.id).then(function () {
+        _this3.auth.signOut().then(function () {
+          window.location.reload(true);
+        });
+      });
+    }
+  }, {
+    key: 'updateUser',
+    value: function updateUser(params) {
+      var _this4 = this;
+
       _Adapters2.default.Users.globalUpdate(this.user.id, params).then(function () {
-        _Adapters2.default.Users.globalFind(_this3.user.id).then(function (user) {
-          _this3.user = user;
-          _this3.launch.render({ user: user });
+        _Adapters2.default.Users.globalFind(_this4.user.id).then(function (user) {
+          _this4.user = user;
+          _this4.launch.render({ user: user });
         });
       });
     }
@@ -1823,7 +1849,7 @@ var State = function () {
   }, {
     key: 'handleKilledIdsChange',
     value: function handleKilledIdsChange() {
-      var _this4 = this;
+      var _this5 = this;
 
       var roundOverData = this.game.calculateRoundOverData(this.players),
           points = this.game.calculatePoints(this.players, roundOverData);
@@ -1843,13 +1869,13 @@ var State = function () {
           roundOver: roundOver
         };
 
-        _Adapters2.default.Games.masterUpdateResults(_this4.game.id, params);
+        _Adapters2.default.Games.masterUpdateResults(_this5.game.id, params);
       });
     }
   }, {
     key: 'handleActionsChange',
     value: function handleActionsChange() {
-      var _this5 = this;
+      var _this6 = this;
 
       if (this.game.isActions) {
         if (this.master) {
@@ -1863,9 +1889,9 @@ var State = function () {
                 killedIds = _game$generateActionI.killedIds;
 
             _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds, confusionIds).then(function () {
-              var playerCountAlive = _this5.game.playerCountAlive - killedIds.length;
-              _Adapters2.default.Games.masterUpdateActionIds(_this5.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
-                _this5.actionLock = false;
+              var playerCountAlive = _this6.game.playerCountAlive - killedIds.length;
+              _Adapters2.default.Games.masterUpdateActionIds(_this6.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
+                _this6.actionLock = false;
               });
             });
           }
@@ -1889,7 +1915,7 @@ var State = function () {
   }, {
     key: 'initializeGame',
     value: function initializeGame(_ref2) {
-      var _this6 = this;
+      var _this7 = this;
 
       var game = _ref2.game;
       var newGame = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
@@ -1900,22 +1926,22 @@ var State = function () {
       this.master = game.masterId === this.playerId;
       this.players = {};
       _Adapters2.default.Players.globalListenerAdded(this.gameId, function (player) {
-        _this6.initializePlayer(player);
+        _this7.initializePlayer(player);
       });
       _Adapters2.default.Players.globalListenerRemoved(this.gameId, function (player) {
-        _this6.removePlayer(player);
+        _this7.removePlayer(player);
       });
       _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: this.gameId });
       _Adapters2.default.Players.globalFindOrCreate(this.user, this.gameId, this.master).then(function (player) {
-        _this6.game = new _Game2.default({ state: _this6 });
-        _Adapters2.default.Games.globalListener(_this6.gameId, function (game) {
+        _this7.game = new _Game2.default({ state: _this7 });
+        _Adapters2.default.Games.globalListener(_this7.gameId, function (game) {
           if (game) {
-            _this6.game.update(game);
-            _this6.handleGameChanges();
+            _this7.game.update(game);
+            _this7.handleGameChanges();
           } else {
-            _this6.rendered = false;
-            _Adapters2.default.Users.globalUpdate(_this6.playerId, { currentGameId: null });
-            _this6.launch.render({ user: _this6.user });
+            _this7.rendered = false;
+            _Adapters2.default.Users.globalUpdate(_this7.playerId, { currentGameId: null });
+            _this7.launch.render({ user: _this7.user });
           }
         });
       });
@@ -1923,11 +1949,11 @@ var State = function () {
   }, {
     key: 'initializePlayer',
     value: function initializePlayer(player) {
-      var _this7 = this;
+      var _this8 = this;
 
       this.players[player.id] = new _Player2.default(this, player);
       _Adapters2.default.Players.globalListenerPlayer(this.gameId, player.id, function (player) {
-        if (player && _this7.players[player.id]) _this7.players[player.id].update(player);
+        if (player && _this8.players[player.id]) _this8.players[player.id].update(player);
       });
       if (!this.rendered && this.player) this.initializeRenderers();
       if (this.player) {
@@ -1947,7 +1973,7 @@ var State = function () {
   }, {
     key: 'initializeRenderers',
     value: function initializeRenderers() {
-      var _this8 = this;
+      var _this9 = this;
 
       if (this.renderers) {
         for (var key in this.renderers) {
@@ -1957,39 +1983,39 @@ var State = function () {
       this.renderers = {
         start: new _Renderers2.default.Start(this.player, {
           dispatchStart: function dispatchStart() {
-            return _this8.dispatchStart();
+            return _this9.dispatchStart();
           },
           dispatchEnd: function dispatchEnd() {
-            return _this8.dispatchEnd();
+            return _this9.dispatchEnd();
           }
         }),
         turns: new _Renderers2.default.Turns(this.player, {
           dispatchReveal: function dispatchReveal() {
-            return _this8.dispatchReveal();
+            return _this9.dispatchReveal();
           }
         }),
         reveal: new _Renderers2.default.Reveal(this.player, {
           dispatchActions: function dispatchActions() {
-            return _this8.dispatchActions();
+            return _this9.dispatchActions();
           }
         }),
         actions: new _Renderers2.default.Actions(this.player, {
           dispatchAction: function dispatchAction(p, a) {
-            return _this8.dispatchAction(p, a);
+            return _this9.dispatchAction(p, a);
           }
         }),
         results: new _Renderers2.default.Results(this.player, {
           dispatchEnd: function dispatchEnd() {
-            return _this8.dispatchEnd();
+            return _this9.dispatchEnd();
           },
           dispatchLeave: function dispatchLeave() {
-            return _this8.dispatchLeave();
+            return _this9.dispatchLeave();
           },
           dispatchTurns: function dispatchTurns() {
-            return _this8.dispatchTurns();
+            return _this9.dispatchTurns();
           },
           dispatchNewRound: function dispatchNewRound() {
-            return _this8.dispatchNewRound();
+            return _this9.dispatchNewRound();
           }
         })
       };
@@ -2006,22 +2032,22 @@ var State = function () {
   }, {
     key: 'dispatchStart',
     value: function dispatchStart() {
-      var _this9 = this;
+      var _this10 = this;
 
       _Adapters2.default.Players.masterResetStart(this.players).then(function () {
-        _this9.dispatchNewRound();
+        _this10.dispatchNewRound();
       });
     }
   }, {
     key: 'dispatchTurns',
     value: function dispatchTurns() {
-      var _this10 = this;
+      var _this11 = this;
 
       var topics = this.game.generateTopics(),
           turns = this.game.turns + 1,
           keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
       _Adapters2.default.Games.masterResetTurns(this.game.id, topics, turns, keyMasterId).then(function () {
-        _Adapters2.default.Games.masterUpdateStatus(_this10.game.id, 'turns');
+        _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'turns');
       });
     }
   }, {
@@ -2037,36 +2063,36 @@ var State = function () {
   }, {
     key: 'dispatchNewRound',
     value: function dispatchNewRound() {
-      var _this11 = this;
+      var _this12 = this;
 
       var roundData = this.game.generateRoundData();
       _Adapters2.default.Games.masterUpdateRoundData(this.game.id, roundData.game).then(function () {
-        _Adapters2.default.Players.masterUpdateRoundData(_this11.players, roundData.players).then(function () {
-          _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'turns');
+        _Adapters2.default.Players.masterUpdateRoundData(_this12.players, roundData.players).then(function () {
+          _Adapters2.default.Games.masterUpdateStatus(_this12.game.id, 'turns');
         });
       });
     }
   }, {
     key: 'dispatchEnd',
     value: function dispatchEnd() {
-      var _this12 = this;
+      var _this13 = this;
 
       _Adapters2.default.Players.masterDelete(this.game.id).then(function () {
-        _Adapters2.default.Games.masterDelete(_this12.game.id);
+        _Adapters2.default.Games.masterDelete(_this13.game.id);
       });
     }
   }, {
     key: 'dispatchLeave',
     value: function dispatchLeave() {
-      var _this13 = this;
+      var _this14 = this;
 
       if (this.game.playerCount <= 3) {
         this.dispatchEnd();
       } else {
         _Adapters2.default.Games.globalKill(this.game.id);
         _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: null }).then(function () {
-          _Adapters2.default.Players.globalLeave(_this13.game.id, _this13.user.id).then(function () {
-            _this13.launch.render({ user: _this13.user });
+          _Adapters2.default.Players.globalLeave(_this14.game.id, _this14.user.id).then(function () {
+            _this14.launch.render({ user: _this14.user });
           });
         });
       }
@@ -2093,21 +2119,21 @@ var State = function () {
   }, {
     key: 'render',
     value: function render() {
-      var _this14 = this;
+      var _this15 = this;
 
       var status = this.game.status;
       var map = {
         turns: function turns() {
-          return _this14.renderers.turns.render(_this14.game, _this14.players);
+          return _this15.renderers.turns.render(_this15.game, _this15.players);
         },
         reveal: function reveal() {
-          return _this14.renderers.reveal.render(_this14.game, _this14.players);
+          return _this15.renderers.reveal.render(_this15.game, _this15.players);
         },
         actions: function actions() {
-          return _this14.renderers.actions.render(_this14.game, _this14.players);
+          return _this15.renderers.actions.render(_this15.game, _this15.players);
         },
         results: function results() {
-          return _this14.renderers.results.render(_this14.game, _this14.players);
+          return _this15.renderers.results.render(_this15.game, _this15.players);
         }
       };
       return map[status] ? map[status]() : null;
@@ -2323,7 +2349,13 @@ var Launch = function (_Renderer) {
 
       var $inst = this.el('p', 'If you are on a mobile device, add this site to your home screen to get full screen.\n          iOS can only do this through Safari.', 'instruction'),
           $or = this.el('p', 'Enter a Secret to Join', 'instruction'),
-          $link = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
+          $instructions = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
+          $signOut = this.el('div', null, 'instructions'),
+          signOut = new _Button2.default({
+        content: 'Sign Out',
+        classname: 'small link',
+        clickEvent: this.events.signOut.bind(this)
+      }),
           $slug = this.el('input'),
           $grp = this.el('div', null, 'item-group');
       this.$editor = this.el('div', null, 'editor');
@@ -2341,8 +2373,9 @@ var Launch = function (_Renderer) {
       this.$user = this.el('p', null, 'user-info');
       $slug.setAttribute('type', 'text');
       $slug.setAttribute('placeholder', 'gamesecret');
+      this.append($signOut, [signOut.$el]);
       this.append($grp, [$slug, this.join.$el]);
-      this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $link, this.$editor]);
+      this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $instructions, $signOut, this.$editor]);
       this.$footer.appendChild($inst);
     }
   }, {
@@ -2455,7 +2488,7 @@ var Launch = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['createGame', 'findGame', 'updateUser'];
+      return ['createGame', 'findGame', 'signOut', 'updateUser'];
     }
   }], [{
     key: '_avatarUrl',

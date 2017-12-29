@@ -31,7 +31,11 @@ strong {
 }
 
 body {
-  background: #121212;
+  background-color: black;
+  background-image: url(/icon.png);
+  background-size: 96px 96px;
+  background-repeat: no-repeat;
+  background-position: center;
   margin: 0;
 }
 body .container {
@@ -537,6 +541,16 @@ button {
   &[disabled] {
     opacity: 0.5;
     cursor: default;
+  }
+  &.small {
+    display: inline-block;
+    width: initial;
+    font-size: 0.8rem;
+  }
+  &.link {
+    background: transparent;
+    padding: 0;
+    color: $gray;
   }
 }
 
