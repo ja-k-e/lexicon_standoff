@@ -36,6 +36,12 @@
       padding: 30vh 1rem 1rem;
       max-width: 700px;
     }
+    h1, h2, h3 {
+      margin-bottom: 0.5rem;
+    }
+    h1, h2 {
+      margin-top: 2rem;
+    }
     h1 {
       font-size: 1.6rem;
     }
@@ -44,6 +50,10 @@
     }
     h3 {
       font-size: 1.2rem;
+      margin-top: 0.5rem;
+    }
+    p, ul {
+      margin: 0.5rem 0;
     }
     p, li {
       line-height: 1.4;
@@ -61,104 +71,122 @@
     <hr>
 
     <h2>Starting a Game</h2>
-    <p>A Player (Host) starts a game on a phone, tablet, or computer by visiting <a href="/">lexiconstandoff.com</a>. Host shares the <code>gamesecret</code> with other Players, who join the game on their phone, tablet, or computer. Once all Players are in the lobby, the Host starts the first Round.</p>
+    <p>A Player (<strong>Host</strong>) starts a game on a phone, tablet, or computer by visiting <a href="/">lexiconstandoff.com</a>. The <strong>Host</strong> shares the <code>gamesecret</code> with other Players, who join the game on their phone, tablet, or computer. Once all Players are in the lobby, the <strong>Host</strong> starts the first Round.</p>
+
 
 
     <h2>Gameplay</h2>
+
     <p>Players are assigned a role of <strong>Agent</strong> or <strong>Imposter</strong> at the beginning of each Round. Role Distribution is as close to <strong>2 Agents</strong> to <strong>1 Imposter</strong> as possible.</p>
 
     <p>A Round is split into four stages:</p>
-    <p><a href="#turns"><strong>Turns</strong></a><br>
-    Living Players take turns saying a word for two given Topics. <strong>Agents</strong> have better information than <strong>Imposters</strong>.</p>
-    <p><a href="#reveal"><strong>Reveal</strong></a><br>
-    The two Topics are revealed to all Players.</p>
-    <p><a href="#actions"><strong>Actions</strong></a><br>
-    Alive Players vote who to kill, dead Players elect to confuse other Players.</p>
-    <p><a href="#results"><strong>Results</strong></a><br>
-    Players are killed, scores are displayed.</p>
+    <ul>
+      <li><a href="#turns"><strong>Turns</strong></a>:
+        Players take turns saying a word for two given Topics. <strong>Agents</strong> have better intel than <strong>Imposters</strong>.</li>
+      <li><a href="#reveal"><strong>Reveal</strong></a>:
+        The two Topics are revealed to all Players.</li>
+      <li><a href="#actions"><strong>Actions</strong></a>:
+        Alive Players vote who to kill, dead Players elect to confuse other Players.</li>
+      <li><a href="#results"><strong>Results</strong></a>:
+        Players are killed, scores are displayed.</li>
+    </ul>
 
-    <h3 id="turns">Turns</h3>
-    <p>There are two Topics generated for the Round (eg. “Goose” &amp; “Spider”)</p>
-    <p>
-     <strong>Agents</strong> will only see the two Topics on their turn. <strong>Imposters</strong> will see both <em>in addition to</em> two extras. They will not know which are the real Topics and which are fake.
+
+
+    <h2 id="turns">Turns</h2>
+
+    <p>There are two Topics generated for the Round (eg. “Goose” &amp; “Spider”). <strong>Agents</strong> will only see the two Topics on their turn. <strong>Imposters</strong> will see both <em>in addition to</em> two extras. They will not know which are the real Topics and which are fake.
     </p>
+
     <ul>
       <li><strong>Agents</strong> will see “Goose” &amp; “Spider”</li>
       <li><strong>Imposters</strong> will see “Goose”, “Mountain”, “Spider”, “Computer”</li>
-      <li>For any Round after the second, Players may be <em>confused</em>, in which case they will have an extra fake Topic (the <strong>Topic of Confusion</strong>).</li>
     </ul>
 
     <p>On an alive Player's turn, they must say <strong>one</strong> word they associate with both Topics.</p>
     <ul>
       <li>A good word for “Goose” &amp; “Spider” would be “Web” since geese have webbed feet and spiders make webs.</li>
-      <li>Words cannot be repeated by other Players.</li>
+      <li>Words cannot be repeated by other Players during a set of Turns.</li>
     </ul>
 
-    <p>This round should be completely silent aside from Players saying their word. After every Player says their one word, the Host will move the game to the <strong>Reveal</strong> stage.</p>
+    <p>Turns should be completely silent aside from Players saying their word. After every living Player says their word, the <strong>Host</strong> moves the Game to the <strong>Reveal</strong> stage.</p>
 
-    <h3 id="reveal">Reveal</h3>
+    <p><strong>* If there are at least five Players</strong><br>
+      The <strong>Imposters</strong> will see their fellow <strong>Imposters</strong> on their device.</p>
 
-    <p>All Players will be see the real two Topics on their device. Players can ask other Players why they chose their word.</p>
-    <p><strong>Agents</strong> are trying to figure out who are <strong>Imposters</strong> and vice versa. You want your team to survive. Everyone is trying to appear confident in their decision and find their teammates.</p>
-
-    <p>Players may give any explanation as to why they chose their word, even if it is a lie. This is about trying to figure out who is on your team, not about who chose the best word.</p>
-
-    <p>For any Round after the second (if there are enough Players for a third), Players that were <em>confused</em> by other Players may explain their selection relative to the extra word they were presented (the <em>Topic of Confusion</em>). There will be a single <strong>Key Master</strong> randomly selected by the game each Round. This Player can be alive or dead, but will have known the <em>Topic of Confusion</em> during the Turns stage. Any Player claiming to be confused in the previous stage can be verified or debunked by the <strong>Key Master</strong>. However, any Player can claim to have been the <strong>Key Master</strong> and the <strong>Key Master</strong> is allowed to lie about the <em>Topic of Confusion</em>.</p>
+    <p><strong>* If there are at least three sets of Turns</strong><br>
+      Players may be <em>confused</em> by dead Players, in which case they will have an extra fake Topic—the <em>Topic of Confusion</em>. There will be one randomly-selected Player called the <strong>Key Master</strong> who will know what the <em>Topic of Confusion</em> is.</p>
 
 
-    <h3 id="actions">Actions</h3>
-    <p>Every living Player votes on their device for who they want to kill.</p>
-    <p>Every dead Player selects a Player to confuse. The next Round, that Player will have an extra fake Topic. On the last Round, dead Players are also voting to kill a Player with everyone else.</p>
-    <p>After every Player submits their action, the Round will progress on its own.</p>
+
+    <h2 id="reveal">Reveal</h2>
+
+    <p>All Players will be see the real two Topics on their device. They can ask other Players why they chose their word.</p>
+
+    <p><strong>Agents</strong> are trying to figure out who are <strong>Imposters</strong> and the <strong>Imposters</strong> are trying to turn <strong>Agents</strong> against each other. Everyone is trying to appear confident in their decision. Players may give any explanation as to why they chose their word, even if it is a lie. This is not about who chose the best word.</p>
+
+    <p><strong>* If there are at least five Players</strong><br>
+      The <strong>Imposters</strong> will see their fellow <strong>Imposters</strong> on their device.</p>
+
+    <p><strong>* If there are at least three sets of Turns</strong><br>
+      Players that were <em>confused</em> by other Players may explain their choice relative to the <em>Topic of Confusion</em>. The <strong>Key Master</strong> can be alive or dead, but will have known the <em>Topic of Confusion</em> and can verify confused Players' reasoning. However, any Player can claim to have been the <strong>Key Master</strong> and the <strong>Key Master</strong> is allowed to lie about the <em>Topic of Confusion</em>.</p>
 
 
-    <h3 id="results">Results</h3>
-      <p>Players receiving the most votes are killed, even when there is a tie.</p>
-      <p>The Round is over when:</p>
-      <ul>
-        <li><strong>Imposters</strong> win (only <strong>Imposters</strong> remain)</li>
-        <li><strong>Agents</strong> win (only <strong>Agents</strong> remain)</li>
-        <li>Everyone dies</li>
-      </ul>
 
-      <p>If the Round is still active:</p>
-      <ul>
-        <li><strong>Scoring</strong>
-          <ul>
-            <li>Surviving <strong>Imposters</strong>  receive two points</li>
-            <li>Surviving <strong>Agents</strong> receive one point</li>
-          </ul>
-        </li>
-        <li>Players <em>keep</em> their role for the next round so they should not reveal it at this time.</li>
-        <li>Two new Topics are generated and the game will start another <strong>Turns</strong> stage for the survivors.</li>
-        <li>The next alive Player clockwise of the Host goes first. Rotate this first turn every Round.</li>
-      </ul>
 
-      <p>If the Round is over:</p>
-      <ul>
-        <li>
-          <strong>Scoring</strong>
-          <ul>
-            <li>Surviving <strong>Imposters</strong>  receive two points</li>
-            <li>Surviving <strong>Agents</strong> receive one point</li>
-            <li>If one group wins, all Players on that team receive three points. For example:
-              <ul>
-                <li>If two of three <strong>Agents</strong> survive, all three <strong>Agents</strong> receive three additional points</li>
-                <li>If two of three <strong>Imposters</strong> survive, all three <strong>Imposters</strong> receive three additional points</li>
-              </ul>
-            </li>
-            <li>If everyone dies, no one receives the extra points.</li>
-          </ul>
-        </li>
-        <li><strong>Imposters</strong> are revealed at this time.</li>
-        <li>Game Standings will be displayed</li>
-        <li>The Host can start a new Round which will assign new roles for each Player, or they can end the Game.</li>
-     </ul>
+    <h2 id="actions">Actions</h2>
 
-    <h2>Strategy</h2>
+    <p>Every <em>living</em> Player votes on their device for who they want to kill. Every <em>dead</em> Player selects someone to confuse. The next Round, confused Players will have an extra fake Topic. After every Player submits their action, the Round will progress on its own.</p>
+
+    <p><strong>* If there are two living Players left in the Round</strong><br>
+      Dead Players will be voting to kill instead of confuse.</p>
+
+
+
+
+    <h2 id="results">Results</h2>
+
+    <p>Players receiving the most votes are killed, even when there is a tie. The Round is over when only <strong>Imposters</strong> remain, only <strong>Agents</strong> remain, or everyone dies.</p>
+
+    <p>If the Round is still active:</p>
+    <ul>
+      <li>Players <em>keep</em> their role for the next round so they should not reveal it at this time.</li>
+      <li>Two new Topics are generated and the game will start another <strong>Turns</strong> stage for the survivors.</li>
+      <li>The next alive Player clockwise of the <strong>Host</strong> goes first. Rotate this first turn every Round.</li>
+    </ul>
+
+    <p>If the Round is over:</p>
+    <ul>
+      <li><strong>Imposters</strong> are revealed to all Players.</li>
+      <li>Game Standings will be displayed</li>
+      <li>The <strong>Host</strong> can start a new Round which will assign new roles for each Player, or they can end the Game.</li>
+    </ul>
+
+    <h3>Scoring</h3>
+    <p>Surviving <strong>Imposters</strong> receive two points and surviving <strong>Agents</strong> receive one point.</p>
+    <p>If the Round is over:</p>
+    <p>If one group wins, all Players on that team receive three points. For example:</p>
+    <ul>
+      <li>If two of three <strong>Agents</strong> survive, all three <strong>Agents</strong> receive three additional points</li>
+      <li>If two of three <strong>Imposters</strong> survive, all three <strong>Imposters</strong> receive three additional points</li>
+    </ul>
+
+    <p>If everyone dies, no one receives the extra points.</p>
+
+
+
+    <hr>
+    <h1>Strategy</h1>
+
     <p><strong>Agents</strong> want to be discreet in their selection so as not to make it obvious to the <strong>Imposters</strong> what the two Topics are, but also specific enough so that fellow <strong>Agents</strong> will trust them.</p>
-    <p><strong>Imposters</strong> will try and figure out which two Topics are the real Topics based on how <strong>Agents</strong> answer the question, but also be abstract enough with their selection so that they can defend their choice when the Topics are revealed.</p>
-    <p>Any Player can claim to have been the <strong>Key Master</strong> for the Round, but they better have a good answer when asked what the <em>Topic of Confusion</em> was. You can claim the <em>Topic of Confusion</em> was anything that makes another Player look bad or to help Players trust another.</p>
+
+    <p><strong>Imposters</strong> can use <strong>Agents’</strong> word choices to try and figure out which two Topics are the real Topics. They should also be abstract enough with their word so that they can defend their choice when the two Topics are revealed.</p>
+
+    <p><strong>* If there are at least three sets of Turns</strong><br>
+    Any Player can claim to have been confused by the <em>Topic of Confusion</em>.</p>
+
+    <p>Any Player can claim to have been the <strong>Key Master</strong> for the Round and can claim the <em>Topic of Confusion</em> was anything that makes another Player look bad or to help Players trust another.</p>
+
     <p>If you are <em>confused</em> by another Player, but are also the <strong>Key Master</strong>, you can use your knowledge of the <em>Topic of Confusion</em> to help determine what the two Topics are for the Round.</p>
   </main>
 </body>

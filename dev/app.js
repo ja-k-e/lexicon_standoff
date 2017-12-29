@@ -896,8 +896,7 @@ console.clear();
 
 var //
 AUTH = new _Auth2.default(),
-    VERSION = 0.1;
-var NEW_VERSION = false;
+    VERSION = 0.2;
 
 console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n ', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
