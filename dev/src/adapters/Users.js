@@ -78,7 +78,54 @@ export default class Users extends Adapter {
     let id = params.uid,
       image = params.photoURL,
       avatar = image,
-      name = params.displayName.replace(/ .+$/, '').substring(0, 12);
+      name = this._safeName(params.displayName);
     return { id, avatar, image, name };
+  }
+
+  _safeName(name) {
+    if (name) return name.replace(/ .+$/, '').substring(0, 12);
+    return this._names[Math.floor(Math.random() * this._names.length)];
+  }
+
+  get _names() {
+    return [
+      'Angsty',
+      'Babe',
+      'Baby',
+      'BFF',
+      'Birdie',
+      'Booger',
+      'Captain',
+      'Cuddles',
+      'Darling',
+      'Doll',
+      'Fighter',
+      'Goober',
+      'Heisenberg',
+      'Honey',
+      'Hot Lips',
+      'Hunk',
+      'Jello',
+      'King',
+      'Lover',
+      'Mama',
+      'Muffin',
+      'Muppet',
+      'Papi',
+      'Peanut',
+      'Pookie',
+      'Pop Tart',
+      'Punk',
+      'Queen',
+      'Sailor',
+      'Shorty',
+      'Simba',
+      'Soldier',
+      'Sport',
+      'Sugar',
+      'Superstar',
+      'Tiger',
+      'Tinkerbell'
+    ];
   }
 }

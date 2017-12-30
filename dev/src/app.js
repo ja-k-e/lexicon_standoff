@@ -17,26 +17,14 @@ console.info(
 %c© Jake Albaugh ${new Date().getFullYear()}
 https://twitter.com/jake_albaugh
 https://github.com/jakealbaugh/lexicon_standoff
- `,
+`,
   'font-family: sans-serif; font-weight: bold;',
   'font-family: sans-serif; font-weight: normal;'
 );
 
 AUTH.detectExisting()
   .then(initializeUser)
-  .catch(() => {
-    AUTH.detectRedirectResult()
-      .then(initializeUser)
-      .catch(handleNoUser);
-  });
-
-function authGoogle() {
-  AUTH.authenticate('GoogleAuthProvider');
-}
-
-function authTwitter() {
-  AUTH.authenticate('TwitterAuthProvider');
-}
+  .catch(handleNoUser);
 
 function handleNewVersion() {
   let renderer = new Renderers.NewVersion(null, {});
@@ -45,12 +33,10 @@ function handleNewVersion() {
 }
 
 function handleNoUser() {
-  let renderer = new Renderers.Auth(null, {
-    authTwitter,
-    authGoogle
-  });
+  let renderer = new Renderers.Auth(null, {});
   renderer.renderInitial();
   renderer.render();
+  AUTH.loadUI();
 }
 
 function initializeState(existingUser) {

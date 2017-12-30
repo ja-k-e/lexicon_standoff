@@ -318,9 +318,58 @@ section.new-version,
 section.auth {
   text-align: center;
   h1 {
+    text-align: center;
     font-size: 1.8rem;
     margin-bottom: 0.25rem;
     border-bottom: none;
+  }
+}
+section.auth {
+  color: black;
+  background: white;
+  .firebaseui-auth {
+    margin-top: 0;
+    .mdl-shadow--2dp {
+      box-shadow: none;
+    }
+    .firebaseui-container {
+      max-width: 310px;
+      .firebaseui-recaptcha-wrapper {
+        width: 100%;
+        .firebaseui-recaptcha-container > div > div {
+          transform-origin: 25% 0;
+        }
+      }
+    }
+    .firebaseui-title {
+      font-size: 1rem;
+      font-weight: normal;
+      color: black;
+      padding: 0;
+      margin: 0;
+    }
+    .firebaseui-card-header {
+      padding: 0 !important;
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    .firebaseui-card-content {
+      padding: 0;
+    }
+    .firebaseui-card-actions {
+      padding: 0 0 24px;
+    }
+    .firebaseui-card-footer {
+      padding: 0;
+    }
+    button {
+      width: auto;
+    }
+    ul li.firebaseui-list-item {
+      height: auto;
+      line-height: auto;
+      overflow: visible;
+    }
   }
 }
 section.launch {

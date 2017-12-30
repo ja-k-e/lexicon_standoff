@@ -24,17 +24,16 @@ export default class Auth {
     });
   }
 
-  detectRedirectResult() {
-    return new Promise((resolve, reject) => {
-      firebase.auth().getRedirectResult(result => {
-        if (result) resolve(result.user);
-        else reject();
-      });
+  loadUI() {
+    let ui = new firebaseui.auth.AuthUI(firebase.auth());
+    ui.start('.firebaseui-auth', {
+      signInSuccessUrl: '/',
+      signInOptions: [
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+        firebase.auth.PhoneAuthProvider.PROVIDER_ID
+      ],
+      tosUrl: '/toc'
     });
-  }
-
-  authenticate(type) {
-    let provider = new firebase.auth[type]();
-    firebase.auth().signInWithRedirect(provider);
   }
 }

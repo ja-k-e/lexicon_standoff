@@ -900,19 +900,9 @@ var //
 AUTH = new _Auth2.default(),
     VERSION = 0.2;
 
-console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n ', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
+console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
-AUTH.detectExisting().then(initializeUser).catch(function () {
-  AUTH.detectRedirectResult().then(initializeUser).catch(handleNoUser);
-});
-
-function authGoogle() {
-  AUTH.authenticate('GoogleAuthProvider');
-}
-
-function authTwitter() {
-  AUTH.authenticate('TwitterAuthProvider');
-}
+AUTH.detectExisting().then(initializeUser).catch(handleNoUser);
 
 function handleNewVersion() {
   var renderer = new _Renderers2.default.NewVersion(null, {});
@@ -921,12 +911,10 @@ function handleNewVersion() {
 }
 
 function handleNoUser() {
-  var renderer = new _Renderers2.default.Auth(null, {
-    authTwitter: authTwitter,
-    authGoogle: authGoogle
-  });
+  var renderer = new _Renderers2.default.Auth(null, {});
   renderer.renderInitial();
   renderer.render();
+  AUTH.loadUI();
 }
 
 function initializeState(existingUser) {
@@ -1622,13 +1610,24 @@ var Users = function (_Adapter) {
       var id = params.uid,
           image = params.photoURL,
           avatar = image,
-          name = params.displayName.replace(/ .+$/, '').substring(0, 12);
+          name = this._safeName(params.displayName);
       return { id: id, avatar: avatar, image: image, name: name };
+    }
+  }, {
+    key: '_safeName',
+    value: function _safeName(name) {
+      if (name) return name.replace(/ .+$/, '').substring(0, 12);
+      return this._names[Math.floor(Math.random() * this._names.length)];
     }
   }, {
     key: '_key',
     get: function get() {
       return 'users';
+    }
+  }, {
+    key: '_names',
+    get: function get() {
+      return ['Angsty', 'Babe', 'Baby', 'BFF', 'Birdie', 'Booger', 'Captain', 'Cuddles', 'Darling', 'Doll', 'Fighter', 'Goober', 'Heisenberg', 'Honey', 'Hot Lips', 'Hunk', 'Jello', 'King', 'Lover', 'Mama', 'Muffin', 'Muppet', 'Papi', 'Peanut', 'Pookie', 'Pop Tart', 'Punk', 'Queen', 'Sailor', 'Shorty', 'Simba', 'Soldier', 'Sport', 'Sugar', 'Superstar', 'Tiger', 'Tinkerbell'];
     }
   }]);
 
@@ -1678,19 +1677,14 @@ var Auth = function () {
       });
     }
   }, {
-    key: 'detectRedirectResult',
-    value: function detectRedirectResult() {
-      return new Promise(function (resolve, reject) {
-        firebase.auth().getRedirectResult(function (result) {
-          if (result) resolve(result.user);else reject();
-        });
+    key: 'loadUI',
+    value: function loadUI() {
+      var ui = new firebaseui.auth.AuthUI(firebase.auth());
+      ui.start('.firebaseui-auth', {
+        signInSuccessUrl: '/',
+        signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID, firebase.auth.TwitterAuthProvider.PROVIDER_ID, firebase.auth.PhoneAuthProvider.PROVIDER_ID],
+        tosUrl: '/toc'
       });
-    }
-  }, {
-    key: 'authenticate',
-    value: function authenticate(type) {
-      var provider = new firebase.auth[type]();
-      firebase.auth().signInWithRedirect(provider);
     }
   }]);
 
@@ -2268,19 +2262,10 @@ var Auth = function (_Renderer) {
   _createClass(Auth, [{
     key: 'renderInitial',
     value: function renderInitial() {
-      var _this2 = this;
-
       var $h1 = this.el('h1', 'Lexicon Standoff'),
-          $desc = this.el('p', 'Please Sign In', 'description'),
-          $google = this.el('button', 'Google'),
-          $twitter = this.el('button', 'Twitter');
-      this.append(this.$main, [$h1, $desc, $google, $twitter]);
-      $google.addEventListener('click', function () {
-        _this2.events.authGoogle();
-      });
-      $twitter.addEventListener('click', function () {
-        _this2.events.authTwitter();
-      });
+          $desc = this.el('p', 'Please Sign In', 'description');
+      this.$auth = this.el('div', null, 'firebaseui-auth');
+      this.append(this.$main, [$h1, this.$auth]);
     }
   }, {
     key: 'render',
@@ -2295,7 +2280,7 @@ var Auth = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['authTwitter', 'authGoogle'];
+      return [];
     }
   }]);
 
