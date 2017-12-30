@@ -41,7 +41,7 @@ export default class Actions extends Renderer {
 
     this.$h1.innerHTML = this.roleHeader('Actions');
 
-    if (this.player.isDead || (playerCount > 4 && this.player.isImposter))
+    if (playerCount > 4 && (this.player.isDead || this.player.isImposter))
       this.renderImposters(players);
 
     // If this player has already voted (refreshed the vote page after voting)

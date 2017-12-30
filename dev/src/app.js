@@ -9,7 +9,7 @@ import Renderers from './renderers/Renderers';
 
 const //
   AUTH = new Auth(),
-  VERSION = 0.2;
+  VERSION = 0.3;
 
 console.info(
   `

@@ -898,7 +898,7 @@ console.clear();
 
 var //
 AUTH = new _Auth2.default(),
-    VERSION = 0.2;
+    VERSION = 0.3;
 
 console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
@@ -2341,8 +2341,8 @@ var Launch = function (_Renderer) {
         classname: 'small link',
         clickEvent: this.events.signOut.bind(this)
       }),
-          $slug = this.el('input'),
           $grp = this.el('div', null, 'item-group');
+      this.$slug = this.el('input');
       this.$editor = this.el('div', null, 'editor');
       this.new = new _Button2.default({
         content: 'Create a Game',
@@ -2351,15 +2351,15 @@ var Launch = function (_Renderer) {
       this.join = new _Button2.default({
         content: 'Join',
         clickEvent: function clickEvent() {
-          return _this2.events.findGame($slug.value.replace(/ /g, '').toLowerCase());
+          return _this2.events.findGame(_this2.$slug.value.replace(/ /g, '').toLowerCase());
         }
       });
 
       this.$user = this.el('p', null, 'user-info');
-      $slug.setAttribute('type', 'text');
-      $slug.setAttribute('placeholder', 'gamesecret');
+      this.$slug.setAttribute('type', 'text');
+      this.$slug.setAttribute('placeholder', 'gamesecret');
       this.append($signOut, [signOut.$el]);
-      this.append($grp, [$slug, this.join.$el]);
+      this.append($grp, [this.$slug, this.join.$el]);
       this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $instructions, $signOut, this.$editor]);
       this.$footer.appendChild($inst);
     }
@@ -2370,6 +2370,7 @@ var Launch = function (_Renderer) {
 
       var user = _ref.user;
 
+      this.$slug.value = '';
       this.renderEditor(user);
       this.toggleSections();
       this.$avatar = this.el('img');
@@ -2724,7 +2725,7 @@ var Turns = function (_Renderer) {
       }
 
       this.imposters.reset();
-      if (this.player.isDead || playerCount > 4 && this.player.isImposter) this.renderImposters(players);
+      if (playerCount > 4 && (this.player.isDead || this.player.isImposter)) this.renderImposters(players);
 
       if (this.player.isAlive) {
         var descHtml = '',
@@ -2857,7 +2858,7 @@ var Reveal = function (_Renderer) {
 
 
       this.imposters.reset();
-      if (this.player.isDead || playerCount > 4 && this.player.isImposter) this.renderImposters(players);
+      if (playerCount > 4 && (this.player.isDead || this.player.isImposter)) this.renderImposters(players);
 
       this.$h1.innerHTML = this.roleHeader('Reveal');
       this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
@@ -2974,7 +2975,7 @@ var Actions = function (_Renderer) {
 
       this.$h1.innerHTML = this.roleHeader('Actions');
 
-      if (this.player.isDead || playerCount > 4 && this.player.isImposter) this.renderImposters(players);
+      if (playerCount > 4 && (this.player.isDead || this.player.isImposter)) this.renderImposters(players);
 
       // If this player has already voted (refreshed the vote page after voting)
       if (votes && votes[this.player.id]) {
@@ -3296,7 +3297,7 @@ var Results = function (_Renderer) {
       var addl = this._points(_Game2.default.winPoints);
       if (imposter > 0) return 'Each Imposter scored an additional ' + addl + '.';
       if (agent > 0) return 'Each Agent scored an additional ' + addl + '.';
-      return 'No one scores additional points.';
+      return 'No one scored additional points.';
     }
   }, {
     key: '_playerPoints',

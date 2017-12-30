@@ -56,7 +56,7 @@ export default class Turns extends Renderer {
     }
 
     this.imposters.reset();
-    if (this.player.isDead || (playerCount > 4 && this.player.isImposter))
+    if (playerCount > 4 && (this.player.isDead || this.player.isImposter))
       this.renderImposters(players);
 
     if (this.player.isAlive) {

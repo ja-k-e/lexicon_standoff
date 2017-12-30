@@ -203,7 +203,7 @@ export default class Results extends Renderer {
     let addl = this._points(Game.winPoints);
     if (imposter > 0) return `Each Imposter scored an additional ${addl}.`;
     if (agent > 0) return `Each Agent scored an additional ${addl}.`;
-    return 'No one scores additional points.';
+    return 'No one scored additional points.';
   }
 
   _playerPoints(roundOver) {

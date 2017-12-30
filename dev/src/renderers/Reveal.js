@@ -33,7 +33,7 @@ export default class Reveal extends Renderer {
     let { topics, playerCount } = game;
 
     this.imposters.reset();
-    if (this.player.isDead || (playerCount > 4 && this.player.isImposter))
+    if (playerCount > 4 && (this.player.isDead || this.player.isImposter))
       this.renderImposters(players);
 
     this.$h1.innerHTML = this.roleHeader('Reveal');

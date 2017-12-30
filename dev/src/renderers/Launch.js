@@ -21,8 +21,8 @@ export default class Launch extends Renderer {
         classname: 'small link',
         clickEvent: this.events.signOut.bind(this)
       }),
-      $slug = this.el('input'),
       $grp = this.el('div', null, 'item-group');
+    this.$slug = this.el('input');
     this.$editor = this.el('div', null, 'editor');
     this.new = new Button({
       content: 'Create a Game',
@@ -31,14 +31,14 @@ export default class Launch extends Renderer {
     this.join = new Button({
       content: 'Join',
       clickEvent: () =>
-        this.events.findGame($slug.value.replace(/ /g, '').toLowerCase())
+        this.events.findGame(this.$slug.value.replace(/ /g, '').toLowerCase())
     });
 
     this.$user = this.el('p', null, 'user-info');
-    $slug.setAttribute('type', 'text');
-    $slug.setAttribute('placeholder', 'gamesecret');
+    this.$slug.setAttribute('type', 'text');
+    this.$slug.setAttribute('placeholder', 'gamesecret');
     this.append($signOut, [signOut.$el]);
-    this.append($grp, [$slug, this.join.$el]);
+    this.append($grp, [this.$slug, this.join.$el]);
     this.append(this.$main, [
       this.$user,
       this.new.$el,
@@ -52,6 +52,7 @@ export default class Launch extends Renderer {
   }
 
   render({ user }) {
+    this.$slug.value = '';
     this.renderEditor(user);
     this.toggleSections();
     this.$avatar = this.el('img');
