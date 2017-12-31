@@ -674,7 +674,7 @@ var Game = function () {
     value: function generateTopics() {
       var _this2 = this;
 
-      return [1, 2, 3, 4, 5].map(function (_) {
+      return [1, 2, 3, 4].map(function (_) {
         return _this2.topicGenerator.loadTopic();
       });
     }
@@ -2736,9 +2736,9 @@ var Turns = function (_Renderer) {
           descHtml += 'You have been confused by ' + confusionVoteCount + ' dead ' + confusionPlayers + '! ';
         }
         if (this.player.isImposter) {
-          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
+          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);else topicsHtml = this._shuffledHtml([0, 1, 2], topics);
         } else {
-          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 4], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
+          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 3], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
         }
         if (this.player.isConfused || this.player.isImposter) {
           descHtml += 'Say one word that you associate with the <strong>two</strong> Agent Topics.';

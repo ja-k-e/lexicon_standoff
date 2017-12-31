@@ -69,11 +69,11 @@ export default class Turns extends Renderer {
       }
       if (this.player.isImposter) {
         if (this.player.isConfused)
-          topicsHtml = this._shuffledHtml([0, 1, 2, 3, 4], topics);
-        else topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
+          topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
+        else topicsHtml = this._shuffledHtml([0, 1, 2], topics);
       } else {
         if (this.player.isConfused)
-          topicsHtml = this._shuffledHtml([0, 1, 4], topics);
+          topicsHtml = this._shuffledHtml([0, 1, 3], topics);
         else topicsHtml = this._shuffledHtml([0, 1], topics);
       }
       if (this.player.isConfused || this.player.isImposter) {

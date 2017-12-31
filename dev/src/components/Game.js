@@ -104,7 +104,7 @@ export default class Game {
   }
 
   generateTopics() {
-    return [1, 2, 3, 4, 5].map(_ => this.topicGenerator.loadTopic());
+    return [1, 2, 3, 4].map(_ => this.topicGenerator.loadTopic());
   }
 
   generateKeyMasterId() {
