@@ -694,8 +694,9 @@ var Game = function () {
           most = 0;
       for (var playerId in this.votes) {
         var actionId = this.votes[playerId],
+            lastVote = this.playerCountAlive === 2,
             aliveAction = this.state.players[playerId].isAlive;
-        if (aliveAction) {
+        if (aliveAction || lastVote) {
           killVotes[actionId] = killVotes[actionId] || 0;
           killVotes[actionId]++;
         } else {

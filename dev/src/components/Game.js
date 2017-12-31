@@ -120,8 +120,9 @@ export default class Game {
       most = 0;
     for (let playerId in this.votes) {
       let actionId = this.votes[playerId],
+        lastVote = this.playerCountAlive === 2,
         aliveAction = this.state.players[playerId].isAlive;
-      if (aliveAction) {
+      if (aliveAction || lastVote) {
         killVotes[actionId] = killVotes[actionId] || 0;
         killVotes[actionId]++;
       } else {
