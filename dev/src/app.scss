@@ -1,7 +1,11 @@
+$font: 'Roboto', BlinkMacSystemFont, -apple-system, 'Segoe UI', 'Roboto',
+  'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  'Helvetica', 'Arial', sans-serif;
+
 html,
 body {
   height: 100%;
-  font-family: sans-serif;
+  font-family: $font;
 }
 
 // NOT WORKING.
@@ -12,22 +16,21 @@ body {
 }
 
 $li-h: 1.3rem;
-$border: 2px;
+$border: 1px;
 $corner: 2px;
 $offblack: #292929;
+$offblack2: #191919;
 $gray: #696969;
 $red: #f44336;
 $green: #66bb6a;
 $sections: (new-version, auth, launch, start, turns, reveal, actions, results);
 
 * {
-  font-family: BlinkMacSystemFont, -apple-system, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    'Helvetica', 'Arial', sans-serif;
+  font-family: $font;
   font-weight: 300;
 }
 strong {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 body {
@@ -45,11 +48,13 @@ body .container {
   > div {
     position: absolute;
     overflow: hidden;
+    max-width: 480px;
+    max-width: 380px;
+    max-height: 700px;
+    max-height: 600px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-width: 480px;
-    max-height: 700px;
     width: 100%;
     height: 100%;
   }
@@ -60,31 +65,169 @@ body .container {
     padding: 1rem;
     position: absolute;
     display: none;
-    transition: transform 250ms ease-in-out;
+    transform: scale(50%) translateX(-100%);
   }
-  @each $class in $sections {
-    $index: index($sections, $class);
-    > div.active-#{$class} {
-      @if $index > 1 {
-        $prev: nth($sections, $index - 1);
-        section.#{$prev} {
-          display: flex;
-          transform: translateX(-100%);
-        }
-      }
-      @if $index < length($sections) {
-        $next: nth($sections, $index + 1);
-        section.#{$next} {
-          display: flex;
-          transform: translateX(100%);
-        }
-      }
-      section.#{$class} {
-        display: flex;
-        transform: translateX(0);
-      }
+
+  > div.active-new-version {
+    section.new-version,
+    section.auth {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.new-version {
+      transform: translateY(0);
+    }
+    section.auth {
+      transform: translateY(100%);
     }
   }
+  > div.active-auth {
+    section.new-version,
+    section.auth,
+    section.launch {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.new-version {
+      transform: translateY(-100%);
+    }
+    section.auth {
+      transform: translateY(0);
+    }
+    section.launch {
+      transform: translateY(100%);
+    }
+  }
+  > div.active-launch {
+    section.auth,
+    section.launch {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.auth {
+      transform: translateY(-100%);
+    }
+    section.launch {
+      transform: translateY(0);
+    }
+    section.start {
+      transform: translateX(100%);
+    }
+    section.turns {
+      transform: translateY(100%);
+    }
+  }
+  > div.active-start {
+    section.start {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.launch {
+      transform: translateY(-100%);
+    }
+    section.start {
+      transform: translateX(0);
+    }
+    section.turns {
+      transform: translateY(100%);
+    }
+  }
+  > div.active-turns {
+    section.results,
+    section.start,
+    section.turns,
+    section.reveal {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.results {
+      transform: translateX(-100%);
+    }
+    section.launch,
+    section.start {
+      transform: translateY(-100%);
+    }
+    section.turns {
+      transform: translateY(0);
+    }
+    section.reveal {
+      transform: translateX(100%);
+    }
+  }
+  > div.active-reveal {
+    section.turns,
+    section.reveal,
+    section.actions {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.turns {
+      transform: translateX(-100%);
+    }
+    section.reveal {
+      transform: translateX(0);
+    }
+    section.actions {
+      transform: translateX(100%);
+    }
+  }
+  > div.active-actions {
+    section.reveal,
+    section.actions,
+    section.results {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.reveal {
+      transform: translateX(-100%);
+    }
+    section.actions {
+      transform: translateX(0);
+    }
+    section.results {
+      transform: translateX(100%);
+    }
+  }
+  > div.active-results {
+    section.actions,
+    section.results,
+    section.turns {
+      display: flex;
+      transition: transform 250ms ease-in-out;
+    }
+    section.actions {
+      transform: translateX(-100%);
+    }
+    section.results {
+      transform: translateX(0);
+    }
+    section.turns {
+      transform: translateX(100%);
+    }
+  }
+  // @each $class in $sections {
+  //   $index: index($sections, $class);
+  //   > div.active-#{$class} {
+  //     @if $index > 1 {
+  //       $prev: nth($sections, $index - 1);
+  //       section.#{$prev} {
+  //         display: flex;
+  //         transform: translateX(-100%);
+  //       }
+  //     }
+  //     @if $index < length($sections) {
+  //       $next: nth($sections, $index + 1);
+  //       section.#{$next} {
+  //         display: flex;
+  //         transform: translateX(100%);
+  //       }
+  //     }
+  //     section.#{$class} {
+  //       display: flex;
+  //       transform: translateX(0);
+  //     }
+  //   }
+  // }
 }
 
 section {
@@ -114,10 +257,10 @@ section {
     }
   }
   footer {
-    display: flex;
-    flex-direction: column;
-    align-content: flex-end;
-    justify-content: flex-end;
+    // display: flex;
+    // flex-direction: column;
+    // align-content: flex-end;
+    // justify-content: flex-end;
   }
   h1 {
     font-size: 1rem;
@@ -126,7 +269,7 @@ section {
     position: relative;
     transform: translateZ(0);
     .status {
-      font-weight: bold;
+      font-weight: 500;
     }
     .info {
       display: inline-block;
@@ -162,12 +305,23 @@ section {
   }
   span.role,
   span.points {
-    font-weight: bold;
+    font-weight: 500;
   }
   .item-group {
     display: flex;
-    > * {
+    align-content: center;
+    justify-content: center;
+    input {
       flex: 1;
+    }
+    button {
+      flex: none;
+      &.flex {
+        flex: 1;
+      }
+    }
+    > * {
+      // flex: 1;
       width: auto;
       + * {
         margin-top: 0;
@@ -177,15 +331,21 @@ section {
   }
   .key-master:not(:empty) {
     // background: $offblack;
-    border-radius: $corner;
-    border: $border solid white;
+    // border-radius: $corner;
+    border-top: $border solid white;
     box-sizing: border-box;
-    padding: 0.5rem;
-    text-align: center;
+    padding-top: 1rem;
+    // text-align: center;
     margin-top: 1rem;
     .topics {
       margin-top: 0.25rem;
       margin-bottom: 0;
+      + .description {
+        margin-top: 0.25rem;
+      }
+    }
+    .description.warning {
+      color: $red;
     }
   }
 }
@@ -321,7 +481,7 @@ section.auth {
     text-align: center;
     font-size: 1.8rem;
     margin-bottom: 0.25rem;
-    border-bottom: none;
+    border: none;
   }
 }
 section.auth {
@@ -343,14 +503,14 @@ section.auth {
     }
     .firebaseui-title {
       font-size: 1rem;
-      font-weight: normal;
+      font-weight: 300;
       color: black;
       padding: 0;
       margin: 0;
     }
     .firebaseui-card-header {
       padding: 0 !important;
-      border-bottom: none;
+      border: none;
       margin-bottom: 0;
     }
     .firebaseui-card-content {
@@ -375,19 +535,23 @@ section.auth {
 section.launch {
   text-align: center;
   a {
-    color: white;
+    background: transparent;
+    text-decoration: none;
+    padding: 0;
+    color: $gray;
   }
   button + p {
     margin: 1rem 0 0;
   }
   .user-info {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     button {
       position: relative;
       padding: 0;
       width: auto;
       display: inline-block;
       background: transparent;
+      border: none;
       &::after {
         content: 'Edit';
         position: absolute;
@@ -436,9 +600,24 @@ section.launch {
       padding: 0;
       height: auto;
     }
+    li button {
+      display: block;
+      width: 100%;
+      border: none;
+    }
+    img {
+      vertical-align: middle;
+    }
     .item-group {
       margin-top: 2rem;
       flex-wrap: wrap;
+      input,
+      button {
+        display: block;
+        box-sizing: border-box;
+        width: calc(50% - 0.25rem);
+        flex-basis: calc(50% - 0.25rem);
+      }
       &::before {
         content: 'Change your Name (8 Character Max)';
         display: block;
@@ -561,6 +740,10 @@ section.results {
       background: white;
       color: black;
       text-shadow: none;
+      &.warning {
+        background: $red;
+        color: white;
+      }
     }
   }
 }
@@ -571,20 +754,36 @@ section.results {
 
 button,
 input[type='text'] {
-  display: block;
-  width: 100%;
+  display: inline-block;
+  width: auto;
   border-radius: 0;
-  letter-spacing: 0.03125em;
   font-size: 1rem;
-  padding: 0.25rem 0.5rem;
+  line-height: 1.6;
+  padding: 0.25rem 1rem;
   box-sizing: border-box;
-  text-align: center;
   border: none;
   color: white;
-  background: $offblack;
+  font-family: $font;
   font-weight: 300;
+  border-radius: $corner;
+}
+input[type='text'] {
+  background-color: $offblack2;
+  border-radius: 0;
+  border: $border solid $offblack;
+  border-bottom: $border solid white;
 }
 button {
+  text-align: center;
+  border: $border solid white;
+  background-color: transparent;
+  &.full {
+    width: 100%;
+  }
+  &.warning {
+    border-color: $red;
+    color: $red;
+  }
   appearance: none;
   cursor: pointer;
   &[disabled] {
@@ -598,6 +797,8 @@ button {
   }
   &.link {
     background: transparent;
+    border: none;
+
     padding: 0;
     color: $gray;
   }
@@ -650,9 +851,9 @@ ol {
       color: white;
       // background: $offblack;
       &.you {
-        font-weight: bold;
+        font-weight: 500;
         ~ * {
-          font-weight: bold;
+          font-weight: 500;
         }
       }
       &.dead {

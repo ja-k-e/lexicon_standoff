@@ -38,18 +38,21 @@ export default class Results extends Renderer {
       ),
       round = new Button({
         content: 'Continue',
-        clickEvent: this.events.dispatchNewRound.bind(this)
+        clickEvent: this.events.dispatchNewRound.bind(this),
+        classname: 'flex'
       }),
       end = new Button({
-        content: 'End',
-        clickEvent: this.events.dispatchEnd.bind(this)
+        content: '◀',
+        clickEvent: this.confirmEnd.bind(this),
+        classname: 'warning'
       });
     this.continue = new Button({
       content: 'Proceed',
-      clickEvent: this.events.dispatchTurns.bind(this)
+      clickEvent: this.events.dispatchTurns.bind(this),
+      classname: 'full'
     });
     this.$group = this.el('div', null, 'item-group');
-    this.append(this.$group, [round.$el, end.$el]);
+    this.append(this.$group, [end.$el, round.$el]);
     this.append(this.$footer, [$inst, this.$group, this.continue.$el]);
   }
 
@@ -62,6 +65,11 @@ export default class Results extends Renderer {
       }
     });
     this.append(this.$footer, [this.leave.$el]);
+  }
+
+  confirmEnd() {
+    if (window.confirm('Are you sure you want to end the game?'))
+      this.events.dispatchEnd();
   }
 
   confirmLeave() {

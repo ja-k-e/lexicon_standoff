@@ -114,15 +114,6 @@ var Renderer = function () {
       this.$section.remove();
     }
   }, {
-    key: 'renderImposters',
-    value: function renderImposters(players) {
-      this.imposters.title('Imposters');
-      for (var playerId in players) {
-        var player = players[playerId];
-        if (player.isImposter) this.imposters.add(this.userSpan(player), player.isDead ? 'dead' : '');
-      }
-    }
-  }, {
     key: 'userSpan',
     value: function userSpan(player, extraClassname) {
       var classname = player.id === this.player.id ? 'you' : '',
@@ -748,8 +739,8 @@ var Game = function () {
     // Private
 
     value: function _distributor(number) {
-      // Going for 2 to 1
-      var agents = Math.floor(number * 0.66667),
+      // Going for 3 to 1, minimum 1
+      var agents = Math.max(Math.floor(number * 0.75), 1),
           imposters = number - agents;
       return [agents, imposters];
     }
@@ -899,7 +890,7 @@ console.clear();
 
 var //
 AUTH = new _Auth2.default(),
-    VERSION = 0.3;
+    VERSION = 0.4;
 
 console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
@@ -1987,16 +1978,25 @@ var State = function () {
         turns: new _Renderers2.default.Turns(this.player, {
           dispatchReveal: function dispatchReveal() {
             return _this9.dispatchReveal();
+          },
+          dispatchEnd: function dispatchEnd() {
+            return _this9.dispatchEnd();
           }
         }),
         reveal: new _Renderers2.default.Reveal(this.player, {
           dispatchActions: function dispatchActions() {
             return _this9.dispatchActions();
+          },
+          back: function back() {
+            return _Adapters2.default.Games.masterUpdateStatus(_this9.game.id, 'turns');
           }
         }),
         actions: new _Renderers2.default.Actions(this.player, {
           dispatchAction: function dispatchAction(p, a) {
             return _this9.dispatchAction(p, a);
+          },
+          back: function back() {
+            return _Adapters2.default.Games.masterUpdateStatus(_this9.game.id, 'reveal');
           }
         }),
         results: new _Renderers2.default.Results(this.player, {
@@ -2102,7 +2102,7 @@ var State = function () {
     key: 'devDispatchAction',
     value: function devDispatchAction(playerId) {
       var spoofs = this.game.playerCount - STUB_COUNT;
-      if (this.player.isMaster) for (var i = 0; i < this.game.playerCount - 2; i++) {
+      if (this.player.isMaster) for (var i = 0; i < STUB_COUNT; i++) {
         var id = '' + STUB_PREFIX + (i + 1),
             victimId = this.players[id].isAlive ? playerId : this.player.id;
         _Adapters2.default.Games.globalVote(this.game.id, id, victimId);
@@ -2334,7 +2334,7 @@ var Launch = function (_Renderer) {
       var _this2 = this;
 
       var $inst = this.el('p', 'If you are on a mobile device, add this site to your home screen to get full screen.\n          iOS can only do this through Safari.', 'instruction'),
-          $or = this.el('p', 'Enter a Secret to Join', 'instruction'),
+          $or = this.el('p', 'OR', 'instruction'),
           $instructions = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
           $signOut = this.el('div', null, 'instructions'),
           signOut = new _Button2.default({
@@ -2346,7 +2346,7 @@ var Launch = function (_Renderer) {
       this.$slug = this.el('input');
       this.$editor = this.el('div', null, 'editor');
       this.new = new _Button2.default({
-        content: 'Create a Game',
+        content: 'Create Game',
         clickEvent: this.events.createGame.bind(this)
       });
       this.join = new _Button2.default({
@@ -2361,7 +2361,7 @@ var Launch = function (_Renderer) {
       this.$slug.setAttribute('placeholder', 'gamesecret');
       this.append($signOut, [signOut.$el]);
       this.append($grp, [this.$slug, this.join.$el]);
-      this.append(this.$main, [this.$user, this.new.$el, $or, $grp, $instructions, $signOut, this.$editor]);
+      this.append(this.$main, [this.$user, $grp, $or, this.new.$el, $instructions, $signOut, this.$editor]);
       this.$footer.appendChild($inst);
     }
   }, {
@@ -2562,11 +2562,13 @@ var Start = function (_Renderer) {
         var $group = this.el('div', null, 'item-group');
         var cancel = new _Button2.default({
           content: 'Cancel',
-          clickEvent: this.events.dispatchEnd.bind(this)
+          clickEvent: this.events.dispatchEnd.bind(this),
+          classname: 'flex'
         });
         this.start = new _Button2.default({
           content: 'Start',
-          clickEvent: this.events.dispatchStart.bind(this)
+          clickEvent: this.events.dispatchStart.bind(this),
+          classname: 'flex'
         });
         this.append($group, [cancel.$el, this.start.$el]);
         this.append(this.$footer, [$inst, $group]);
@@ -2610,8 +2612,8 @@ var Start = function (_Renderer) {
   }, {
     key: '_distributor',
     value: function _distributor(number) {
-      // Going for 2 to 1
-      var agents = Math.floor(number * 0.66667),
+      // Going for 3 to 1, minimum 1
+      var agents = Math.max(Math.floor(number * 0.75), 1),
           imposters = number - agents;
       return [agents, imposters];
     }
@@ -2689,20 +2691,25 @@ var Turns = function (_Renderer) {
       this.$header.appendChild(this.$h1);
       this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
-      this.imposters = new _List2.default('flex-list flex-list-small flex-list-quarter');
-      this.append(this.$main, this.imposters.elements);
-
       if (this.player.isMaster) this.renderInitialMaster();
     }
   }, {
     key: 'renderInitialMaster',
     value: function renderInitialMaster() {
-      var $inst = this.el('p', 'Take clockwise turns saying a word. You\'re first.\n        After a Round, first turn moves to the next alive Player.\n        Once everyone says a word, proceed.', 'instruction');
+      var $inst = this.el('p', 'Take turns saying a word, you first.\n        Next time, first turn moves to the next alive Player.\n        Proceed once everyone says a word.', 'instruction'),
+          cancel = new _Button2.default({
+        content: '◀',
+        clickEvent: this.handleConfirmEnd.bind(this),
+        classname: 'warning'
+      }),
+          $grp = this.el('div', null, 'item-group');
       this.proceed = new _Button2.default({
         content: 'Proceed',
-        clickEvent: this.events.dispatchReveal.bind(this)
+        clickEvent: this.events.dispatchReveal.bind(this),
+        classname: 'flex'
       });
-      this.append(this.$footer, [$inst, this.proceed.$el]);
+      this.append($grp, [cancel.$el, this.proceed.$el]);
+      this.append(this.$footer, [$inst, $grp]);
     }
   }, {
     key: 'render',
@@ -2720,13 +2727,10 @@ var Turns = function (_Renderer) {
       this.$h1.innerHTML = this.roleHeader('Turns');
 
       if (this.player.id === keyMasterId && turns > 2) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">You\u2019re the <strong>Key Master</strong>.<br>The Topic of Confusion is</p>\n        <p class="topics">\u201C' + topics[4][1] + '\u201D</p>\n      ';
+        this.$keyMaster.innerHTML = '\n        <p class="description">You\u2019re the <strong>Key Master</strong>.\n          Topic of Confusion:</p>\n        <p class="topics">\u201C' + topics[3][1] + '\u201D</p>\n        <p class="description warning">\n          Shh! Use the knowledge of this fake Topic to your advantage.\n        </p>\n      ';
       } else {
         this.$keyMaster.innerHTML = '';
       }
-
-      this.imposters.reset();
-      if (playerCount > 4 && (this.player.isDead || this.player.isImposter)) this.renderImposters(players);
 
       if (this.player.isAlive) {
         var descHtml = '',
@@ -2734,7 +2738,7 @@ var Turns = function (_Renderer) {
         if (this.player.isConfused) {
           var confusionVoteCount = confusionVotes[this.player.id],
               confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
-          descHtml += 'You have been confused by ' + confusionVoteCount + ' dead ' + confusionPlayers + '! ';
+          descHtml += '\n          ' + confusionVoteCount + ' dead ' + confusionPlayers + ' confused you with an extra Topic! ';
         }
         if (this.player.isImposter) {
           if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);else topicsHtml = this._shuffledHtml([0, 1, 2], topics);
@@ -2753,6 +2757,11 @@ var Turns = function (_Renderer) {
         this.$desc.innerHTML = "You're dead. You don't get a turn.";
       }
       this.toggleSections();
+    }
+  }, {
+    key: 'handleConfirmEnd',
+    value: function handleConfirmEnd() {
+      if (window.confirm('Are you sure you want to end the game?')) this.events.dispatchEnd();
     }
   }, {
     key: '_shuffledHtml',
@@ -2778,7 +2787,7 @@ var Turns = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchReveal'];
+      return ['dispatchReveal', 'dispatchEnd'];
     }
   }]);
 
@@ -2837,29 +2846,42 @@ var Reveal = function (_Renderer) {
 
       this.$topics = this.el('p', null, 'topics');
       this.$desc = this.el('p', null, 'description');
-      this.append(this.$main, [this.$topics, this.$desc]);
+      this.$keyMaster = this.el('div', null, 'key-master');
 
-      this.imposters = new _List2.default('flex-list flex-list-small flex-list-quarter');
-      this.append(this.$main, this.imposters.elements);
+      this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
       if (this.player.isMaster) {
         var $inst = this.el('p', 'Players question each other and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
-        var proceed = new _Button2.default({
+        var $grp = this.el('div', null, 'item-group'),
+            back = new _Button2.default({
+          content: '◀',
+          clickEvent: this.events.back.bind(this)
+        }),
+            proceed = new _Button2.default({
           content: 'Proceed',
-          clickEvent: this.events.dispatchActions.bind(this)
+          clickEvent: this.events.dispatchActions.bind(this),
+          classname: 'flex'
         });
-        this.append(this.$footer, [$inst, proceed.$el]);
+        this.append($grp, [back.$el, proceed.$el]);
+        this.append(this.$footer, [$inst, $grp]);
       }
     }
   }, {
     key: 'render',
     value: function render(game, players) {
       var topics = game.topics,
-          playerCount = game.playerCount;
+          playerCount = game.playerCount,
+          turns = game.turns,
+          keyMasterId = game.keyMasterId;
 
 
-      this.imposters.reset();
-      if (playerCount > 4 && (this.player.isDead || this.player.isImposter)) this.renderImposters(players);
+      if (this.player.id === keyMasterId && turns > 2) {
+        this.$keyMaster.innerHTML = '\n        <p class="description">You\'re the <strong>Key Master</strong>.\n          Topic of Confusion:</p>\n        <p class="topics">\u201C' + topics[3][1] + '\u201D</p>\n        <p class="description warning">\n          You can reveal, hide, or even lie about this information.\n          Other Players may claim they were confused or that they are the <strong>Key Master</strong>.\n          You may not show Players this screen.\n        </p>\n      ';
+      } else if (turns > 2) {
+        this.$keyMaster.innerHTML = '\n        <p class="description">\n          A <strong>Key Master</strong> knew the Topic of Confusion this round.\n          You can claim to have been confused by that extra Topic.\n          You can also claim to be the <strong>Key Master</strong>. Good luck with that.\n        </p>\n      ';
+      } else {
+        this.$keyMaster.innerHTML = '';
+      }
 
       this.$h1.innerHTML = this.roleHeader('Reveal');
       this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
@@ -2878,7 +2900,7 @@ var Reveal = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchActions'];
+      return ['dispatchActions', 'back'];
     }
   }]);
 
@@ -2943,9 +2965,6 @@ var Actions = function (_Renderer) {
       this.votes = new _List2.default();
       this.append(this.$main, this.votes.elements);
 
-      this.imposters = new _List2.default('flex-list flex-list-small flex-list-quarter');
-      this.append(this.$main, this.imposters.elements);
-
       this.waiting = new _List2.default('flex-list flex-list-small flex-list-quarter');
       this.append(this.$main, this.waiting.elements);
 
@@ -2958,7 +2977,20 @@ var Actions = function (_Renderer) {
           _this2.$main.classList.add('inactive');
         }
       });
-      this.append(this.$footer, [this.vote.$el]);
+      if (this.player.isMaster) {
+        var $inst = this.el('p', 'Play will proceed after every Player submits an Action.', 'instruction');
+        var $grp = this.el('div', null, 'item-group'),
+            back = new _Button2.default({
+          content: '◀',
+          clickEvent: this.events.back.bind(this)
+        });
+        this.append($grp, [back.$el, this.vote.$el]);
+        this.vote.$el.classList.add('flex');
+        this.append(this.$footer, [$inst, $grp]);
+      } else {
+        this.vote.$el.classList.add('full');
+        this.append(this.$footer, [this.vote.$el]);
+      }
     }
   }, {
     key: 'render',
@@ -2971,12 +3003,9 @@ var Actions = function (_Renderer) {
       this.$main.classList.remove('inactive');
       this.vote.enable();
       this.votes.reset();
-      this.imposters.reset();
       this.toggleSections();
 
       this.$h1.innerHTML = this.roleHeader('Actions');
-
-      if (playerCount > 4 && (this.player.isDead || this.player.isImposter)) this.renderImposters(players);
 
       // If this player has already voted (refreshed the vote page after voting)
       if (votes && votes[this.player.id]) {
@@ -3040,7 +3069,7 @@ var Actions = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchAction'];
+      return ['dispatchAction', 'back'];
     }
   }]);
 
@@ -3127,18 +3156,21 @@ var Results = function (_Renderer) {
       var $inst = this.el('p', 'Once everyone is ready, proceed below.', 'instruction'),
           round = new _Button2.default({
         content: 'Continue',
-        clickEvent: this.events.dispatchNewRound.bind(this)
+        clickEvent: this.events.dispatchNewRound.bind(this),
+        classname: 'flex'
       }),
           end = new _Button2.default({
-        content: 'End',
-        clickEvent: this.events.dispatchEnd.bind(this)
+        content: '◀',
+        clickEvent: this.confirmEnd.bind(this),
+        classname: 'warning'
       });
       this.continue = new _Button2.default({
         content: 'Proceed',
-        clickEvent: this.events.dispatchTurns.bind(this)
+        clickEvent: this.events.dispatchTurns.bind(this),
+        classname: 'full'
       });
       this.$group = this.el('div', null, 'item-group');
-      this.append(this.$group, [round.$el, end.$el]);
+      this.append(this.$group, [end.$el, round.$el]);
       this.append(this.$footer, [$inst, this.$group, this.continue.$el]);
     }
   }, {
@@ -3154,6 +3186,11 @@ var Results = function (_Renderer) {
         }
       });
       this.append(this.$footer, [this.leave.$el]);
+    }
+  }, {
+    key: 'confirmEnd',
+    value: function confirmEnd() {
+      if (window.confirm('Are you sure you want to end the game?')) this.events.dispatchEnd();
     }
   }, {
     key: 'confirmLeave',

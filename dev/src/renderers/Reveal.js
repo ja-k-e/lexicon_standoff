@@ -9,10 +9,9 @@ export default class Reveal extends Renderer {
 
     this.$topics = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
-    this.append(this.$main, [this.$topics, this.$desc]);
+    this.$keyMaster = this.el('div', null, 'key-master');
 
-    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
-    this.append(this.$main, this.imposters.elements);
+    this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
     if (this.player.isMaster) {
       let $inst = this.el(
@@ -21,20 +20,46 @@ export default class Reveal extends Renderer {
           Once everyone is ready to vote, proceed.`,
         'instruction'
       );
-      let proceed = new Button({
-        content: 'Proceed',
-        clickEvent: this.events.dispatchActions.bind(this)
-      });
-      this.append(this.$footer, [$inst, proceed.$el]);
+      let $grp = this.el('div', null, 'item-group'),
+        back = new Button({
+          content: '◀',
+          clickEvent: this.events.back.bind(this)
+        }),
+        proceed = new Button({
+          content: 'Proceed',
+          clickEvent: this.events.dispatchActions.bind(this),
+          classname: 'flex'
+        });
+      this.append($grp, [back.$el, proceed.$el]);
+      this.append(this.$footer, [$inst, $grp]);
     }
   }
 
   render(game, players) {
-    let { topics, playerCount } = game;
+    let { topics, playerCount, turns, keyMasterId } = game;
 
-    this.imposters.reset();
-    if (playerCount > 4 && (this.player.isDead || this.player.isImposter))
-      this.renderImposters(players);
+    if (this.player.id === keyMasterId && turns > 2) {
+      this.$keyMaster.innerHTML = `
+        <p class="description">You're the <strong>Key Master</strong>.
+          Topic of Confusion:</p>
+        <p class="topics">“${topics[3][1]}”</p>
+        <p class="description warning">
+          You can reveal, hide, or even lie about this information.
+          Other Players may claim they were confused or that they are the <strong>Key Master</strong>.
+          You may not show Players this screen.
+        </p>
+      `;
+    } else if (turns > 2) {
+      this.$keyMaster.innerHTML = `
+        <p class="description">
+          A <strong>Key Master</strong> knew the Topic of Confusion this round.
+          You can claim to have been confused by that extra Topic.
+          You can also claim to be the <strong>Key Master</strong>. Good luck with that.
+        </p>
+      `;
+    } else {
+      this.$keyMaster.innerHTML = '';
+    }
 
     this.$h1.innerHTML = this.roleHeader('Reveal');
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
@@ -51,6 +76,6 @@ export default class Reveal extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchActions'];
+    return ['dispatchActions', 'back'];
   }
 }

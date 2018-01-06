@@ -219,8 +219,8 @@ export default class Game {
   // Private
 
   _distributor(number) {
-    // Going for 2 to 1
-    let agents = Math.floor(number * 0.66667),
+    // Going for 3 to 1, minimum 1
+    let agents = Math.max(Math.floor(number * 0.75), 1),
       imposters = number - agents;
     return [agents, imposters];
   }

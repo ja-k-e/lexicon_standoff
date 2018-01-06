@@ -13,9 +13,6 @@ export default class Actions extends Renderer {
     this.votes = new List();
     this.append(this.$main, this.votes.elements);
 
-    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
-    this.append(this.$main, this.imposters.elements);
-
     this.waiting = new List('flex-list flex-list-small flex-list-quarter');
     this.append(this.$main, this.waiting.elements);
 
@@ -28,7 +25,24 @@ export default class Actions extends Renderer {
         this.$main.classList.add('inactive');
       }
     });
-    this.append(this.$footer, [this.vote.$el]);
+    if (this.player.isMaster) {
+      let $inst = this.el(
+        'p',
+        `Play will proceed after every Player submits an Action.`,
+        'instruction'
+      );
+      let $grp = this.el('div', null, 'item-group'),
+        back = new Button({
+          content: '◀',
+          clickEvent: this.events.back.bind(this)
+        });
+      this.append($grp, [back.$el, this.vote.$el]);
+      this.vote.$el.classList.add('flex');
+      this.append(this.$footer, [$inst, $grp]);
+    } else {
+      this.vote.$el.classList.add('full');
+      this.append(this.$footer, [this.vote.$el]);
+    }
   }
 
   render(game, players) {
@@ -36,13 +50,9 @@ export default class Actions extends Renderer {
     this.$main.classList.remove('inactive');
     this.vote.enable();
     this.votes.reset();
-    this.imposters.reset();
     this.toggleSections();
 
     this.$h1.innerHTML = this.roleHeader('Actions');
-
-    if (playerCount > 4 && (this.player.isDead || this.player.isImposter))
-      this.renderImposters(players);
 
     // If this player has already voted (refreshed the vote page after voting)
     if (votes && votes[this.player.id]) {
@@ -105,6 +115,6 @@ export default class Actions extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchAction'];
+    return ['dispatchAction', 'back'];
   }
 }

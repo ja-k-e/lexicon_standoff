@@ -26,11 +26,13 @@ export default class Start extends Renderer {
       let $group = this.el('div', null, 'item-group');
       let cancel = new Button({
         content: 'Cancel',
-        clickEvent: this.events.dispatchEnd.bind(this)
+        clickEvent: this.events.dispatchEnd.bind(this),
+        classname: 'flex'
       });
       this.start = new Button({
         content: 'Start',
-        clickEvent: this.events.dispatchStart.bind(this)
+        clickEvent: this.events.dispatchStart.bind(this),
+        classname: 'flex'
       });
       this.append($group, [cancel.$el, this.start.$el]);
       this.append(this.$footer, [$inst, $group]);
@@ -69,8 +71,8 @@ export default class Start extends Renderer {
   }
 
   _distributor(number) {
-    // Going for 2 to 1
-    let agents = Math.floor(number * 0.66667),
+    // Going for 3 to 1, minimum 1
+    let agents = Math.max(Math.floor(number * 0.75), 1),
       imposters = number - agents;
     return [agents, imposters];
   }

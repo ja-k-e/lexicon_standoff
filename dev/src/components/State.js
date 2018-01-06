@@ -223,13 +223,16 @@ export default class State {
         dispatchEnd: () => this.dispatchEnd()
       }),
       turns: new Renderers.Turns(this.player, {
-        dispatchReveal: () => this.dispatchReveal()
+        dispatchReveal: () => this.dispatchReveal(),
+        dispatchEnd: () => this.dispatchEnd()
       }),
       reveal: new Renderers.Reveal(this.player, {
-        dispatchActions: () => this.dispatchActions()
+        dispatchActions: () => this.dispatchActions(),
+        back: () => Adapters.Games.masterUpdateStatus(this.game.id, 'turns')
       }),
       actions: new Renderers.Actions(this.player, {
-        dispatchAction: (p, a) => this.dispatchAction(p, a)
+        dispatchAction: (p, a) => this.dispatchAction(p, a),
+        back: () => Adapters.Games.masterUpdateStatus(this.game.id, 'reveal')
       }),
       results: new Renderers.Results(this.player, {
         dispatchEnd: () => this.dispatchEnd(),
@@ -315,7 +318,7 @@ export default class State {
   devDispatchAction(playerId) {
     let spoofs = this.game.playerCount - STUB_COUNT;
     if (this.player.isMaster)
-      for (let i = 0; i < this.game.playerCount - 2; i++) {
+      for (let i = 0; i < STUB_COUNT; i++) {
         let id = `${STUB_PREFIX}${i + 1}`,
           victimId = this.players[id].isAlive ? playerId : this.player.id;
         Adapters.Games.globalVote(this.game.id, id, victimId);

@@ -13,25 +13,30 @@ export default class Turns extends Renderer {
     this.$header.appendChild(this.$h1);
     this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
 
-    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
-    this.append(this.$main, this.imposters.elements);
-
     if (this.player.isMaster) this.renderInitialMaster();
   }
 
   renderInitialMaster() {
     let $inst = this.el(
-      'p',
-      `Take clockwise turns saying a word. You're first.
-        After a Round, first turn moves to the next alive Player.
-        Once everyone says a word, proceed.`,
-      'instruction'
-    );
+        'p',
+        `Take turns saying a word, you first.
+        Next time, first turn moves to the next alive Player.
+        Proceed once everyone says a word.`,
+        'instruction'
+      ),
+      cancel = new Button({
+        content: '◀',
+        clickEvent: this.handleConfirmEnd.bind(this),
+        classname: 'warning'
+      }),
+      $grp = this.el('div', null, 'item-group');
     this.proceed = new Button({
       content: 'Proceed',
-      clickEvent: this.events.dispatchReveal.bind(this)
+      clickEvent: this.events.dispatchReveal.bind(this),
+      classname: 'flex'
     });
-    this.append(this.$footer, [$inst, this.proceed.$el]);
+    this.append($grp, [cancel.$el, this.proceed.$el]);
+    this.append(this.$footer, [$inst, $grp]);
   }
 
   render(game, players) {
@@ -48,16 +53,16 @@ export default class Turns extends Renderer {
 
     if (this.player.id === keyMasterId && turns > 2) {
       this.$keyMaster.innerHTML = `
-        <p class="description">You’re the <strong>Key Master</strong>.<br>The Topic of Confusion is</p>
-        <p class="topics">“${topics[4][1]}”</p>
+        <p class="description">You’re the <strong>Key Master</strong>.
+          Topic of Confusion:</p>
+        <p class="topics">“${topics[3][1]}”</p>
+        <p class="description warning">
+          Shh! Use the knowledge of this fake Topic to your advantage.
+        </p>
       `;
     } else {
       this.$keyMaster.innerHTML = '';
     }
-
-    this.imposters.reset();
-    if (playerCount > 4 && (this.player.isDead || this.player.isImposter))
-      this.renderImposters(players);
 
     if (this.player.isAlive) {
       let descHtml = '',
@@ -65,7 +70,8 @@ export default class Turns extends Renderer {
       if (this.player.isConfused) {
         let confusionVoteCount = confusionVotes[this.player.id],
           confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
-        descHtml += `You have been confused by ${confusionVoteCount} dead ${confusionPlayers}! `;
+        descHtml += `
+          ${confusionVoteCount} dead ${confusionPlayers} confused you with an extra Topic! `;
       }
       if (this.player.isImposter) {
         if (this.player.isConfused)
@@ -90,6 +96,11 @@ export default class Turns extends Renderer {
     this.toggleSections();
   }
 
+  handleConfirmEnd() {
+    if (window.confirm('Are you sure you want to end the game?'))
+      this.events.dispatchEnd();
+  }
+
   _shuffledHtml(arr, topics) {
     if (arr.length === 2) {
       return `“${topics[arr[0]][1]}” &amp; “${topics[arr[1]][1]}”`;
@@ -109,6 +120,6 @@ export default class Turns extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchReveal'];
+    return ['dispatchReveal', 'dispatchEnd'];
   }
 }

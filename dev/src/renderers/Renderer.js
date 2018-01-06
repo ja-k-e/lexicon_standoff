@@ -27,15 +27,6 @@ export default class Renderer {
     this.$section.remove();
   }
 
-  renderImposters(players) {
-    this.imposters.title('Imposters');
-    for (let playerId in players) {
-      let player = players[playerId];
-      if (player.isImposter)
-        this.imposters.add(this.userSpan(player), player.isDead ? 'dead' : '');
-    }
-  }
-
   userSpan(player, extraClassname) {
     let classname = player.id === this.player.id ? 'you' : '',
       name = player.id === this.player.id ? 'You' : player.name;

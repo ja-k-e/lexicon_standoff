@@ -9,7 +9,7 @@ export default class Launch extends Renderer {
           iOS can only do this through Safari.`,
         'instruction'
       ),
-      $or = this.el('p', 'Enter a Secret to Join', 'instruction'),
+      $or = this.el('p', 'OR', 'instruction'),
       $instructions = this.el(
         'p',
         '<br><a href="/instructions/">Instructions</a>',
@@ -25,7 +25,7 @@ export default class Launch extends Renderer {
     this.$slug = this.el('input');
     this.$editor = this.el('div', null, 'editor');
     this.new = new Button({
-      content: 'Create a Game',
+      content: 'Create Game',
       clickEvent: this.events.createGame.bind(this)
     });
     this.join = new Button({
@@ -41,9 +41,9 @@ export default class Launch extends Renderer {
     this.append($grp, [this.$slug, this.join.$el]);
     this.append(this.$main, [
       this.$user,
-      this.new.$el,
-      $or,
       $grp,
+      $or,
+      this.new.$el,
       $instructions,
       $signOut,
       this.$editor
