@@ -762,18 +762,19 @@ input[type='text'] {
   padding: 0.25rem 1rem;
   box-sizing: border-box;
   border: none;
-  color: white;
   font-family: $font;
   font-weight: 300;
-  border-radius: $corner;
+  color: white;
 }
 input[type='text'] {
   background-color: $offblack2;
   border-radius: 0;
   border: $border solid $offblack;
+  border: none;
   border-bottom: $border solid white;
 }
 button {
+  border-radius: $corner;
   text-align: center;
   border: $border solid white;
   background-color: transparent;
