@@ -2,7 +2,7 @@ import NewVersion from './NewVersion';
 import Auth from './Auth';
 import Launch from './Launch';
 import Start from './Start';
-import Turns from './Turns';
+import Selections from './Selections';
 import Reveal from './Reveal';
 import Actions from './Actions';
 import Results from './Results';
@@ -12,7 +12,7 @@ const Renderers = {
   Auth,
   Launch,
   Start,
-  Turns,
+  Selections,
   Reveal,
   Actions,
   Results

@@ -48,7 +48,7 @@ export default class Results extends Renderer {
       });
     this.continue = new Button({
       content: 'Proceed',
-      clickEvent: this.events.dispatchTurns.bind(this),
+      clickEvent: this.events.dispatchSelections.bind(this),
       classname: 'full'
     });
     this.$group = this.el('div', null, 'item-group');
@@ -60,9 +60,8 @@ export default class Results extends Renderer {
     let self = this;
     this.leave = new Button({
       content: 'Leave Game',
-      clickEvent: () => {
-        this.confirmLeave();
-      }
+      clickEvent: () => this.confirmLeave(),
+      classname: 'full'
     });
     this.append(this.$footer, [this.leave.$el]);
   }
@@ -216,11 +215,11 @@ export default class Results extends Renderer {
 
   _playerPoints(roundOver) {
     let { scoreRound, role, alive } = this.player._,
-      scoreTurn = alive ? Game.survivePoints[role] : 0,
-      points = this._points(scoreTurn),
+      scoreSelection = alive ? Game.survivePoints[role] : 0,
+      points = this._points(scoreSelection),
       extra = roundOver ? 'in total' : 'so far';
     if (alive)
-      return `You scored ${points} this Turn,
+      return `You scored ${points} this Selection,
         and ${this._points(scoreRound)} ${extra} this Round.`;
     else
       return `You are dead and scored ${this._points(
@@ -245,7 +244,7 @@ export default class Results extends Renderer {
   get _eventsList() {
     return [
       'dispatchEnd',
-      'dispatchTurns',
+      'dispatchSelections',
       'dispatchNewRound',
       'dispatchLeave'
     ];

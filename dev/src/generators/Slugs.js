@@ -944,7 +944,7 @@ export default class Slugs {
       'trucks',
       'tub',
       'turkey',
-      'turn',
+      'selection',
       'twig',
       'twist',
       'umbrella',
