@@ -65,7 +65,7 @@ export default class Games extends Adapter {
             if (game && game.id === id) {
               // Kill listener
               this.db.ref(this.r(id)).off();
-              // Reselection the Game
+              // Return the Game
               resolve({ game });
             }
           });

@@ -1158,7 +1158,7 @@ var Games = function (_Adapter) {
             if (game && game.id === id) {
               // Kill listener
               _this5.db.ref(_this5.r(id)).off();
-              // Reselection the Game
+              // Return the Game
               resolve({ game: game });
             }
           });
