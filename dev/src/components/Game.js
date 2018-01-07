@@ -12,7 +12,10 @@ export default class Game {
   }
 
   detectAllActionsSubmitted() {
-    return Object.keys(this.votes).length === this.playerCount;
+    return Object.keys(this.actions).length === this.playerCount;
+  }
+  detectAllSelectionsSubmitted() {
+    return Object.keys(this.selections).length === this.playerCountAlive;
   }
 
   calculateRoundOverData(players) {
@@ -63,7 +66,7 @@ export default class Game {
 
   update(values) {
     this.changes = {};
-    ['status', 'votes', 'killedIds'].forEach(type => {
+    ['status', 'actions', 'selections', 'killedIds'].forEach(type => {
       this.changes[type] = values[type] !== this._[type];
     });
     this._ = values;
@@ -85,14 +88,15 @@ export default class Game {
         playerCountAlive: playerCount,
         playerCount,
         inProgress: true,
-        votes: {},
+        actions: {},
+        selections: {},
         killVotes: {},
         killedIds: [],
         aliveCounts: { imposter: 0, agent: 0 },
         aliveIds: [],
         deadCounts: { imposter: 0, agent: 0 },
         deadIds: [],
-        turns: 1,
+        selections: 1,
         imposterCount,
         topics,
         roundOver: false
@@ -111,8 +115,8 @@ export default class Game {
       confusionVotes = {},
       confusionIds = [],
       most = 0;
-    for (let playerId in this.votes) {
-      let actionId = this.votes[playerId],
+    for (let playerId in this.actions) {
+      let actionId = this.actions[playerId],
         lastVote = this.playerCountAlive === 2,
         aliveAction = this.state.players[playerId].isAlive;
       if (aliveAction || lastVote) {
@@ -124,16 +128,16 @@ export default class Game {
       }
     }
     for (let playerId in killVotes) {
-      let votes = killVotes[playerId];
-      if (votes > most) {
-        most = votes;
+      let actions = killVotes[playerId];
+      if (actions > most) {
+        most = actions;
         killedIds = [playerId];
-      } else if (votes === most) {
+      } else if (actions === most) {
         killedIds.push(playerId);
       }
     }
     for (let playerId in confusionVotes) {
-      let votes = confusionVotes[playerId];
+      let actions = confusionVotes[playerId];
       confusionIds.push(playerId);
     }
     return { confusionVotes, confusionIds, killVotes, killedIds };
@@ -190,20 +194,26 @@ export default class Game {
   get roundOver() {
     return this._.roundOver;
   }
+  get selections() {
+    return this._.selections;
+  }
   get status() {
     return this._.status;
   }
   get topics() {
     return this._.topics;
   }
-  get turns() {
-    return this._.turns;
+  get selections() {
+    return this._.selections;
   }
-  get votes() {
-    return this._.votes;
+  get actions() {
+    return this._.actions;
   }
   get isActions() {
     return this.status === 'actions';
+  }
+  get isSelections() {
+    return this.status === 'selections';
   }
 
   // Private

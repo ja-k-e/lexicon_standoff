@@ -10,18 +10,18 @@ export default class Actions extends Renderer {
     this.$desc = this.el('p', null, 'description');
     this.$main.appendChild(this.$desc);
 
-    this.votes = new List();
-    this.append(this.$main, this.votes.elements);
+    this.actions = new List();
+    this.append(this.$main, this.actions.elements);
 
     this.waiting = new List('flex-list flex-list-small flex-list-quarter');
     this.append(this.$main, this.waiting.elements);
 
-    this.vote = new Button({
+    this.act = new Button({
       content: '',
       clickEvent: () => {
         let playerId = this.$section.querySelector(':checked').value;
         this.events.dispatchAction(playerId);
-        this.vote.disable();
+        this.act.disable();
         this.$main.classList.add('inactive');
       }
     });
@@ -36,32 +36,32 @@ export default class Actions extends Renderer {
           content: '◀',
           clickEvent: this.events.back.bind(this)
         });
-      this.append($grp, [back.$el, this.vote.$el]);
-      this.vote.$el.classList.add('flex');
+      this.append($grp, [back.$el, this.act.$el]);
+      this.act.$el.classList.add('flex');
       this.append(this.$footer, [$inst, $grp]);
     } else {
-      this.vote.$el.classList.add('full');
-      this.append(this.$footer, [this.vote.$el]);
+      this.act.$el.classList.add('full');
+      this.append(this.$footer, [this.act.$el]);
     }
   }
 
   render(game, players) {
-    let { votes, imposterCount, playerCount, playerCountAlive } = game;
+    let { actions, imposterCount, playerCount, playerCountAlive } = game;
     this.$main.classList.remove('inactive');
-    this.vote.enable();
-    this.votes.reset();
+    this.act.enable();
+    this.actions.reset();
     this.toggleSections();
 
     this.$h1.innerHTML = this.roleHeader('Actions');
 
     // If this player has already voted (refreshed the vote page after voting)
-    if (votes && votes[this.player.id]) {
-      this.votes.title('You have already voted!');
-      this.vote.disable();
+    if (actions && actions[this.player.id]) {
+      this.actions.title('You have already voted!');
+      this.act.disable();
       this.$footer.classList.add('hide');
     } else {
       this.$footer.classList.remove('hide');
-      this.votes.title('Select a Player');
+      this.actions.title('Select a Player');
       let agentCount = Object.keys(players).length - imposterCount,
         imposterS = this._pluralize(imposterCount, 'Imposter'),
         agentS = this._pluralize(agentCount, 'Agent'),
@@ -69,7 +69,7 @@ export default class Actions extends Renderer {
         last = playerCountAlive === 2,
         term = alive || last ? 'Kill' : 'Confuse',
         extra = alive || last ? '' : 'You’re Dead.';
-      this.vote.content(term);
+      this.act.content(term);
       this.$desc.innerHTML = ` ${last ? 'This is the final vote!' : ''}
         ${extra} Select a Player to <strong>${term}</strong>.`;
       if (this.player.isAlive)
@@ -81,9 +81,9 @@ export default class Actions extends Renderer {
           if (player.isAlive) {
             let selected = first ? 'checked' : '';
             if (first) first = false;
-            this.votes.add(`
+            this.actions.add(`
               <input id="${playerId}" value="${playerId}"
-                type="radio" name="votes" ${selected} />
+                type="radio" name="actions" ${selected} />
               <label for="${playerId}">${this.userSpan(player)}</label>
             `);
           }
@@ -91,14 +91,14 @@ export default class Actions extends Renderer {
       }
     }
 
-    this.renderWaiting({ players, votes });
+    this.renderWaiting({ players, actions });
   }
 
-  renderWaiting({ players, votes }) {
+  renderWaiting({ players, actions }) {
     this.waiting.reset();
     this.waiting.title('Waiting on...');
     for (let playerId in players)
-      if (!votes || !votes[playerId])
+      if (!actions || !actions[playerId])
         this.waiting.add(this.userSpan(players[playerId]));
   }
 

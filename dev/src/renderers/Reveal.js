@@ -12,6 +12,12 @@ export default class Reveal extends Renderer {
 
     this.append(this.$main, [this.$topics, this.$desc]);
 
+    this.selections = new List(
+      'flex-list flex-list-small flex-list-selections'
+    );
+    this.selections.title('Selections');
+    this.append(this.$main, this.selections.elements);
+
     if (this.player.isMaster) {
       let $inst = this.el(
         'p',
@@ -35,7 +41,14 @@ export default class Reveal extends Renderer {
   }
 
   render(game, players) {
-    let { topics, playerCount, turns } = game;
+    let { topics, playerCount, selections } = game;
+
+    this.selections.reset();
+    for (let playerId in selections)
+      this.selections.add(`
+        ${this.userSpan(players[playerId])}
+        <span class="selection">${selections[playerId]}</span>
+      `);
 
     this.$h1.innerHTML = this.roleHeader('Reveal');
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
