@@ -79,8 +79,7 @@ export default class Game {
       imposterCount
     } = this._generateRoles(playerIds);
     let playerCount = playerIds.length,
-      topics = this.generateTopics(),
-      keyMasterId = this.generateKeyMasterId();
+      topics = this.generateTopics();
     return {
       game: {
         playerCountAlive: playerCount,
@@ -94,7 +93,6 @@ export default class Game {
         deadCounts: { imposter: 0, agent: 0 },
         deadIds: [],
         turns: 1,
-        keyMasterId,
         imposterCount,
         topics,
         roundOver: false
@@ -105,11 +103,6 @@ export default class Game {
 
   generateTopics() {
     return [1, 2, 3, 4].map(_ => this.topicGenerator.loadTopic());
-  }
-
-  generateKeyMasterId() {
-    let playerIds = Object.keys(this.state.players);
-    return playerIds[Math.floor(Math.random() * playerIds.length)];
   }
 
   generateActionIds() {
@@ -181,9 +174,6 @@ export default class Game {
   }
   get imposterCount() {
     return this._.imposterCount;
-  }
-  get keyMasterId() {
-    return this._.keyMasterId;
   }
   get killedIds() {
     return this._.killedIds;

@@ -329,25 +329,6 @@ section {
       }
     }
   }
-  .key-master:not(:empty) {
-    // background: $offblack;
-    // border-radius: $corner;
-    border-top: $border solid white;
-    box-sizing: border-box;
-    padding-top: 1rem;
-    // text-align: center;
-    margin-top: 1rem;
-    .topics {
-      margin-top: 0.25rem;
-      margin-bottom: 0;
-      + .description {
-        margin-top: 0.25rem;
-      }
-    }
-    .description.warning {
-      color: $red;
-    }
-  }
 }
 
 ul.hint-list {

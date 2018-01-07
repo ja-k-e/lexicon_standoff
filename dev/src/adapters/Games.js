@@ -111,7 +111,7 @@ export default class Games extends Adapter {
     });
   }
 
-  masterResetTurns(gameId, topics, turns, keyMasterId) {
+  masterResetTurns(gameId, topics, turns) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
@@ -120,7 +120,6 @@ export default class Games extends Adapter {
           killedIds: [],
           killVotes: {},
           roundOver: false,
-          keyMasterId,
           turns,
           aliveCounts: { imposter: 0, agent: 0 },
           aliveIds: [],

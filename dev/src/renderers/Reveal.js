@@ -9,9 +9,8 @@ export default class Reveal extends Renderer {
 
     this.$topics = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
-    this.$keyMaster = this.el('div', null, 'key-master');
 
-    this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
+    this.append(this.$main, [this.$topics, this.$desc]);
 
     if (this.player.isMaster) {
       let $inst = this.el(
@@ -36,30 +35,7 @@ export default class Reveal extends Renderer {
   }
 
   render(game, players) {
-    let { topics, playerCount, turns, keyMasterId } = game;
-
-    if (this.player.id === keyMasterId && turns > 2) {
-      this.$keyMaster.innerHTML = `
-        <p class="description">You're the <strong>Key Master</strong>.
-          Topic of Confusion:</p>
-        <p class="topics">“${topics[3][1]}”</p>
-        <p class="description warning">
-          You can reveal, hide, or even lie about this information.
-          Other Players may claim they were confused or that they are the <strong>Key Master</strong>.
-          You may not show Players this screen.
-        </p>
-      `;
-    } else if (turns > 2) {
-      this.$keyMaster.innerHTML = `
-        <p class="description">
-          A <strong>Key Master</strong> knew the Topic of Confusion this round.
-          You can claim to have been confused by that extra Topic.
-          You can also claim to be the <strong>Key Master</strong>. Good luck with that.
-        </p>
-      `;
-    } else {
-      this.$keyMaster.innerHTML = '';
-    }
+    let { topics, playerCount, turns } = game;
 
     this.$h1.innerHTML = this.roleHeader('Reveal');
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;

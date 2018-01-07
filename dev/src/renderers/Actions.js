@@ -73,7 +73,7 @@ export default class Actions extends Renderer {
       this.$desc.innerHTML = ` ${last ? 'This is the final vote!' : ''}
         ${extra} Select a Player to <strong>${term}</strong>.`;
       if (this.player.isAlive)
-        this.$desc.innerHTML += ` There ${imposterS} and ${agentS} in total.`;
+        this.$desc.innerHTML += ` There are ${agentS} and ${imposterS} in total.`;
       let first = true;
       for (let playerId in players) {
         if (playerId !== this.player.id) {

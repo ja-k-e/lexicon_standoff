@@ -637,8 +637,7 @@ var Game = function () {
           imposterCount = _generateRoles2.imposterCount;
 
       var playerCount = playerIds.length,
-          topics = this.generateTopics(),
-          keyMasterId = this.generateKeyMasterId();
+          topics = this.generateTopics();
       return {
         game: {
           playerCountAlive: playerCount,
@@ -652,7 +651,6 @@ var Game = function () {
           deadCounts: { imposter: 0, agent: 0 },
           deadIds: [],
           turns: 1,
-          keyMasterId: keyMasterId,
           imposterCount: imposterCount,
           topics: topics,
           roundOver: false
@@ -668,12 +666,6 @@ var Game = function () {
       return [1, 2, 3, 4].map(function (_) {
         return _this2.topicGenerator.loadTopic();
       });
-    }
-  }, {
-    key: 'generateKeyMasterId',
-    value: function generateKeyMasterId() {
-      var playerIds = Object.keys(this.state.players);
-      return playerIds[Math.floor(Math.random() * playerIds.length)];
     }
   }, {
     key: 'generateActionIds',
@@ -773,11 +765,6 @@ var Game = function () {
     key: 'imposterCount',
     get: function get() {
       return this._.imposterCount;
-    }
-  }, {
-    key: 'keyMasterId',
-    get: function get() {
-      return this._.keyMasterId;
     }
   }, {
     key: 'killedIds',
@@ -1145,7 +1132,7 @@ var Games = function (_Adapter) {
     }
   }, {
     key: 'masterResetTurns',
-    value: function masterResetTurns(gameId, topics, turns, keyMasterId) {
+    value: function masterResetTurns(gameId, topics, turns) {
       var _this8 = this;
 
       return new Promise(function (resolve, reject) {
@@ -1154,7 +1141,6 @@ var Games = function (_Adapter) {
           killedIds: [],
           killVotes: {},
           roundOver: false,
-          keyMasterId: keyMasterId,
           turns: turns,
           aliveCounts: { imposter: 0, agent: 0 },
           aliveIds: [],
@@ -1738,7 +1724,7 @@ var config = __webpack_require__(5);
 
 var //
 STUB = config.env === 'development',
-    STUB_COUNT = 3,
+    STUB_COUNT = 6,
     STUB_PREFIX = 'TEST_USER_';
 
 var State = function () {
@@ -2039,9 +2025,8 @@ var State = function () {
       var _this11 = this;
 
       var topics = this.game.generateTopics(),
-          turns = this.game.turns + 1,
-          keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
-      _Adapters2.default.Games.masterResetTurns(this.game.id, topics, turns, keyMasterId).then(function () {
+          turns = this.game.turns + 1;
+      _Adapters2.default.Games.masterResetTurns(this.game.id, topics, turns).then(function () {
         _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'turns');
       });
     }
@@ -2686,10 +2671,9 @@ var Turns = function (_Renderer) {
       this.$h1 = this.el('h1');
       this.$topics = this.el('p', null, 'topics');
       this.$desc = this.el('p', null, 'description');
-      this.$keyMaster = this.el('div', null, 'key-master');
 
       this.$header.appendChild(this.$h1);
-      this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
+      this.append(this.$main, [this.$topics, this.$desc]);
 
       if (this.player.isMaster) this.renderInitialMaster();
     }
@@ -2717,7 +2701,6 @@ var Turns = function (_Renderer) {
       var turns = game.turns,
           topics = game.topics,
           confusionVotes = game.confusionVotes,
-          keyMasterId = game.keyMasterId,
           playerCount = game.playerCount,
           playerCountAlive = game.playerCountAlive;
 
@@ -2725,12 +2708,6 @@ var Turns = function (_Renderer) {
         return [i[0], i[1].split(' ').join('&nbsp;')];
       });
       this.$h1.innerHTML = this.roleHeader('Turns');
-
-      if (this.player.id === keyMasterId && turns > 2) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">You\u2019re the <strong>Key Master</strong>.\n          Topic of Confusion:</p>\n        <p class="topics">\u201C' + topics[3][1] + '\u201D</p>\n        <p class="description warning">\n          Shh! Use the knowledge of this fake Topic to your advantage.\n        </p>\n      ';
-      } else {
-        this.$keyMaster.innerHTML = '';
-      }
 
       if (this.player.isAlive) {
         var descHtml = '',
@@ -2846,9 +2823,8 @@ var Reveal = function (_Renderer) {
 
       this.$topics = this.el('p', null, 'topics');
       this.$desc = this.el('p', null, 'description');
-      this.$keyMaster = this.el('div', null, 'key-master');
 
-      this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
+      this.append(this.$main, [this.$topics, this.$desc]);
 
       if (this.player.isMaster) {
         var $inst = this.el('p', 'Players question each other and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
@@ -2871,17 +2847,8 @@ var Reveal = function (_Renderer) {
     value: function render(game, players) {
       var topics = game.topics,
           playerCount = game.playerCount,
-          turns = game.turns,
-          keyMasterId = game.keyMasterId;
+          turns = game.turns;
 
-
-      if (this.player.id === keyMasterId && turns > 2) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">You\'re the <strong>Key Master</strong>.\n          Topic of Confusion:</p>\n        <p class="topics">\u201C' + topics[3][1] + '\u201D</p>\n        <p class="description warning">\n          You can reveal, hide, or even lie about this information.\n          Other Players may claim they were confused or that they are the <strong>Key Master</strong>.\n          You may not show Players this screen.\n        </p>\n      ';
-      } else if (turns > 2) {
-        this.$keyMaster.innerHTML = '\n        <p class="description">\n          A <strong>Key Master</strong> knew the Topic of Confusion this round.\n          You can claim to have been confused by that extra Topic.\n          You can also claim to be the <strong>Key Master</strong>. Good luck with that.\n        </p>\n      ';
-      } else {
-        this.$keyMaster.innerHTML = '';
-      }
 
       this.$h1.innerHTML = this.roleHeader('Reveal');
       this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
@@ -3024,7 +2991,7 @@ var Actions = function (_Renderer) {
             extra = alive || last ? '' : 'You’re Dead.';
         this.vote.content(term);
         this.$desc.innerHTML = ' ' + (last ? 'This is the final vote!' : '') + '\n        ' + extra + ' Select a Player to <strong>' + term + '</strong>.';
-        if (this.player.isAlive) this.$desc.innerHTML += ' There ' + imposterS + ' and ' + agentS + ' in total.';
+        if (this.player.isAlive) this.$desc.innerHTML += ' There are ' + agentS + ' and ' + imposterS + ' in total.';
         var first = true;
         for (var playerId in players) {
           if (playerId !== this.player.id) {

@@ -7,7 +7,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 3,
+  STUB_COUNT = 6,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -259,13 +259,10 @@ export default class State {
 
   dispatchTurns() {
     let topics = this.game.generateTopics(),
-      turns = this.game.turns + 1,
-      keyMasterId = turns > 2 ? this.game.generateKeyMasterId() : null;
-    Adapters.Games
-      .masterResetTurns(this.game.id, topics, turns, keyMasterId)
-      .then(() => {
-        Adapters.Games.masterUpdateStatus(this.game.id, 'turns');
-      });
+      turns = this.game.turns + 1;
+    Adapters.Games.masterResetTurns(this.game.id, topics, turns).then(() => {
+      Adapters.Games.masterUpdateStatus(this.game.id, 'turns');
+    });
   }
 
   dispatchReveal() {

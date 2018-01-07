@@ -8,10 +8,9 @@ export default class Turns extends Renderer {
     this.$h1 = this.el('h1');
     this.$topics = this.el('p', null, 'topics');
     this.$desc = this.el('p', null, 'description');
-    this.$keyMaster = this.el('div', null, 'key-master');
 
     this.$header.appendChild(this.$h1);
-    this.append(this.$main, [this.$topics, this.$desc, this.$keyMaster]);
+    this.append(this.$main, [this.$topics, this.$desc]);
 
     if (this.player.isMaster) this.renderInitialMaster();
   }
@@ -40,29 +39,9 @@ export default class Turns extends Renderer {
   }
 
   render(game, players) {
-    let {
-      turns,
-      topics,
-      confusionVotes,
-      keyMasterId,
-      playerCount,
-      playerCountAlive
-    } = game;
+    let { turns, topics, confusionVotes, playerCount, playerCountAlive } = game;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
     this.$h1.innerHTML = this.roleHeader('Turns');
-
-    if (this.player.id === keyMasterId && turns > 2) {
-      this.$keyMaster.innerHTML = `
-        <p class="description">You’re the <strong>Key Master</strong>.
-          Topic of Confusion:</p>
-        <p class="topics">“${topics[3][1]}”</p>
-        <p class="description warning">
-          Shh! Use the knowledge of this fake Topic to your advantage.
-        </p>
-      `;
-    } else {
-      this.$keyMaster.innerHTML = '';
-    }
 
     if (this.player.isAlive) {
       let descHtml = '',
