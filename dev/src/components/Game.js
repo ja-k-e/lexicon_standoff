@@ -12,58 +12,26 @@ export default class Game {
   }
 
   detectAllActionsSubmitted() {
-    return Object.keys(this.votes).length === this.playerCount;
+    return Object.keys(this.actions).length === this.playerCount;
+  }
+  detectAllSelectionsSubmitted() {
+    return Object.keys(this.selections).length === this.playerCount;
   }
 
-  calculateRoundOverData(players) {
-    let deadCounts = { imposter: 0, agent: 0 },
-      aliveCounts = { imposter: 0, agent: 0 },
-      aliveIds = [],
-      deadIds = [];
-    for (let playerId in players) {
-      let role = players[playerId].role;
-      if (players[playerId].isAlive) {
-        aliveCounts[role]++;
-        aliveIds.push(playerId);
-      } else {
-        deadCounts[role]++;
-        deadIds.push(playerId);
-      }
-    }
-    let roundOver = aliveCounts.imposter === 0 || aliveCounts.agent === 0;
-    return { aliveCounts, aliveIds, deadCounts, deadIds, roundOver };
-  }
+  calculatePoints(players) {
+    let points = {};
 
-  calculatePoints(players, { aliveCounts, aliveIds, roundOver }) {
-    let points = {},
-      winRole = null;
-    if (roundOver) {
-      if (aliveCounts.imposter > 0) winRole = 'imposter';
-      else if (aliveCounts.agent > 0) winRole = 'agent';
-    }
     // Alive Imposters score two, alive Agents score one
-    for (let playerId in players) {
-      let player = players[playerId],
-        role = player.role,
-        survivePts = Game.survivePoints[role];
-      // If winning Team
-      if (winRole && winRole === role) {
-        // If alive, extra points
-        let pts = player.isAlive ? Game.winPoints + survivePts : Game.winPoints;
-        points[playerId] = pts;
-      } else if (winRole) {
-        // If Loser,
-      } else {
-        // Game Still playing
-        if (player.isAlive) points[playerId] = survivePts;
-      }
-    }
+    for (let playerId in players)
+      if (players[playerId].isAlive)
+        points[playerId] = Game.survivePoints[players[playerId].role];
+
     return points;
   }
 
   update(values) {
     this.changes = {};
-    ['status', 'votes', 'killedIds'].forEach(type => {
+    ['status', 'actions', 'selections', 'killedIds'].forEach(type => {
       this.changes[type] = values[type] !== this._[type];
     });
     this._ = values;
@@ -82,61 +50,64 @@ export default class Game {
       topics = this.generateTopics();
     return {
       game: {
-        playerCountAlive: playerCount,
         playerCount,
         inProgress: true,
-        votes: {},
+        actions: {},
+        selections: {},
+        killVotesByPlayer: {},
         killVotes: {},
         killedIds: [],
-        aliveCounts: { imposter: 0, agent: 0 },
-        aliveIds: [],
-        deadCounts: { imposter: 0, agent: 0 },
-        deadIds: [],
-        turns: 1,
+        selections: 1,
         imposterCount,
-        topics,
-        roundOver: false
+        topics
       },
       players: { playerIdsImposters, playerIdsAgents }
     };
   }
 
   generateTopics() {
-    return [1, 2, 3, 4].map(_ => this.topicGenerator.loadTopic());
+    return [1, 2, 3].map(_ => this.topicGenerator.loadTopic());
   }
 
   generateActionIds() {
-    let killVotes = {},
+    let sums = {};
+    for (let voterId in this.actions) {
+      let voteIds = this.actions[voterId];
+      voteIds.forEach(voteId => {
+        sums[voteId] = sums[voteId] || 0;
+        sums[voteId]++;
+      });
+    }
+
+    let sorted = Object.keys(sums)
+      .sort((a, b) => {
+        if (sums[a] > sums[b]) return -1;
+        if (sums[a] < sums[b]) return 1;
+        return 0;
+      })
+      .map(a => [a, sums[a]]);
+
+    let imposterCount = this.imposterCount,
       killedIds = [],
-      confusionVotes = {},
-      confusionIds = [],
-      most = 0;
-    for (let playerId in this.votes) {
-      let actionId = this.votes[playerId],
-        lastVote = this.playerCountAlive === 2,
-        aliveAction = this.state.players[playerId].isAlive;
-      if (aliveAction || lastVote) {
-        killVotes[actionId] = killVotes[actionId] || 0;
-        killVotes[actionId]++;
-      } else {
-        confusionVotes[actionId] = confusionVotes[actionId] || 0;
-        confusionVotes[actionId]++;
-      }
+      killVotes = {},
+      killVotesByPlayer = {};
+
+    pluck();
+
+    function pluck(i = 0) {
+      let curr = sorted[i],
+        next = sorted[i + 1];
+      killedIds.push(curr[0]);
+      killVotes[curr[1]] = killVotes[curr[1]] || [];
+      killVotes[curr[1]].push(curr[0]);
+      killVotesByPlayer[curr[0]] = curr[1];
+      let same = next ? curr[1] === next[1] : false,
+        remaining = i < sorted.length - 1,
+        enough = killedIds.length < imposterCount;
+      if (remaining && (enough || same)) pluck(i + 1);
     }
-    for (let playerId in killVotes) {
-      let votes = killVotes[playerId];
-      if (votes > most) {
-        most = votes;
-        killedIds = [playerId];
-      } else if (votes === most) {
-        killedIds.push(playerId);
-      }
-    }
-    for (let playerId in confusionVotes) {
-      let votes = confusionVotes[playerId];
-      confusionIds.push(playerId);
-    }
-    return { confusionVotes, confusionIds, killVotes, killedIds };
+
+    return { killVotes, killedIds, killVotesByPlayer };
   }
 
   // Generators
@@ -157,21 +128,6 @@ export default class Game {
   }
 
   // Getters
-  get aliveCounts() {
-    return this._.aliveCounts;
-  }
-  get aliveIds() {
-    return this._.aliveIds;
-  }
-  get confusionVotes() {
-    return this._.confusionVotes;
-  }
-  get deadCounts() {
-    return this._.deadCounts;
-  }
-  get deadIds() {
-    return this._.deadIds;
-  }
   get imposterCount() {
     return this._.imposterCount;
   }
@@ -181,14 +137,14 @@ export default class Game {
   get killVotes() {
     return this._.killVotes;
   }
+  get killVotesByPlayer() {
+    return this._.killVotesByPlayer;
+  }
   get playerCount() {
     return this._.playerCount;
   }
-  get playerCountAlive() {
-    return this._.playerCountAlive;
-  }
-  get roundOver() {
-    return this._.roundOver;
+  get selections() {
+    return this._.selections;
   }
   get status() {
     return this._.status;
@@ -196,14 +152,17 @@ export default class Game {
   get topics() {
     return this._.topics;
   }
-  get turns() {
-    return this._.turns;
+  get selections() {
+    return this._.selections;
   }
-  get votes() {
-    return this._.votes;
+  get actions() {
+    return this._.actions;
   }
   get isActions() {
     return this.status === 'actions';
+  }
+  get isSelections() {
+    return this.status === 'selections';
   }
 
   // Private

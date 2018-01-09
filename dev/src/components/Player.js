@@ -15,9 +15,6 @@ export default class Player {
   get score() {
     return this._.score;
   }
-  get scoreRound() {
-    return this._.scoreRound;
-  }
   get role() {
     return this._.role;
   }
@@ -35,9 +32,6 @@ export default class Player {
   }
   get isMaster() {
     return this._.master;
-  }
-  get isConfused() {
-    return this._.confused;
   }
 
   get capitalizedRole() {

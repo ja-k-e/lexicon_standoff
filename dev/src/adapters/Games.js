@@ -21,12 +21,23 @@ export default class Games extends Adapter {
     });
   }
 
-  globalVote(gameId, actingPlayerId, playerId) {
+  globalAction(gameId, actingPlayerId, playerId) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
-        .child('votes')
+        .child('actions')
         .update({ [actingPlayerId]: playerId })
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+  globalSelection(gameId, playerId, selection) {
+    return new Promise((resolve, reject) => {
+      this.db
+        .ref(this.r(gameId))
+        .child('selections')
+        .update({ [playerId]: selection })
         .then(resolve)
         .catch(reject);
     });
@@ -78,23 +89,14 @@ export default class Games extends Adapter {
     });
   }
 
-  masterUpdateActionIds(
-    gameId,
-    confusionVotes,
-    confusionIds,
-    killVotes,
-    killedIds,
-    playerCountAlive
-  ) {
+  masterUpdateActionIds(gameId, killVotesByPlayer, killVotes, killedIds) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
         .update({
-          confusionVotes,
-          confusionIds,
+          killVotesByPlayer,
           killedIds,
-          killVotes,
-          playerCountAlive
+          killVotes
         })
         .then(resolve)
         .catch(reject);
@@ -111,20 +113,14 @@ export default class Games extends Adapter {
     });
   }
 
-  masterResetTurns(gameId, topics, turns) {
+  masterResetSelections(gameId, topics, selections) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
         .update({
-          votes: {},
-          killedIds: [],
-          killVotes: {},
-          roundOver: false,
-          turns,
-          aliveCounts: { imposter: 0, agent: 0 },
-          aliveIds: [],
-          deadCounts: { imposter: 0, agent: 0 },
-          deadIds: [],
+          actions: {},
+          selections: {},
+          selections,
           topics
         })
         .then(resolve)
