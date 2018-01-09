@@ -25,15 +25,14 @@ export default class Players extends Adapter {
 
   globalCreate(gameId, user, master) {
     return new Promise((resolve, reject) => {
-      let { id, name, avatar, alive } = user,
+      let { id, name, avatar } = user,
         params = {
           id,
           gameId,
           name,
           avatar,
           master,
-          score: 0,
-          scoreRound: 0
+          score: 0
         };
       this.db
         .ref(this.r([gameId, id]))
@@ -99,12 +98,11 @@ export default class Players extends Adapter {
     });
   }
 
-  masterActOnPlayers(gameId, players, killedIds, confusionIds) {
+  masterActOnPlayers(gameId, players, killedIds) {
     return new Promise((resolve, reject) => {
       let playerCount = Object.keys(players).length;
       for (let playerId in players) {
-        let params = { confused: confusionIds.includes(playerId) };
-        if (killedIds.includes(playerId)) params.alive = false;
+        let params = { alive: !killedIds.includes(playerId) };
         this.db
           .ref(this.r([gameId, playerId]))
           .update(params)
@@ -141,11 +139,10 @@ export default class Players extends Adapter {
         let pointsVal = points[playerId],
           player = players[playerId];
         if (pointsVal) {
-          let scoreRound = player.scoreRound + pointsVal,
-            score = player.score + pointsVal;
+          let score = player.score + pointsVal;
           this.db
             .ref(this.r([player.gameId, playerId]))
-            .update({ score, scoreRound })
+            .update({ score })
             .then(() => {
               playerCount--;
               if (playerCount <= 0) resolve();
@@ -165,15 +162,13 @@ export default class Players extends Adapter {
       for (let playerId in players) {
         let player = players[playerId];
         let role,
-          confused = false,
-          alive = true,
-          scoreRound = 0;
+          alive = true;
         if (playerIdsImposters.includes(playerId)) role = 'imposter';
         else if (playerIdsAgents.includes(playerId)) role = 'agent';
         else role = 'agent';
         this.db
           .ref(this.r([player.gameId, playerId]))
-          .update({ role, alive, confused, scoreRound })
+          .update({ role, alive })
           .then(() => {
             playerCount--;
             if (playerCount <= 0) resolve();

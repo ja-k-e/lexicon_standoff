@@ -10,7 +10,7 @@ export default class Selections extends Renderer {
     this.$desc = this.el('p', null, 'description');
     this.$input = this.el('input', null, 'full margin');
     this.$input.setAttribute('type', 'text');
-    this.$input.setAttribute('placeholder', 'Your Word');
+    this.$input.setAttribute('placeholder', 'Word or Name');
     this.$input.setAttribute('maxlength', '16');
 
     this.$header.appendChild(this.$h1);
@@ -56,54 +56,29 @@ export default class Selections extends Renderer {
   render(game, players) {
     this.topics = game.topics.map(t => t[1]);
     this.$input.value = '';
-    let {
-      topics,
-      selections,
-      confusionVotes,
-      playerCount,
-      playerCountAlive
-    } = game;
+    let { topics, selections, playerCount } = game;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
     this.$h1.innerHTML = this.roleHeader('Selections');
 
-    if (this.player.isAlive) {
-      if (selections[this.player.id]) {
-        this.$input.classList.add('hide');
-        this.submit.disable();
-      } else {
-        this.$input.classList.remove('hide');
-        this.submit.enable();
-      }
-      let descHtml = '',
-        topicsHtml;
-      if (this.player.isConfused) {
-        let confusionVoteCount = confusionVotes[this.player.id],
-          confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
-        descHtml += `
-          ${confusionVoteCount} dead ${confusionPlayers} confused you with an extra Topic! `;
-      }
-      if (this.player.isImposter) {
-        if (this.player.isConfused)
-          topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);
-        else topicsHtml = this._shuffledHtml([0, 1, 2], topics);
-      } else {
-        if (this.player.isConfused)
-          topicsHtml = this._shuffledHtml([0, 1, 3], topics);
-        else topicsHtml = this._shuffledHtml([0, 1], topics);
-      }
-      if (this.player.isConfused || this.player.isImposter) {
-        descHtml += `Enter one word that you associate with the <strong>two</strong> Agent Topics.`;
-      } else {
-        descHtml = `Enter one word that you associate with both of the Topics above.`;
-      }
-      this.$topics.innerHTML = topicsHtml;
-      this.$desc.innerHTML = descHtml;
-    } else {
+    if (selections[this.player.id]) {
       this.$input.classList.add('hide');
       this.submit.disable();
-      this.$topics.innerHTML = this._shuffledHtml([0, 1], topics);
-      this.$desc.innerHTML = "You're dead. You don't get a selection.";
+    } else {
+      this.$input.classList.remove('hide');
+      this.submit.enable();
     }
+    let descHtml = '',
+      topicsHtml;
+    if (this.player.isImposter)
+      topicsHtml = this._shuffledHtml([0, 1, 2], topics);
+    else topicsHtml = this._shuffledHtml([0, 1], topics);
+    if (this.player.isImposter) {
+      descHtml += `Enter one word or name below that you associate with the <strong>two</strong> Agent Topics.`;
+    } else {
+      descHtml = `Enter one word or name below that you associate with both of the Topics above.`;
+    }
+    this.$topics.innerHTML = topicsHtml;
+    this.$desc.innerHTML = descHtml;
     this.toggleSections();
     this.renderWaiting({ players, selections });
   }

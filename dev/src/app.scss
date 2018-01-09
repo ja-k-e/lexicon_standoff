@@ -360,7 +360,8 @@ ul.flex-list {
       height: $size;
       font-size: 0.7rem;
       span.user,
-      span.score {
+      span.score,
+      span.votes {
         line-height: $size;
       }
       span.user {
@@ -387,6 +388,7 @@ ul.flex-list {
         position: absolute;
         top: 0;
         right: 0;
+        background: black;
       }
     }
   }
@@ -681,6 +683,19 @@ section.actions {
       position: relative;
       cursor: pointer;
       background: $offblack;
+      width: 100%;
+      height: 100%;
+      .selection {
+        top: 0;
+        left: $li-h * 1.2;
+        right: 0;
+        position: absolute;
+        font-size: 0.7rem;
+        line-height: $li-h;
+        height: $li-h;
+        background: $offblack;
+        animation: pulse-selection 3s ease-in-out alternate infinite;
+      }
     }
     input {
       position: absolute;
@@ -693,12 +708,24 @@ section.actions {
       }
       &:checked {
         + label,
-        + label .user {
+        + label .user,
+        + label .selection {
           background: white;
           color: black;
         }
       }
     }
+  }
+}
+
+@keyframes pulse-selection {
+  0%,
+  45% {
+    opacity: 0;
+  }
+  55%,
+  100% {
+    opacity: 1;
   }
 }
 
@@ -847,7 +874,8 @@ ol {
       color: $gray;
       // font-style: italic;
     }
-    span.score {
+    span.score,
+    span.votes {
       position: absolute;
       top: 0;
       right: $li-h * 0.25;

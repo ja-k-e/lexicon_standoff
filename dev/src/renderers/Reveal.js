@@ -21,27 +21,22 @@ export default class Reveal extends Renderer {
     if (this.player.isMaster) {
       let $inst = this.el(
         'p',
-        `Players question each other and discuss who they think is an Imposter.
-          Once everyone is ready to vote, proceed.`,
+        `Players discuss their answers. Proceed once everyone is ready to vote.`,
         'instruction'
       );
       let $grp = this.el('div', null, 'item-group'),
-        back = new Button({
-          content: '◀',
-          clickEvent: this.events.back.bind(this)
-        }),
         proceed = new Button({
           content: 'Proceed',
           clickEvent: this.events.dispatchActions.bind(this),
           classname: 'flex'
         });
-      this.append($grp, [back.$el, proceed.$el]);
+      this.append($grp, [proceed.$el]);
       this.append(this.$footer, [$inst, $grp]);
     }
   }
 
   render(game, players) {
-    let { topics, playerCount, selections } = game;
+    let { topics, playerCount, imposterCount, selections } = game;
 
     this.selections.reset();
     for (let playerId in selections)
@@ -52,11 +47,11 @@ export default class Reveal extends Renderer {
 
     this.$h1.innerHTML = this.roleHeader('Reveal');
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
-    if (this.player.isAlive) {
-      this.$desc.innerHTML = `These were the two Topics. Explain why you chose your word.`;
-    } else {
-      this.$desc.innerHTML = 'You are dead. You can still question Players.';
-    }
+    let playerS = imposterCount === 1 ? '1 Player' : `${imposterCount} Players`;
+    this.$desc.innerHTML = `
+      These were the two Topics. Explain and argue your case.
+      You'll need to vote to kill ${playerS}.
+    `;
     this.toggleSections();
   }
 
@@ -65,6 +60,6 @@ export default class Reveal extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchActions', 'back'];
+    return ['dispatchActions'];
   }
 }

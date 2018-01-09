@@ -8,7 +8,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 2,
+  STUB_COUNT = 12,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -90,25 +90,10 @@ export default class State {
   }
 
   handleKilledIdsChange() {
-    let roundOverData = this.game.calculateRoundOverData(this.players),
-      points = this.game.calculatePoints(this.players, roundOverData);
+    let points = this.game.calculatePoints(this.players);
     // Add player points then update results
     Adapters.Players.masterTallyScores(this.players, points).then(() => {
-      let {
-          aliveCounts,
-          aliveIds,
-          deadCounts,
-          deadIds,
-          roundOver
-        } = roundOverData,
-        params = {
-          status: 'results',
-          aliveCounts,
-          aliveIds,
-          deadCounts,
-          deadIds,
-          roundOver
-        };
+      let params = { status: 'results' };
       Adapters.Games.masterUpdateResults(this.game.id, params);
     });
   }
@@ -119,29 +104,19 @@ export default class State {
         if (this.game.detectAllActionsSubmitted() && !this.actionLock) {
           this.actionLock = true;
           let {
-            confusionVotes,
-            confusionIds,
+            killVotesByPlayer,
             killVotes,
             killedIds
           } = this.game.generateActionIds();
           Adapters.Players
-            .masterActOnPlayers(
-              this.game.id,
-              this.players,
-              killedIds,
-              confusionIds
-            )
+            .masterActOnPlayers(this.game.id, this.players, killedIds)
             .then(() => {
-              let playerCountAlive =
-                this.game.playerCountAlive - killedIds.length;
               Adapters.Games
                 .masterUpdateActionIds(
                   this.game.id,
-                  confusionVotes,
-                  confusionIds,
+                  killVotesByPlayer,
                   killVotes,
-                  killedIds,
-                  playerCountAlive
+                  killedIds
                 )
                 .then(() => {
                   this.actionLock = false;
@@ -238,22 +213,18 @@ export default class State {
         dispatchEnd: () => this.dispatchEnd()
       }),
       selections: new Renderers.Selections(this.player, {
-        dispatchSelection: (p, a) => this.dispatchSelection(p, a),
+        dispatchSelection: sel => this.dispatchSelection(sel),
         dispatchEnd: () => this.dispatchEnd()
       }),
       reveal: new Renderers.Reveal(this.player, {
-        dispatchActions: () => this.dispatchActions(),
-        back: () =>
-          Adapters.Games.masterUpdateStatus(this.game.id, 'selections')
+        dispatchActions: () => this.dispatchActions()
       }),
       actions: new Renderers.Actions(this.player, {
-        dispatchAction: (p, a) => this.dispatchAction(p, a),
-        back: () => Adapters.Games.masterUpdateStatus(this.game.id, 'reveal')
+        dispatchAction: ids => this.dispatchAction(ids)
       }),
       results: new Renderers.Results(this.player, {
         dispatchEnd: () => this.dispatchEnd(),
         dispatchLeave: () => this.dispatchLeave(),
-        dispatchSelections: () => this.dispatchSelections(),
         dispatchNewRound: () => this.dispatchNewRound()
       })
     };
@@ -271,16 +242,6 @@ export default class State {
     Adapters.Players.masterResetStart(this.players).then(() => {
       this.dispatchNewRound();
     });
-  }
-
-  dispatchSelections() {
-    let topics = this.game.generateTopics(),
-      selections = this.game.selections + 1;
-    Adapters.Games
-      .masterResetSelections(this.game.id, topics, selections)
-      .then(() => {
-        Adapters.Games.masterUpdateStatus(this.game.id, 'selections');
-      });
   }
 
   dispatchReveal() {
@@ -335,25 +296,27 @@ export default class State {
       let topics = new Topics().topics;
       for (let i = 0; i < STUB_COUNT; i++) {
         let id = `${STUB_PREFIX}${i + 1}`;
-        if (this.players[id].isAlive) {
-          let topic = topics[Math.floor(Math.random() * topics.length)][1];
-          Adapters.Games.globalSelection(this.game.id, id, topic);
-        }
+        let topic = topics[Math.floor(Math.random() * topics.length)][1];
+        Adapters.Games.globalSelection(this.game.id, id, topic);
       }
     }
   }
 
-  dispatchAction(playerId) {
-    Adapters.Games.globalAction(this.game.id, this.user.id, playerId);
-    if (STUB) this.devDispatchAction(playerId);
+  dispatchAction(playerIds) {
+    Adapters.Games.globalAction(this.game.id, this.user.id, playerIds);
+    if (STUB) this.devDispatchAction(playerIds);
   }
 
-  devDispatchAction(playerId) {
+  devDispatchAction(playerIds) {
     if (this.player.isMaster)
       for (let i = 0; i < STUB_COUNT; i++) {
         let id = `${STUB_PREFIX}${i + 1}`,
-          victimId = this.players[id].isAlive ? playerId : this.player.id;
-        Adapters.Games.globalAction(this.game.id, id, victimId);
+          victimIds = [];
+        for (let j = 0; j < this.game.imposterCount; j++)
+          victimIds.push(
+            `${STUB_PREFIX}${Math.ceil(Math.random() * STUB_COUNT)}`
+          );
+        Adapters.Games.globalAction(this.game.id, id, victimIds);
       }
   }
 

@@ -89,23 +89,14 @@ export default class Games extends Adapter {
     });
   }
 
-  masterUpdateActionIds(
-    gameId,
-    confusionVotes,
-    confusionIds,
-    killVotes,
-    killedIds,
-    playerCountAlive
-  ) {
+  masterUpdateActionIds(gameId, killVotesByPlayer, killVotes, killedIds) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
         .update({
-          confusionVotes,
-          confusionIds,
+          killVotesByPlayer,
           killedIds,
-          killVotes,
-          playerCountAlive
+          killVotes
         })
         .then(resolve)
         .catch(reject);
@@ -129,14 +120,7 @@ export default class Games extends Adapter {
         .update({
           actions: {},
           selections: {},
-          killedIds: [],
-          killVotes: {},
-          roundOver: false,
           selections,
-          aliveCounts: { imposter: 0, agent: 0 },
-          aliveIds: [],
-          deadCounts: { imposter: 0, agent: 0 },
-          deadIds: [],
           topics
         })
         .then(resolve)

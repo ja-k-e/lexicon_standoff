@@ -566,58 +566,17 @@ var Game = function () {
   }, {
     key: 'detectAllSelectionsSubmitted',
     value: function detectAllSelectionsSubmitted() {
-      return Object.keys(this.selections).length === this.playerCountAlive;
-    }
-  }, {
-    key: 'calculateRoundOverData',
-    value: function calculateRoundOverData(players) {
-      var deadCounts = { imposter: 0, agent: 0 },
-          aliveCounts = { imposter: 0, agent: 0 },
-          aliveIds = [],
-          deadIds = [];
-      for (var playerId in players) {
-        var role = players[playerId].role;
-        if (players[playerId].isAlive) {
-          aliveCounts[role]++;
-          aliveIds.push(playerId);
-        } else {
-          deadCounts[role]++;
-          deadIds.push(playerId);
-        }
-      }
-      var roundOver = aliveCounts.imposter === 0 || aliveCounts.agent === 0;
-      return { aliveCounts: aliveCounts, aliveIds: aliveIds, deadCounts: deadCounts, deadIds: deadIds, roundOver: roundOver };
+      return Object.keys(this.selections).length === this.playerCount;
     }
   }, {
     key: 'calculatePoints',
-    value: function calculatePoints(players, _ref2) {
-      var aliveCounts = _ref2.aliveCounts,
-          aliveIds = _ref2.aliveIds,
-          roundOver = _ref2.roundOver;
+    value: function calculatePoints(players) {
+      var points = {};
 
-      var points = {},
-          winRole = null;
-      if (roundOver) {
-        if (aliveCounts.imposter > 0) winRole = 'imposter';else if (aliveCounts.agent > 0) winRole = 'agent';
-      }
       // Alive Imposters score two, alive Agents score one
       for (var playerId in players) {
-        var player = players[playerId],
-            role = player.role,
-            survivePts = Game.survivePoints[role];
-        // If winning Team
-        if (winRole && winRole === role) {
-          // If alive, extra points
-          var pts = player.isAlive ? Game.winPoints + survivePts : Game.winPoints;
-          points[playerId] = pts;
-        } else if (winRole) {
-          // If Loser,
-        } else {
-          // Game Still playing
-          if (player.isAlive) points[playerId] = survivePts;
-        }
-      }
-      return points;
+        if (players[playerId].isAlive) points[playerId] = Game.survivePoints[players[playerId].role];
+      }return points;
     }
   }, {
     key: 'update',
@@ -649,18 +608,14 @@ var Game = function () {
           topics = this.generateTopics();
       return {
         game: (_game = {
-          playerCountAlive: playerCount,
           playerCount: playerCount,
           inProgress: true,
           actions: {},
           selections: {},
+          killVotesByPlayer: {},
           killVotes: {},
-          killedIds: [],
-          aliveCounts: { imposter: 0, agent: 0 },
-          aliveIds: [],
-          deadCounts: { imposter: 0, agent: 0 },
-          deadIds: []
-        }, _defineProperty(_game, 'selections', 1), _defineProperty(_game, 'imposterCount', imposterCount), _defineProperty(_game, 'topics', topics), _defineProperty(_game, 'roundOver', false), _game),
+          killedIds: []
+        }, _defineProperty(_game, 'selections', 1), _defineProperty(_game, 'imposterCount', imposterCount), _defineProperty(_game, 'topics', topics), _game),
         players: { playerIdsImposters: playerIdsImposters, playerIdsAgents: playerIdsAgents }
       };
     }
@@ -669,44 +624,53 @@ var Game = function () {
     value: function generateTopics() {
       var _this2 = this;
 
-      return [1, 2, 3, 4].map(function (_) {
+      return [1, 2, 3].map(function (_) {
         return _this2.topicGenerator.loadTopic();
       });
     }
   }, {
     key: 'generateActionIds',
     value: function generateActionIds() {
-      var killVotes = {},
+      var sums = {};
+      for (var voterId in this.actions) {
+        var voteIds = this.actions[voterId];
+        voteIds.forEach(function (voteId) {
+          sums[voteId] = sums[voteId] || 0;
+          sums[voteId]++;
+        });
+      }
+
+      var sorted = Object.keys(sums).sort(function (a, b) {
+        if (sums[a] > sums[b]) return -1;
+        if (sums[a] < sums[b]) return 1;
+        return 0;
+      }).map(function (a) {
+        return [a, sums[a]];
+      });
+
+      var imposterCount = this.imposterCount,
           killedIds = [],
-          confusionVotes = {},
-          confusionIds = [],
-          most = 0;
-      for (var playerId in this.actions) {
-        var actionId = this.actions[playerId],
-            lastVote = this.playerCountAlive === 2,
-            aliveAction = this.state.players[playerId].isAlive;
-        if (aliveAction || lastVote) {
-          killVotes[actionId] = killVotes[actionId] || 0;
-          killVotes[actionId]++;
-        } else {
-          confusionVotes[actionId] = confusionVotes[actionId] || 0;
-          confusionVotes[actionId]++;
-        }
+          killVotes = {},
+          killVotesByPlayer = {};
+
+      pluck();
+
+      function pluck() {
+        var i = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+        var curr = sorted[i],
+            next = sorted[i + 1];
+        killedIds.push(curr[0]);
+        killVotes[curr[1]] = killVotes[curr[1]] || [];
+        killVotes[curr[1]].push(curr[0]);
+        killVotesByPlayer[curr[0]] = curr[1];
+        var same = next ? curr[1] === next[1] : false,
+            remaining = i < sorted.length - 1,
+            enough = killedIds.length < imposterCount;
+        if (remaining && (enough || same)) pluck(i + 1);
       }
-      for (var _playerId in killVotes) {
-        var actions = killVotes[_playerId];
-        if (actions > most) {
-          most = actions;
-          killedIds = [_playerId];
-        } else if (actions === most) {
-          killedIds.push(_playerId);
-        }
-      }
-      for (var _playerId2 in confusionVotes) {
-        var _actions = confusionVotes[_playerId2];
-        confusionIds.push(_playerId2);
-      }
-      return { confusionVotes: confusionVotes, confusionIds: confusionIds, killVotes: killVotes, killedIds: killedIds };
+
+      return { killVotes: killVotes, killedIds: killedIds, killVotesByPlayer: killVotesByPlayer };
     }
 
     // Generators
@@ -743,31 +707,6 @@ var Game = function () {
       return [agents, imposters];
     }
   }, {
-    key: 'aliveCounts',
-    get: function get() {
-      return this._.aliveCounts;
-    }
-  }, {
-    key: 'aliveIds',
-    get: function get() {
-      return this._.aliveIds;
-    }
-  }, {
-    key: 'confusionVotes',
-    get: function get() {
-      return this._.confusionVotes;
-    }
-  }, {
-    key: 'deadCounts',
-    get: function get() {
-      return this._.deadCounts;
-    }
-  }, {
-    key: 'deadIds',
-    get: function get() {
-      return this._.deadIds;
-    }
-  }, {
     key: 'imposterCount',
     get: function get() {
       return this._.imposterCount;
@@ -783,19 +722,14 @@ var Game = function () {
       return this._.killVotes;
     }
   }, {
+    key: 'killVotesByPlayer',
+    get: function get() {
+      return this._.killVotesByPlayer;
+    }
+  }, {
     key: 'playerCount',
     get: function get() {
       return this._.playerCount;
-    }
-  }, {
-    key: 'playerCountAlive',
-    get: function get() {
-      return this._.playerCountAlive;
-    }
-  }, {
-    key: 'roundOver',
-    get: function get() {
-      return this._.roundOver;
     }
   }, {
     key: 'selections',
@@ -938,7 +872,7 @@ console.clear();
 
 var //
 AUTH = new _Auth2.default(),
-    VERSION = 0.4;
+    VERSION = 0.5;
 
 console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
@@ -1178,16 +1112,14 @@ var Games = function (_Adapter) {
     }
   }, {
     key: 'masterUpdateActionIds',
-    value: function masterUpdateActionIds(gameId, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive) {
+    value: function masterUpdateActionIds(gameId, killVotesByPlayer, killVotes, killedIds) {
       var _this7 = this;
 
       return new Promise(function (resolve, reject) {
         _this7.db.ref(_this7.r(gameId)).update({
-          confusionVotes: confusionVotes,
-          confusionIds: confusionIds,
+          killVotesByPlayer: killVotesByPlayer,
           killedIds: killedIds,
-          killVotes: killVotes,
-          playerCountAlive: playerCountAlive
+          killVotes: killVotes
         }).then(resolve).catch(reject);
       });
     }
@@ -1210,11 +1142,8 @@ var Games = function (_Adapter) {
 
         _this9.db.ref(_this9.r(gameId)).update((_this9$db$ref$update = {
           actions: {},
-          selections: {},
-          killedIds: [],
-          killVotes: {},
-          roundOver: false
-        }, _defineProperty(_this9$db$ref$update, 'selections', selections), _defineProperty(_this9$db$ref$update, 'aliveCounts', { imposter: 0, agent: 0 }), _defineProperty(_this9$db$ref$update, 'aliveIds', []), _defineProperty(_this9$db$ref$update, 'deadCounts', { imposter: 0, agent: 0 }), _defineProperty(_this9$db$ref$update, 'deadIds', []), _defineProperty(_this9$db$ref$update, 'topics', topics), _this9$db$ref$update)).then(resolve).catch(reject);
+          selections: {}
+        }, _defineProperty(_this9$db$ref$update, 'selections', selections), _defineProperty(_this9$db$ref$update, 'topics', topics), _this9$db$ref$update)).then(resolve).catch(reject);
       });
     }
   }, {
@@ -1384,15 +1313,13 @@ var Players = function (_Adapter) {
         var id = user.id,
             name = user.name,
             avatar = user.avatar,
-            alive = user.alive,
             params = {
           id: id,
           gameId: gameId,
           name: name,
           avatar: avatar,
           master: master,
-          score: 0,
-          scoreRound: 0
+          score: 0
         };
 
         _this3.db.ref(_this3.r([gameId, id])).set(params).then(resolve).catch(reject);
@@ -1458,14 +1385,13 @@ var Players = function (_Adapter) {
     }
   }, {
     key: 'masterActOnPlayers',
-    value: function masterActOnPlayers(gameId, players, killedIds, confusionIds) {
+    value: function masterActOnPlayers(gameId, players, killedIds) {
       var _this8 = this;
 
       return new Promise(function (resolve, reject) {
         var playerCount = Object.keys(players).length;
         for (var playerId in players) {
-          var params = { confused: confusionIds.includes(playerId) };
-          if (killedIds.includes(playerId)) params.alive = false;
+          var params = { alive: !killedIds.includes(playerId) };
           _this8.db.ref(_this8.r([gameId, playerId])).update(params).then(function () {
             playerCount--;
             if (playerCount <= 0) resolve();
@@ -1500,9 +1426,8 @@ var Players = function (_Adapter) {
           var pointsVal = points[playerId],
               player = players[playerId];
           if (pointsVal) {
-            var scoreRound = player.scoreRound + pointsVal,
-                score = player.score + pointsVal;
-            _this10.db.ref(_this10.r([player.gameId, playerId])).update({ score: score, scoreRound: scoreRound }).then(function () {
+            var score = player.score + pointsVal;
+            _this10.db.ref(_this10.r([player.gameId, playerId])).update({ score: score }).then(function () {
               playerCount--;
               if (playerCount <= 0) resolve();
             }).catch(reject);
@@ -1526,11 +1451,9 @@ var Players = function (_Adapter) {
         for (var playerId in players) {
           var player = players[playerId];
           var role = void 0,
-              confused = false,
-              alive = true,
-              scoreRound = 0;
+              alive = true;
           if (playerIdsImposters.includes(playerId)) role = 'imposter';else if (playerIdsAgents.includes(playerId)) role = 'agent';else role = 'agent';
-          _this11.db.ref(_this11.r([player.gameId, playerId])).update({ role: role, alive: alive, confused: confused, scoreRound: scoreRound }).then(function () {
+          _this11.db.ref(_this11.r([player.gameId, playerId])).update({ role: role, alive: alive }).then(function () {
             playerCount--;
             if (playerCount <= 0) resolve();
           }).catch(reject);
@@ -1795,7 +1718,7 @@ var config = __webpack_require__(5);
 
 var //
 STUB = config.env === 'development',
-    STUB_COUNT = 2,
+    STUB_COUNT = 12,
     STUB_PREFIX = 'TEST_USER_';
 
 var State = function () {
@@ -1895,24 +1818,10 @@ var State = function () {
     value: function handleKilledIdsChange() {
       var _this5 = this;
 
-      var roundOverData = this.game.calculateRoundOverData(this.players),
-          points = this.game.calculatePoints(this.players, roundOverData);
+      var points = this.game.calculatePoints(this.players);
       // Add player points then update results
       _Adapters2.default.Players.masterTallyScores(this.players, points).then(function () {
-        var aliveCounts = roundOverData.aliveCounts,
-            aliveIds = roundOverData.aliveIds,
-            deadCounts = roundOverData.deadCounts,
-            deadIds = roundOverData.deadIds,
-            roundOver = roundOverData.roundOver,
-            params = {
-          status: 'results',
-          aliveCounts: aliveCounts,
-          aliveIds: aliveIds,
-          deadCounts: deadCounts,
-          deadIds: deadIds,
-          roundOver: roundOver
-        };
-
+        var params = { status: 'results' };
         _Adapters2.default.Games.masterUpdateResults(_this5.game.id, params);
       });
     }
@@ -1927,14 +1836,12 @@ var State = function () {
             this.actionLock = true;
 
             var _game$generateActionI = this.game.generateActionIds(),
-                confusionVotes = _game$generateActionI.confusionVotes,
-                confusionIds = _game$generateActionI.confusionIds,
+                killVotesByPlayer = _game$generateActionI.killVotesByPlayer,
                 killVotes = _game$generateActionI.killVotes,
                 killedIds = _game$generateActionI.killedIds;
 
-            _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds, confusionIds).then(function () {
-              var playerCountAlive = _this6.game.playerCountAlive - killedIds.length;
-              _Adapters2.default.Games.masterUpdateActionIds(_this6.game.id, confusionVotes, confusionIds, killVotes, killedIds, playerCountAlive).then(function () {
+            _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds).then(function () {
+              _Adapters2.default.Games.masterUpdateActionIds(_this6.game.id, killVotesByPlayer, killVotes, killedIds).then(function () {
                 _this6.actionLock = false;
               });
             });
@@ -2047,8 +1954,8 @@ var State = function () {
           }
         }),
         selections: new _Renderers2.default.Selections(this.player, {
-          dispatchSelection: function dispatchSelection(p, a) {
-            return _this9.dispatchSelection(p, a);
+          dispatchSelection: function dispatchSelection(sel) {
+            return _this9.dispatchSelection(sel);
           },
           dispatchEnd: function dispatchEnd() {
             return _this9.dispatchEnd();
@@ -2057,17 +1964,11 @@ var State = function () {
         reveal: new _Renderers2.default.Reveal(this.player, {
           dispatchActions: function dispatchActions() {
             return _this9.dispatchActions();
-          },
-          back: function back() {
-            return _Adapters2.default.Games.masterUpdateStatus(_this9.game.id, 'selections');
           }
         }),
         actions: new _Renderers2.default.Actions(this.player, {
-          dispatchAction: function dispatchAction(p, a) {
-            return _this9.dispatchAction(p, a);
-          },
-          back: function back() {
-            return _Adapters2.default.Games.masterUpdateStatus(_this9.game.id, 'reveal');
+          dispatchAction: function dispatchAction(ids) {
+            return _this9.dispatchAction(ids);
           }
         }),
         results: new _Renderers2.default.Results(this.player, {
@@ -2076,9 +1977,6 @@ var State = function () {
           },
           dispatchLeave: function dispatchLeave() {
             return _this9.dispatchLeave();
-          },
-          dispatchSelections: function dispatchSelections() {
-            return _this9.dispatchSelections();
           },
           dispatchNewRound: function dispatchNewRound() {
             return _this9.dispatchNewRound();
@@ -2105,17 +2003,6 @@ var State = function () {
       });
     }
   }, {
-    key: 'dispatchSelections',
-    value: function dispatchSelections() {
-      var _this11 = this;
-
-      var topics = this.game.generateTopics(),
-          selections = this.game.selections + 1;
-      _Adapters2.default.Games.masterResetSelections(this.game.id, topics, selections).then(function () {
-        _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'selections');
-      });
-    }
-  }, {
     key: 'dispatchReveal',
     value: function dispatchReveal() {
       _Adapters2.default.Games.masterUpdateStatus(this.game.id, 'reveal');
@@ -2128,36 +2015,36 @@ var State = function () {
   }, {
     key: 'dispatchNewRound',
     value: function dispatchNewRound() {
-      var _this12 = this;
+      var _this11 = this;
 
       var roundData = this.game.generateRoundData();
       _Adapters2.default.Games.masterUpdateRoundData(this.game.id, roundData.game).then(function () {
-        _Adapters2.default.Players.masterUpdateRoundData(_this12.players, roundData.players).then(function () {
-          _Adapters2.default.Games.masterUpdateStatus(_this12.game.id, 'selections');
+        _Adapters2.default.Players.masterUpdateRoundData(_this11.players, roundData.players).then(function () {
+          _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'selections');
         });
       });
     }
   }, {
     key: 'dispatchEnd',
     value: function dispatchEnd() {
-      var _this13 = this;
+      var _this12 = this;
 
       _Adapters2.default.Players.masterDelete(this.game.id).then(function () {
-        _Adapters2.default.Games.masterDelete(_this13.game.id);
+        _Adapters2.default.Games.masterDelete(_this12.game.id);
       });
     }
   }, {
     key: 'dispatchLeave',
     value: function dispatchLeave() {
-      var _this14 = this;
+      var _this13 = this;
 
       if (this.game.playerCount <= 3) {
         this.dispatchEnd();
       } else {
         _Adapters2.default.Games.globalKill(this.game.id);
         _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: null }).then(function () {
-          _Adapters2.default.Players.globalLeave(_this14.game.id, _this14.user.id).then(function () {
-            _this14.launch.render({ user: _this14.user });
+          _Adapters2.default.Players.globalLeave(_this13.game.id, _this13.user.id).then(function () {
+            _this13.launch.render({ user: _this13.user });
           });
         });
       }
@@ -2175,26 +2062,26 @@ var State = function () {
         var topics = new _Topics2.default().topics;
         for (var i = 0; i < STUB_COUNT; i++) {
           var id = '' + STUB_PREFIX + (i + 1);
-          if (this.players[id].isAlive) {
-            var topic = topics[Math.floor(Math.random() * topics.length)][1];
-            _Adapters2.default.Games.globalSelection(this.game.id, id, topic);
-          }
+          var topic = topics[Math.floor(Math.random() * topics.length)][1];
+          _Adapters2.default.Games.globalSelection(this.game.id, id, topic);
         }
       }
     }
   }, {
     key: 'dispatchAction',
-    value: function dispatchAction(playerId) {
-      _Adapters2.default.Games.globalAction(this.game.id, this.user.id, playerId);
-      if (STUB) this.devDispatchAction(playerId);
+    value: function dispatchAction(playerIds) {
+      _Adapters2.default.Games.globalAction(this.game.id, this.user.id, playerIds);
+      if (STUB) this.devDispatchAction(playerIds);
     }
   }, {
     key: 'devDispatchAction',
-    value: function devDispatchAction(playerId) {
+    value: function devDispatchAction(playerIds) {
       if (this.player.isMaster) for (var i = 0; i < STUB_COUNT; i++) {
         var id = '' + STUB_PREFIX + (i + 1),
-            victimId = this.players[id].isAlive ? playerId : this.player.id;
-        _Adapters2.default.Games.globalAction(this.game.id, id, victimId);
+            victimIds = [];
+        for (var j = 0; j < this.game.imposterCount; j++) {
+          victimIds.push('' + STUB_PREFIX + Math.ceil(Math.random() * STUB_COUNT));
+        }_Adapters2.default.Games.globalAction(this.game.id, id, victimIds);
       }
     }
 
@@ -2203,21 +2090,21 @@ var State = function () {
   }, {
     key: 'render',
     value: function render() {
-      var _this15 = this;
+      var _this14 = this;
 
       var status = this.game.status;
       var map = {
         selections: function selections() {
-          return _this15.renderers.selections.render(_this15.game, _this15.players);
+          return _this14.renderers.selections.render(_this14.game, _this14.players);
         },
         reveal: function reveal() {
-          return _this15.renderers.reveal.render(_this15.game, _this15.players);
+          return _this14.renderers.reveal.render(_this14.game, _this14.players);
         },
         actions: function actions() {
-          return _this15.renderers.actions.render(_this15.game, _this15.players);
+          return _this14.renderers.actions.render(_this14.game, _this14.players);
         },
         results: function results() {
-          return _this15.renderers.results.render(_this15.game, _this15.players);
+          return _this14.renderers.results.render(_this14.game, _this14.players);
         }
       };
       return map[status] ? map[status]() : null;
@@ -2777,7 +2664,7 @@ var Selections = function (_Renderer) {
       this.$desc = this.el('p', null, 'description');
       this.$input = this.el('input', null, 'full margin');
       this.$input.setAttribute('type', 'text');
-      this.$input.setAttribute('placeholder', 'Your Word');
+      this.$input.setAttribute('placeholder', 'Word or Name');
       this.$input.setAttribute('maxlength', '16');
 
       this.$header.appendChild(this.$h1);
@@ -2825,48 +2712,30 @@ var Selections = function (_Renderer) {
       this.$input.value = '';
       var topics = game.topics,
           selections = game.selections,
-          confusionVotes = game.confusionVotes,
-          playerCount = game.playerCount,
-          playerCountAlive = game.playerCountAlive;
+          playerCount = game.playerCount;
 
       topics = topics.map(function (i) {
         return [i[0], i[1].split(' ').join('&nbsp;')];
       });
       this.$h1.innerHTML = this.roleHeader('Selections');
 
-      if (this.player.isAlive) {
-        if (selections[this.player.id]) {
-          this.$input.classList.add('hide');
-          this.submit.disable();
-        } else {
-          this.$input.classList.remove('hide');
-          this.submit.enable();
-        }
-        var descHtml = '',
-            topicsHtml = void 0;
-        if (this.player.isConfused) {
-          var confusionVoteCount = confusionVotes[this.player.id],
-              confusionPlayers = confusionVoteCount === 1 ? 'Player' : 'Players';
-          descHtml += '\n          ' + confusionVoteCount + ' dead ' + confusionPlayers + ' confused you with an extra Topic! ';
-        }
-        if (this.player.isImposter) {
-          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 2, 3], topics);else topicsHtml = this._shuffledHtml([0, 1, 2], topics);
-        } else {
-          if (this.player.isConfused) topicsHtml = this._shuffledHtml([0, 1, 3], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
-        }
-        if (this.player.isConfused || this.player.isImposter) {
-          descHtml += 'Enter one word that you associate with the <strong>two</strong> Agent Topics.';
-        } else {
-          descHtml = 'Enter one word that you associate with both of the Topics above.';
-        }
-        this.$topics.innerHTML = topicsHtml;
-        this.$desc.innerHTML = descHtml;
-      } else {
+      if (selections[this.player.id]) {
         this.$input.classList.add('hide');
         this.submit.disable();
-        this.$topics.innerHTML = this._shuffledHtml([0, 1], topics);
-        this.$desc.innerHTML = "You're dead. You don't get a selection.";
+      } else {
+        this.$input.classList.remove('hide');
+        this.submit.enable();
       }
+      var descHtml = '',
+          topicsHtml = void 0;
+      if (this.player.isImposter) topicsHtml = this._shuffledHtml([0, 1, 2], topics);else topicsHtml = this._shuffledHtml([0, 1], topics);
+      if (this.player.isImposter) {
+        descHtml += 'Enter one word or name below that you associate with the <strong>two</strong> Agent Topics.';
+      } else {
+        descHtml = 'Enter one word or name below that you associate with both of the Topics above.';
+      }
+      this.$topics.innerHTML = topicsHtml;
+      this.$desc.innerHTML = descHtml;
       this.toggleSections();
       this.renderWaiting({ players: players, selections: selections });
     }
@@ -2978,18 +2847,14 @@ var Reveal = function (_Renderer) {
       this.append(this.$main, this.selections.elements);
 
       if (this.player.isMaster) {
-        var $inst = this.el('p', 'Players question each other and discuss who they think is an Imposter.\n          Once everyone is ready to vote, proceed.', 'instruction');
+        var $inst = this.el('p', 'Players discuss their answers. Proceed once everyone is ready to vote.', 'instruction');
         var $grp = this.el('div', null, 'item-group'),
-            back = new _Button2.default({
-          content: '◀',
-          clickEvent: this.events.back.bind(this)
-        }),
             proceed = new _Button2.default({
           content: 'Proceed',
           clickEvent: this.events.dispatchActions.bind(this),
           classname: 'flex'
         });
-        this.append($grp, [back.$el, proceed.$el]);
+        this.append($grp, [proceed.$el]);
         this.append(this.$footer, [$inst, $grp]);
       }
     }
@@ -2998,6 +2863,7 @@ var Reveal = function (_Renderer) {
     value: function render(game, players) {
       var topics = game.topics,
           playerCount = game.playerCount,
+          imposterCount = game.imposterCount,
           selections = game.selections;
 
 
@@ -3006,11 +2872,8 @@ var Reveal = function (_Renderer) {
         this.selections.add('\n        ' + this.userSpan(players[playerId]) + '\n        <span class="selection">' + selections[playerId] + '</span>\n      ');
       }this.$h1.innerHTML = this.roleHeader('Reveal');
       this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
-      if (this.player.isAlive) {
-        this.$desc.innerHTML = 'These were the two Topics. Explain why you chose your word.';
-      } else {
-        this.$desc.innerHTML = 'You are dead. You can still question Players.';
-      }
+      var playerS = imposterCount === 1 ? '1 Player' : imposterCount + ' Players';
+      this.$desc.innerHTML = '\n      These were the two Topics. Explain and argue your case.\n      You\'ll need to vote to kill ' + playerS + '.\n    ';
       this.toggleSections();
     }
   }, {
@@ -3021,7 +2884,7 @@ var Reveal = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchActions', 'back'];
+      return ['dispatchActions'];
     }
   }]);
 
@@ -3083,7 +2946,7 @@ var Actions = function (_Renderer) {
       this.$desc = this.el('p', null, 'description');
       this.$main.appendChild(this.$desc);
 
-      this.actions = new _List2.default();
+      this.actions = new _List2.default('flex-list flex-list-half');
       this.append(this.$main, this.actions.elements);
 
       this.waiting = new _List2.default('flex-list flex-list-small flex-list-quarter');
@@ -3092,20 +2955,18 @@ var Actions = function (_Renderer) {
       this.act = new _Button2.default({
         content: '',
         clickEvent: function clickEvent() {
-          var playerId = _this2.$section.querySelector(':checked').value;
-          _this2.events.dispatchAction(playerId);
+          var playerIds = Array.from(_this2.$section.querySelectorAll(':checked')).map(function (el) {
+            return el.value;
+          });
+          _this2.events.dispatchAction(playerIds);
           _this2.act.disable();
           _this2.$main.classList.add('inactive');
         }
       });
       if (this.player.isMaster) {
         var $inst = this.el('p', 'Play will proceed after every Player submits an Action.', 'instruction');
-        var $grp = this.el('div', null, 'item-group'),
-            back = new _Button2.default({
-          content: '◀',
-          clickEvent: this.events.back.bind(this)
-        });
-        this.append($grp, [back.$el, this.act.$el]);
+        var $grp = this.el('div', null, 'item-group');
+        this.append($grp, [this.act.$el]);
         this.act.$el.classList.add('flex');
         this.append(this.$footer, [$inst, $grp]);
       } else {
@@ -3116,14 +2977,16 @@ var Actions = function (_Renderer) {
   }, {
     key: 'render',
     value: function render(game, players) {
+      var _this3 = this;
+
       var actions = game.actions,
           imposterCount = game.imposterCount,
           playerCount = game.playerCount,
-          playerCountAlive = game.playerCountAlive;
+          selections = game.selections;
 
       this.$main.classList.remove('inactive');
-      this.act.enable();
       this.actions.reset();
+      this.act.disable();
       this.toggleSections();
 
       this.$h1.innerHTML = this.roleHeader('Actions');
@@ -3131,35 +2994,42 @@ var Actions = function (_Renderer) {
       // If this player has already voted (refreshed the vote page after voting)
       if (actions && actions[this.player.id]) {
         this.actions.title('You have already voted!');
-        this.act.disable();
         this.$footer.classList.add('hide');
       } else {
         this.$footer.classList.remove('hide');
-        this.actions.title('Select a Player');
         var agentCount = Object.keys(players).length - imposterCount,
-            imposterS = this._pluralize(imposterCount, 'Imposter'),
             agentS = this._pluralize(agentCount, 'Agent'),
-            alive = this.player.isAlive,
-            last = playerCountAlive === 2,
-            term = alive || last ? 'Kill' : 'Confuse',
-            extra = alive || last ? '' : 'You’re Dead.';
-        this.act.content(term);
-        this.$desc.innerHTML = ' ' + (last ? 'This is the final vote!' : '') + '\n        ' + extra + ' Select a Player to <strong>' + term + '</strong>.';
-        if (this.player.isAlive) this.$desc.innerHTML += ' There are ' + agentS + ' and ' + imposterS + ' in total.';
-        var first = true;
+            voteS = imposterCount === 1 ? '1 Vote' : imposterCount + ' Votes',
+            playerS = imposterCount === 1 ? '1 Player' : imposterCount + ' Players';
+
+        this.act.content('Submit ' + voteS);
+        this.$desc.innerHTML = ' Select ' + playerS + ' to <strong>Kill</strong>. There are ' + agentS + '.';
         for (var playerId in players) {
           if (playerId !== this.player.id) {
             var player = players[playerId];
-            if (player.isAlive) {
-              var selected = first ? 'checked' : '';
-              if (first) first = false;
-              this.actions.add('\n              <input id="' + playerId + '" value="' + playerId + '"\n                type="radio" name="actions" ' + selected + ' />\n              <label for="' + playerId + '">' + this.userSpan(player) + '</label>\n            ');
-            }
+            var $input = this.el('input');
+            $input.setAttribute('type', 'checkbox');
+            $input.setAttribute('value', playerId);
+            $input.addEventListener('change', function () {
+              _this3.handleChangedInput(imposterCount);
+            });
+            $input.setAttribute('id', playerId);
+            var $label = this.el('label', '\n            ' + this.userSpan(player) + '\n            <span class="selection">' + selections[playerId] + '</span>\n            ');
+            $label.setAttribute('for', playerId);
+            var $li = this.el('li');
+            this.append($li, [$input, $label]);
+            this.actions.$ul.appendChild($li);
           }
         }
       }
 
       this.renderWaiting({ players: players, actions: actions });
+    }
+  }, {
+    key: 'handleChangedInput',
+    value: function handleChangedInput(count) {
+      var checked = this.actions.$ul.querySelectorAll('input:checked');
+      if (checked.length === count) this.act.enable();else this.act.disable();
     }
   }, {
     key: 'renderWaiting',
@@ -3190,7 +3060,7 @@ var Actions = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchAction', 'back'];
+      return ['dispatchAction'];
     }
   }]);
 
@@ -3251,20 +3121,17 @@ var Results = function (_Renderer) {
       this.$h1 = this.el('h1');
       this.$header.appendChild(this.$h1);
 
-      this.killed = new _List2.default();
-      this.append(this.$main, this.killed.elements);
+      this.$desc = this.el('div');
+      this.$main.appendChild(this.$desc);
 
-      this.survivors = new _List2.default('flex-list flex-list-small flex-list-quarter');
-      this.append(this.$main, this.survivors.elements);
+      this.killed = new _List2.default('flex-list flex-list-small');
+      this.append(this.$main, this.killed.elements);
 
       this.imposters = new _List2.default('flex-list flex-list-small flex-list-quarter');
       this.append(this.$main, this.imposters.elements);
 
-      this.$desc = this.el('div');
-      this.$main.appendChild(this.$desc);
-
-      this.extra2 = new _List2.default('flex-list flex-list-small');
-      this.append(this.$main, this.extra2.elements);
+      this.standings = new _List2.default('flex-list flex-list-small');
+      this.append(this.$main, this.standings.elements);
 
       this.$score = this.el('p', null, 'description');
       this.$main.appendChild(this.$score);
@@ -3285,14 +3152,9 @@ var Results = function (_Renderer) {
         clickEvent: this.confirmEnd.bind(this),
         classname: 'warning'
       });
-      this.continue = new _Button2.default({
-        content: 'Proceed',
-        clickEvent: this.events.dispatchSelections.bind(this),
-        classname: 'full'
-      });
       this.$group = this.el('div', null, 'item-group');
       this.append(this.$group, [end.$el, round.$el]);
-      this.append(this.$footer, [$inst, this.$group, this.continue.$el]);
+      this.append(this.$footer, [$inst, this.$group]);
     }
   }, {
     key: 'renderInitialLeave',
@@ -3324,18 +3186,13 @@ var Results = function (_Renderer) {
     value: function render(game, players) {
       var _this3 = this;
 
-      var aliveCounts = game.aliveCounts,
-          aliveIds = game.aliveIds,
-          deadCounts = game.deadCounts,
-          deadIds = game.deadIds,
-          roundOver = game.roundOver,
+      var killVotesByPlayer = game.killVotesByPlayer,
           killVotes = game.killVotes,
           killedIds = game.killedIds;
 
       this.killed.reset();
-      this.survivors.reset();
       this.imposters.reset();
-      this.extra2.reset();
+      this.standings.reset();
       this.$score.innerHTML = '';
       this.$section.className = this.$section.className.replace(/(win-\d+)|(lose-\d+)/g, '');
 
@@ -3343,71 +3200,39 @@ var Results = function (_Renderer) {
 
       this.$h1.innerHTML = this.roleHeader('Results');
 
-      var killedVotes = killVotes[killedIds[0]],
-          voteS = killedVotes === 1 ? 'Vote' : 'Votes';
-      this.killed.title('Killed this Round by ' + killedVotes + ' ' + voteS);
+      this.killed.title('Killed by popular Vote');
       killedIds.forEach(function (key) {
-        _this3.killed.add(_this3.userSpan(players[key], 'dead'));
+        var user = _this3.userSpan(players[key], 'dead');
+        _this3.killed.add(user + ' <span class="votes">' + killVotesByPlayer[key] + '</span>');
       });
 
-      this.survivors.title('Survivors');
-      if (roundOver) {
-        if (this.leave) this.leave.enable();
-        this.imposters.title('Imposters');
-        this.extra2.title('Standings');
-        var winClass = this._winLoseClass(aliveCounts),
-            winnerText = this._winnerText(aliveCounts),
-            roundText = this._roundPointsText(aliveCounts);
-        this.$section.classList.add(winClass);
-        this.$desc.innerHTML = '\n        <p class="description">\n          ' + winnerText + ' ' + this._playerPoints(true) + ' ' + roundText + '\n        </p>\n      ';
-        var survivors = false,
-            playerIds = Object.keys(players);
-        playerIds.sort(function (a, b) {
-          var aScore = players[a].score,
-              bScore = players[b].score;
-          if (aScore > bScore) return -1;
-          if (aScore < bScore) return 1;
-          return 0;
-        }).forEach(function (playerId) {
-          var player = players[playerId],
-              score = '<span class="score">' + player.score + '</span>',
-              html = _this3.userSpan(player) + ' ' + score;
-          _this3.extra2.add(html);
-          if (player.isImposter) _this3.imposters.add(_this3.userSpan(player));
-          if (player.isAlive) {
-            _this3.survivors.add(_this3.userSpan(player));
-            survivors = true;
-          }
-        });
-        if (!survivors) this.survivors.$ul.innerHTML = '<li class="empty">None</li>';
-      } else {
-        if (this.leave) this.leave.disable();
-        this.extra2.title('Graveyard');
-        this.extra2.$ul.classList.remove('flex-list-half');
-        this.$desc.innerHTML = '\n        <p class="description">' + this._playerPoints(false) + '\n          The Round is in progress, roles stay the same.</p>\n      ';
-        for (var playerId in players) {
-          var player = players[playerId],
-              alive = player.isAlive;
-          if (alive) {
-            this.survivors.add(this.userSpan(player));
-          } else {
-            this.extra2.add(this.userSpan(player, 'dead'));
-          }
-        }
-      }
+      if (this.leave) this.leave.enable();
+      this.imposters.title('Imposters');
+      this.standings.title('Standings');
+      var winClass = this._winLoseClass(),
+          winnerText = this._winnerText();
+      this.$section.classList.add(winClass);
+      this.$desc.innerHTML = '\n      <p class="description">' + winnerText + ' ' + this._playerPoints() + '</p>\n    ';
+      Object.keys(players).sort(function (a, b) {
+        var aScore = players[a].score,
+            bScore = players[b].score;
+        if (aScore > bScore) return -1;
+        if (aScore < bScore) return 1;
+        return 0;
+      }).forEach(function (playerId) {
+        var player = players[playerId],
+            score = '<span class="score">' + player.score + '</span>',
+            html = _this3.userSpan(player) + ' ' + score;
+        _this3.standings.add(html);
+        if (player.isImposter) _this3.imposters.add(_this3.userSpan(player));
+      });
 
-      if (this.player.isMaster) this.renderMaster(roundOver);
+      if (this.player.isMaster) this.renderMaster();
     }
   }, {
     key: 'renderMaster',
-    value: function renderMaster(roundOver) {
-      if (roundOver) {
-        this.continue.$el.classList.add('hide');
-        this.$group.classList.remove('hide');
-      } else {
-        this.continue.$el.classList.remove('hide');
-        this.$group.classList.add('hide');
-      }
+    value: function renderMaster() {
+      this.$group.classList.remove('hide');
     }
   }, {
     key: '_points',
@@ -3416,61 +3241,26 @@ var Results = function (_Renderer) {
     }
   }, {
     key: '_winLoseClass',
-    value: function _winLoseClass(_ref) {
-      var imposter = _ref.imposter,
-          agent = _ref.agent;
-
+    value: function _winLoseClass() {
       var win = Math.ceil(Math.random() * 6),
-          lose = Math.ceil(Math.random() * 10),
-          role = this.player.role;
-      if (imposter > 0) {
-        return role === 'imposter' ? 'win-' + win : 'lose-' + lose;
-      } else if (agent > 0) {
-        return role === 'agent' ? 'win-' + win : 'lose-' + lose;
-      }
-      return 'lose-' + lose;
+          lose = Math.ceil(Math.random() * 10);
+      return this.player.isAlive ? 'win-' + win : 'lose-' + lose;
     }
   }, {
     key: '_winnerText',
-    value: function _winnerText(_ref2) {
-      var imposter = _ref2.imposter,
-          agent = _ref2.agent;
-
-      var role = this.player.capitalizedRole;
-      if (imposter > 0) {
-        var prefix = this.player.isImposter ? this._success() : this._failure(),
-            wonLost = this.player.isImposter ? 'won' : 'lost';
-        return prefix + ' The <span class="role">' + role + 's</span> ' + wonLost + '.';
-      } else if (agent > 0) {
-        var _prefix = this.player.isAgent ? this._success() : this._failure(),
-            _wonLost = this.player.isAgent ? 'won' : 'lost';
-        return _prefix + ' The <span class="role">' + role + 's</span> ' + _wonLost + '.';
-      }
-      return 'Everyone died!';
-    }
-  }, {
-    key: '_roundPointsText',
-    value: function _roundPointsText(_ref3) {
-      var imposter = _ref3.imposter,
-          agent = _ref3.agent;
-
-      var addl = this._points(_Game2.default.winPoints);
-      if (imposter > 0) return 'Each Imposter scored an additional ' + addl + '.';
-      if (agent > 0) return 'Each Agent scored an additional ' + addl + '.';
-      return 'No one scored additional points.';
+    value: function _winnerText() {
+      if (this.player.isAlive) return this._success() + ' You stayed Alive.';else return this._failure() + ' You died.';
     }
   }, {
     key: '_playerPoints',
-    value: function _playerPoints(roundOver) {
+    value: function _playerPoints() {
       var _player$_ = this.player._,
-          scoreRound = _player$_.scoreRound,
           role = _player$_.role,
           alive = _player$_.alive,
           scoreSelection = alive ? _Game2.default.survivePoints[role] : 0,
-          points = this._points(scoreSelection),
-          extra = roundOver ? 'in total' : 'so far';
+          points = this._points(scoreSelection);
 
-      if (alive) return 'You scored ' + points + ' this Selection,\n        and ' + this._points(scoreRound) + ' ' + extra + ' this Round.';else return 'You are dead and scored ' + this._points(scoreRound) + ' ' + extra + ' this Round.';
+      return 'You scored ' + points + ' this Round.';
     }
   }, {
     key: '_success',
@@ -3492,7 +3282,7 @@ var Results = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchEnd', 'dispatchSelections', 'dispatchNewRound', 'dispatchLeave'];
+      return ['dispatchEnd', 'dispatchNewRound', 'dispatchLeave'];
     }
   }]);
 
@@ -3545,11 +3335,6 @@ var Player = function () {
       return this._.score;
     }
   }, {
-    key: 'scoreRound',
-    get: function get() {
-      return this._.scoreRound;
-    }
-  }, {
     key: 'role',
     get: function get() {
       return this._.role;
@@ -3578,11 +3363,6 @@ var Player = function () {
     key: 'isMaster',
     get: function get() {
       return this._.master;
-    }
-  }, {
-    key: 'isConfused',
-    get: function get() {
-      return this._.confused;
     }
   }, {
     key: 'capitalizedRole',
