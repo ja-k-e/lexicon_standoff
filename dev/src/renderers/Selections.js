@@ -28,7 +28,8 @@ export default class Selections extends Renderer {
     this.submit = new Button({
       content: 'Submit',
       clickEvent: this.handleSubmit.bind(this),
-      classname: 'flex'
+      classname: 'flex',
+      submit: true
     });
     if (this.player.isMaster) {
       let cancel = new Button({
@@ -44,6 +45,7 @@ export default class Selections extends Renderer {
 
   handleSubmit() {
     let selection = this.$input.value;
+    this.$input.blur();
     if (selection.replace(/ /g, '').length > 0) {
       this.events.dispatchSelection(selection);
       this.$input.classList.add('hide');

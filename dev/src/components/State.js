@@ -8,7 +8,7 @@ import Player from './Player';
 
 const //
   STUB = config.env === 'development',
-  STUB_COUNT = 12,
+  STUB_COUNT = 4,
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
@@ -20,12 +20,16 @@ export default class State {
   }
 
   initializeLaunch() {
-    this.launch = new Renderers.Launch(null, {
-      createGame: this.createGame.bind(this),
-      findGame: this.findGame.bind(this),
-      signOut: this.signOut.bind(this),
-      updateUser: this.updateUser.bind(this)
-    });
+    this.launch = new Renderers.Launch(
+      null,
+      {
+        createGame: this.createGame.bind(this),
+        findGame: this.findGame.bind(this),
+        signOut: this.signOut.bind(this),
+        updateUser: this.updateUser.bind(this)
+      },
+      true
+    );
     this.launch.renderInitial();
   }
 
@@ -212,10 +216,14 @@ export default class State {
         dispatchStart: () => this.dispatchStart(),
         dispatchEnd: () => this.dispatchEnd()
       }),
-      selections: new Renderers.Selections(this.player, {
-        dispatchSelection: sel => this.dispatchSelection(sel),
-        dispatchEnd: () => this.dispatchEnd()
-      }),
+      selections: new Renderers.Selections(
+        this.player,
+        {
+          dispatchSelection: sel => this.dispatchSelection(sel),
+          dispatchEnd: () => this.dispatchEnd()
+        },
+        true
+      ),
       reveal: new Renderers.Reveal(this.player, {
         dispatchActions: () => this.dispatchActions()
       }),

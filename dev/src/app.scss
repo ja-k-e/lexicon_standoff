@@ -4,8 +4,8 @@ $font: 'Roboto', BlinkMacSystemFont, -apple-system, 'Segoe UI', 'Roboto',
 
 html,
 body {
-  height: 100%;
   font-family: $font;
+  height: 100%;
 }
 
 // NOT WORKING.
@@ -57,15 +57,15 @@ body .container {
   > div {
     position: absolute;
     overflow: hidden;
+    height: 100%;
+    width: 100%;
     max-width: 480px;
-    max-width: 380px;
+    // max-width: 380px;
     max-height: 700px;
-    max-height: 600px;
+    // max-height: 600px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
   }
   section {
     width: 100%;
@@ -214,29 +214,6 @@ body .container {
       transform: translateX(100%);
     }
   }
-  // @each $class in $sections {
-  //   $index: index($sections, $class);
-  //   > div.active-#{$class} {
-  //     @if $index > 1 {
-  //       $prev: nth($sections, $index - 1);
-  //       section.#{$prev} {
-  //         display: flex;
-  //         transform: translateX(-100%);
-  //       }
-  //     }
-  //     @if $index < length($sections) {
-  //       $next: nth($sections, $index + 1);
-  //       section.#{$next} {
-  //         display: flex;
-  //         transform: translateX(100%);
-  //       }
-  //     }
-  //     section.#{$class} {
-  //       display: flex;
-  //       transform: translateX(0);
-  //     }
-  //   }
-  // }
 }
 
 section {
@@ -246,6 +223,12 @@ section {
   color: white;
   background: black;
   flex-direction: column;
+  form {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
   header {
   }
   main {
@@ -266,10 +249,6 @@ section {
     }
   }
   footer {
-    // display: flex;
-    // flex-direction: column;
-    // align-content: flex-end;
-    // justify-content: flex-end;
   }
   h1 {
     font-size: 1rem;

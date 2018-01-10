@@ -38,6 +38,7 @@ const settings = {
       filter: p =>
         !!p.match(/(dev\/app\.css)|(dev\/app\.js)|(dev\/index\.html)/)
     },
+    host: '0.0.0.0',
     directoryListing: false,
     open: false
   }

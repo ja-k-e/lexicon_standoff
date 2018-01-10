@@ -81,6 +81,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Renderer = function () {
   function Renderer(player) {
     var events = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var form = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
 
     _classCallCheck(this, Renderer);
 
@@ -92,9 +93,20 @@ var Renderer = function () {
     this.$main = this.el('main');
     this.$footer = this.el('footer');
     this.$container.appendChild(this.$section);
-    this.$section.appendChild(this.$header);
-    this.$section.appendChild(this.$main);
-    this.$section.appendChild(this.$footer);
+    if (form) {
+      this.$form = this.el('form');
+      this.$form.addEventListener('submit', function (e) {
+        return e.preventDefault();
+      });
+      this.$form.appendChild(this.$header);
+      this.$form.appendChild(this.$main);
+      this.$form.appendChild(this.$footer);
+      this.$section.appendChild(this.$form);
+    } else {
+      this.$section.appendChild(this.$header);
+      this.$section.appendChild(this.$main);
+      this.$section.appendChild(this.$footer);
+    }
     this.$section.classList.add(this._name);
     this._activeSection = null;
   }
@@ -201,13 +213,16 @@ var Button = function (_Module) {
         _ref$content = _ref.content,
         content = _ref$content === undefined ? '' : _ref$content,
         _ref$classname = _ref.classname,
-        classname = _ref$classname === undefined ? '' : _ref$classname;
+        classname = _ref$classname === undefined ? '' : _ref$classname,
+        _ref$submit = _ref.submit,
+        submit = _ref$submit === undefined ? false : _ref$submit;
 
     _classCallCheck(this, Button);
 
     var _this = _possibleConstructorReturn(this, (Button.__proto__ || Object.getPrototypeOf(Button)).call(this));
 
     _this.$el = _this.el('button', content, classname);
+    if (submit) _this.$el.setAttribute('type', 'submit');else _this.$el.setAttribute('type', 'button');
     if (clickEvent) _this.$el.addEventListener('click', function () {
       return clickEvent();
     });
@@ -875,6 +890,33 @@ AUTH = new _Auth2.default(),
     VERSION = 0.5;
 
 console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
+
+var $CONTAINER = document.querySelector('.container'),
+    VISIBLE = void 0,
+    HEIGHT = void 0,
+    WIDTH = void 0;
+
+updateDimensions();
+window.addEventListener('resize', function () {
+  return updateDimensions();
+});
+document.addEventListener('visibilitychange', function () {
+  var state = document.visibilityState;
+  if (state !== VISIBLE) {
+    if (state === 'visible') window.location.reload();
+    VISIBLE = state;
+  }
+});
+function updateDimensions() {
+  var h = window.innerHeight,
+      w = window.innerWidth;
+  if (h > 500) {
+    $CONTAINER.style.height = h + 'px';
+    $CONTAINER.style.width = w + 'px';
+    HEIGHT = h;
+    WIDTH = w;
+  }
+}
 
 AUTH.detectExisting().then(initializeUser).catch(handleNoUser);
 
@@ -1718,7 +1760,7 @@ var config = __webpack_require__(5);
 
 var //
 STUB = config.env === 'development',
-    STUB_COUNT = 12,
+    STUB_COUNT = 4,
     STUB_PREFIX = 'TEST_USER_';
 
 var State = function () {
@@ -1742,7 +1784,7 @@ var State = function () {
         findGame: this.findGame.bind(this),
         signOut: this.signOut.bind(this),
         updateUser: this.updateUser.bind(this)
-      });
+      }, true);
       this.launch.renderInitial();
     }
   }, {
@@ -1960,7 +2002,7 @@ var State = function () {
           dispatchEnd: function dispatchEnd() {
             return _this9.dispatchEnd();
           }
-        }),
+        }, true),
         reveal: new _Renderers2.default.Reveal(this.player, {
           dispatchActions: function dispatchActions() {
             return _this9.dispatchActions();
@@ -2329,7 +2371,8 @@ var Launch = function (_Renderer) {
         content: 'Join',
         clickEvent: function clickEvent() {
           return _this2.events.findGame(_this2.$slug.value.replace(/ /g, '').toLowerCase());
-        }
+        },
+        submit: true
       });
 
       this.$user = this.el('p', null, 'user-info');
@@ -2678,7 +2721,8 @@ var Selections = function (_Renderer) {
       this.submit = new _Button2.default({
         content: 'Submit',
         clickEvent: this.handleSubmit.bind(this),
-        classname: 'flex'
+        classname: 'flex',
+        submit: true
       });
       if (this.player.isMaster) {
         var cancel = new _Button2.default({
@@ -2695,6 +2739,7 @@ var Selections = function (_Renderer) {
     key: 'handleSubmit',
     value: function handleSubmit() {
       var selection = this.$input.value;
+      this.$input.blur();
       if (selection.replace(/ /g, '').length > 0) {
         this.events.dispatchSelection(selection);
         this.$input.classList.add('hide');

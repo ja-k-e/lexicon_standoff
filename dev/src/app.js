@@ -22,6 +22,31 @@ https://github.com/jakealbaugh/lexicon_standoff
   'font-family: sans-serif; font-weight: normal;'
 );
 
+let $CONTAINER = document.querySelector('.container'),
+  VISIBLE,
+  HEIGHT,
+  WIDTH;
+
+updateDimensions();
+window.addEventListener('resize', () => updateDimensions());
+document.addEventListener('visibilitychange', () => {
+  let state = document.visibilityState;
+  if (state !== VISIBLE) {
+    if (state === 'visible') window.location.reload();
+    VISIBLE = state;
+  }
+});
+function updateDimensions() {
+  let h = window.innerHeight,
+    w = window.innerWidth;
+  if (h > 500) {
+    $CONTAINER.style.height = `${h}px`;
+    $CONTAINER.style.width = `${w}px`;
+    HEIGHT = h;
+    WIDTH = w;
+  }
+}
+
 AUTH.detectExisting()
   .then(initializeUser)
   .catch(handleNoUser);

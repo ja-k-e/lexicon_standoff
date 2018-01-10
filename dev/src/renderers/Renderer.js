@@ -1,5 +1,5 @@
 export default class Renderer {
-  constructor(player, events = {}) {
+  constructor(player, events = {}, form = false) {
     this.player = player;
     this.events = events;
     this.$container = document.querySelector('.container > div');
@@ -8,9 +8,18 @@ export default class Renderer {
     this.$main = this.el('main');
     this.$footer = this.el('footer');
     this.$container.appendChild(this.$section);
-    this.$section.appendChild(this.$header);
-    this.$section.appendChild(this.$main);
-    this.$section.appendChild(this.$footer);
+    if (form) {
+      this.$form = this.el('form');
+      this.$form.addEventListener('submit', e => e.preventDefault());
+      this.$form.appendChild(this.$header);
+      this.$form.appendChild(this.$main);
+      this.$form.appendChild(this.$footer);
+      this.$section.appendChild(this.$form);
+    } else {
+      this.$section.appendChild(this.$header);
+      this.$section.appendChild(this.$main);
+      this.$section.appendChild(this.$footer);
+    }
     this.$section.classList.add(this._name);
     this._activeSection = null;
   }

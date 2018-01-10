@@ -31,7 +31,8 @@ export default class Launch extends Renderer {
     this.join = new Button({
       content: 'Join',
       clickEvent: () =>
-        this.events.findGame(this.$slug.value.replace(/ /g, '').toLowerCase())
+        this.events.findGame(this.$slug.value.replace(/ /g, '').toLowerCase()),
+      submit: true
     });
 
     this.$user = this.el('p', null, 'user-info');
