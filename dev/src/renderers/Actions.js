@@ -29,12 +29,17 @@ export default class Actions extends Renderer {
     });
     if (this.player.isMaster) {
       let $inst = this.el(
-        'p',
-        `Play will proceed after every Player submits an Action.`,
-        'instruction'
-      );
+          'p',
+          `Play will proceed after everyone submits a Vote.`,
+          'instruction'
+        ),
+        cancel = new Button({
+          content: 'End',
+          clickEvent: this.handleConfirmEnd.bind(this),
+          classname: 'warning'
+        });
       let $grp = this.el('div', null, 'item-group');
-      this.append($grp, [this.act.$el]);
+      this.append($grp, [cancel.$el, this.act.$el]);
       this.act.$el.classList.add('flex');
       this.append(this.$footer, [$inst, $grp]);
     } else {
@@ -65,7 +70,18 @@ export default class Actions extends Renderer {
 
       this.act.content(`Submit ${voteS}`);
       this.$desc.innerHTML = ` Select ${playerS} to <strong>Kill</strong>. There are ${agentS}.`;
-      for (let playerId in players) {
+      let playerIds = Object.keys(selections).sort((a, b) => {
+        let sa = selections[a].seconds,
+          sb = selections[b].seconds;
+        if (sa < sb) return 1;
+        if (sa > sb) return -1;
+        sa = selections[a].selection.toLowerCase();
+        sb = selections[b].selection.toLowerCase();
+        if (sa < sb) return -1;
+        if (sa > sb) return 1;
+        return 0;
+      });
+      playerIds.forEach(playerId => {
         if (playerId !== this.player.id) {
           let player = players[playerId];
           let $input = this.el('input');
@@ -75,19 +91,20 @@ export default class Actions extends Renderer {
             this.handleChangedInput(imposterCount);
           });
           $input.setAttribute('id', playerId);
-          let $label = this.el(
-            'label',
-            `
+          let { selection } = selections[playerId],
+            $label = this.el(
+              'label',
+              `
             ${this.userSpan(player)}
-            <span class="selection">${selections[playerId]}</span>
+            <span class="selection">${selection}</span>
             `
-          );
+            );
           $label.setAttribute('for', playerId);
           let $li = this.el('li');
           this.append($li, [$input, $label]);
           this.actions.$ul.appendChild($li);
         }
-      }
+      });
     }
 
     this.renderWaiting({ players, actions });
@@ -120,6 +137,6 @@ export default class Actions extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchAction'];
+    return ['dispatchAction', 'dispatchEnd'];
   }
 }

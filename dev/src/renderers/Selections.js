@@ -33,7 +33,7 @@ export default class Selections extends Renderer {
     });
     if (this.player.isMaster) {
       let cancel = new Button({
-        content: '◀',
+        content: 'End',
         clickEvent: this.handleConfirmEnd.bind(this),
         classname: 'warning'
       });
@@ -45,18 +45,34 @@ export default class Selections extends Renderer {
 
   handleSubmit() {
     let selection = this.$input.value;
-    this.$input.blur();
-    if (selection.replace(/ /g, '').length > 0) {
+    selection = selection.replace(/[^\w ]/g, '').toLowerCase();
+    if (selection.match(/\d/)) {
+      alert('Letters only.');
+    } else if (this.matchesTopic(selection)) {
+      alert(
+        "You can't submit one of the Topics, dummy. This is a game. Play it."
+      );
+    } else if (selection.replace(/ /g, '').length > 0) {
+      this.$input.blur();
       this.events.dispatchSelection(selection);
       this.$input.classList.add('hide');
       this.submit.disable();
     } else {
-      alert(`"${selection}" is not valid. Try again.`);
+      alert("C'mon. You gotta submit something.");
     }
   }
 
+  matchesTopic(selection) {
+    let topics = this.player.isImposter
+      ? this.topics
+      : [this.topics[0], this.topics[1]];
+    let clean = selection.replace(/[^\w]/g, ''),
+      arr = topics.map(t => t[1].toLowerCase().replace(/[^\w]/g, ''));
+    return arr.includes(clean);
+  }
+
   render(game, players) {
-    this.topics = game.topics.map(t => t[1]);
+    this.topics = game.topics;
     this.$input.value = '';
     let { topics, selections, playerCount } = game;
     topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
@@ -92,11 +108,6 @@ export default class Selections extends Renderer {
       if (!selections || !selections[playerId])
         if (players[playerId].isAlive)
           this.waiting.add(this.userSpan(players[playerId]));
-  }
-
-  handleConfirmEnd() {
-    if (window.confirm('Are you sure you want to end the game?'))
-      this.events.dispatchEnd();
   }
 
   _shuffledHtml(arr, topics) {

@@ -21,23 +21,23 @@ export default class Games extends Adapter {
     });
   }
 
-  globalAction(gameId, actingPlayerId, playerId) {
+  globalAction(gameId, actingPlayerId, playerIds) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
         .child('actions')
-        .update({ [actingPlayerId]: playerId })
+        .update({ [actingPlayerId]: playerIds })
         .then(resolve)
         .catch(reject);
     });
   }
 
-  globalSelection(gameId, playerId, selection) {
+  globalSelection(gameId, playerId, selection, seconds) {
     return new Promise((resolve, reject) => {
       this.db
         .ref(this.r(gameId))
         .child('selections')
-        .update({ [playerId]: selection })
+        .update({ [playerId]: { selection, seconds } })
         .then(resolve)
         .catch(reject);
     });
@@ -143,6 +143,16 @@ export default class Games extends Adapter {
       this.db
         .ref(this.r(gameId))
         .update({ status })
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
+  masterUpdate(gameId, params) {
+    return new Promise((resolve, reject) => {
+      this.db
+        .ref(this.r(gameId))
+        .update(params)
         .then(resolve)
         .catch(reject);
     });

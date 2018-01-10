@@ -2,19 +2,6 @@ $font: 'Roboto', BlinkMacSystemFont, -apple-system, 'Segoe UI', 'Roboto',
   'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
   'Helvetica', 'Arial', sans-serif;
 
-html,
-body {
-  font-family: $font;
-  height: 100%;
-}
-
-// NOT WORKING.
-@media all and (display-mode: standalone) {
-  section.launch .instruction {
-    display: none;
-  }
-}
-
 $li-h: 1.3rem;
 $border: 1px;
 $corner: 2px;
@@ -33,10 +20,36 @@ $sections: (
   actions,
   results
 );
+$font-size: (
+  xl: (28px, 32px),
+  lg: (16px, 19px),
+  md: (13px, 15px),
+  sm: (11px, 13px)
+);
+@mixin font-size($type) {
+  font-size: nth(map-get($font-size, $type), 1);
+  @media (min-width: 375px) {
+    font-size: nth(map-get($font-size, $type), 2);
+  }
+}
+
+html,
+body {
+  font-family: $font;
+  height: 100%;
+}
+
+// NOT WORKING.
+@media all and (display-mode: standalone) {
+  section.launch .instruction {
+    display: none;
+  }
+}
 
 * {
   font-family: $font;
   font-weight: 300;
+  vertical-align: middle;
 }
 strong {
   font-weight: 500;
@@ -61,7 +74,7 @@ body .container {
     width: 100%;
     max-width: 480px;
     // max-width: 380px;
-    max-height: 700px;
+    max-height: 800px;
     // max-height: 600px;
     top: 50%;
     left: 50%;
@@ -251,7 +264,7 @@ section {
   footer {
   }
   h1 {
-    font-size: 1rem;
+    @include font-size(lg);
     padding-bottom: 0.25rem;
     border-bottom: $border solid;
     position: relative;
@@ -269,7 +282,7 @@ section {
   p {
     &.secret,
     &.topics {
-      font-size: 1rem;
+      @include font-size(lg);
       margin-bottom: 0.5rem;
       + * {
         margin-top: 0;
@@ -278,16 +291,16 @@ section {
     &.topics {
     }
     &.label {
-      font-size: 0.8rem;
+      @include font-size(md);
       &:not(:empty) + * {
         margin-top: 0.125rem;
       }
     }
     &.description {
-      font-size: 0.8rem;
+      @include font-size(md);
     }
     &.instruction {
-      font-size: 0.8rem;
+      @include font-size(md);
       color: $gray;
     }
   }
@@ -329,112 +342,7 @@ ul.hint-list {
     padding: 0;
   }
 }
-ul.flex-list {
-  display: flex;
-  flex-wrap: wrap;
-  &.flex-list-small {
-    li {
-      $size: $li-h * 0.75;
-      line-height: $size;
-      height: $size;
-      font-size: 0.7rem;
-      span.user,
-      span.score,
-      span.votes {
-        line-height: $size;
-      }
-      span.user {
-        height: $size;
-        padding-left: $size + 0.25rem;
-        img {
-          height: $size;
-          width: $size;
-        }
-      }
-    }
-  }
-  &.flex-list-selections {
-    li {
-      flex-basis: 100%;
-      margin-top: 0.25rem;
-      &:nth-child(odd) {
-        background: rgba(255, 255, 255, 0.1);
-      }
-      &:nth-child(even) {
-        background: rgba(255, 255, 255, 0.05);
-      }
-      .selection {
-        position: absolute;
-        top: 0;
-        right: 0;
-        background: black;
-      }
-    }
-  }
-  &.flex-list-half {
-    li {
-      flex-basis: calc(50% - 0.25rem);
-      &:nth-child(odd) {
-        margin-right: 0.125rem;
-      }
-      &:nth-child(even) {
-        margin-left: 0.125rem;
-      }
-      &:not(:nth-child(1)):not(:nth-child(2)) {
-        margin-top: 0.25rem;
-      }
-    }
-  }
-  &.flex-list-quarter {
-    li {
-      flex-basis: calc(25% - 0.1875rem);
-      &:nth-child(4n + 2),
-      &:nth-child(4n + 3),
-      &:nth-child(4n + 4) {
-        margin-left: 0.25rem;
-      }
-      margin-top: 0.25rem;
-      &:nth-child(1),
-      &:nth-child(2),
-      &:nth-child(3),
-      &:nth-child(4) {
-        margin-top: 0;
-      }
-    }
-  }
-  &.flex-list-large {
-    li {
-      $size: $li-h * 1.5;
-      line-height: $size;
-      height: $size;
-      font-size: 0.9rem;
-      span.user {
-        line-height: $size;
-        height: $size;
-        padding-left: $size + 0.25rem;
-        img {
-          height: $size;
-          width: $size;
-        }
-      }
-    }
-  }
-  &:not(.flex-list-half):not(.flex-list-quarter):not(.flex-list-selections) {
-    li {
-      flex-basis: calc(33.33% - 0.166666667rem);
-      &:nth-child(3n + 2) {
-        margin-right: 0.25rem;
-        margin-left: 0.25rem;
-      }
-      &:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) {
-        margin-top: 0.25rem;
-      }
-    }
-  }
-  li + li {
-    margin-top: 0;
-  }
-}
+
 p,
 ul,
 h1,
@@ -467,7 +375,7 @@ section.auth {
   text-align: center;
   h1 {
     text-align: center;
-    font-size: 1.8rem;
+    @include font-size(xl);
     margin-bottom: 0.25rem;
     border: none;
   }
@@ -490,7 +398,7 @@ section.auth {
       }
     }
     .firebaseui-title {
-      font-size: 1rem;
+      @include font-size(lg);
       font-weight: 300;
       color: black;
       padding: 0;
@@ -543,7 +451,7 @@ section.launch {
       &::after {
         content: 'Edit';
         position: absolute;
-        font-size: 0.7rem;
+        @include font-size(sm);
         left: 0;
         width: 100%;
         top: 100%;
@@ -610,7 +518,7 @@ section.launch {
         content: 'Change your Name (8 Character Max)';
         display: block;
         flex-basis: 100%;
-        font-size: 0.8rem;
+        @include font-size(md);
         margin-bottom: 0.5rem;
       }
     }
@@ -619,7 +527,7 @@ section.launch {
         content: 'Select an Avatar';
         display: block;
         flex-basis: 100%;
-        font-size: 0.8rem;
+        @include font-size(md);
         margin-bottom: 0.5rem;
       }
       display: flex;
@@ -666,14 +574,10 @@ section.actions {
       height: 100%;
       .selection {
         top: 0;
-        left: $li-h * 1.2;
         right: 0;
         position: absolute;
-        font-size: 0.7rem;
-        line-height: $li-h;
-        height: $li-h;
         background: $offblack;
-        animation: pulse-selection 3s ease-in-out alternate infinite;
+        animation: pulse-selection 2s ease-in-out alternate infinite;
       }
     }
     input {
@@ -770,7 +674,7 @@ input[type='text'] {
   display: inline-block;
   width: auto;
   border-radius: 0;
-  font-size: 1rem;
+  @include font-size(lg);
   line-height: 1.6;
   padding: 0.25rem 1rem;
   box-sizing: border-box;
@@ -813,7 +717,7 @@ button {
   &.small {
     display: inline-block;
     width: initial;
-    font-size: 0.8rem;
+    @include font-size(md);
   }
   &.link {
     background: transparent;
@@ -824,6 +728,16 @@ button {
   }
 }
 
+hr {
+  border-top: none;
+  border-bottom: $border solid;
+  margin: 1rem 0 !important;
+  text-shadow: none !important;
+  + * {
+    margin-top: 0 !important;
+  }
+}
+
 img {
   height: auto;
   max-width: 100%;
@@ -831,18 +745,48 @@ img {
   filter: grayscale(20%);
 }
 
+@mixin li($size, $font) {
+  line-height: $size;
+  height: $size;
+  font-size: $font;
+  span.user,
+  span.score,
+  span.votes {
+    height: $size;
+    line-height: $size;
+  }
+  span.user {
+    height: $size;
+    padding-left: $size + 0.25rem;
+    img {
+      height: $size;
+      width: $size;
+    }
+  }
+  span.score,
+  span.votes {
+    right: $size * 0.25;
+  }
+  label .selection,
+  label .seconds {
+    left: $size + 0.25rem;
+    line-height: $size;
+    height: $size;
+  }
+}
 ul,
 ol {
   list-style: none;
   padding: 0;
   li {
-    line-height: $li-h;
-    height: $li-h;
+    @include li($li-h, 0.8rem);
+    @media (min-width: 375px) {
+      @include li($li-h * 1.2, 0.9rem);
+    }
     overflow: hidden;
     color: white;
     box-sizing: border-box;
     position: relative;
-    font-size: 0.8rem;
     letter-spacing: 0.03125em;
     + li {
       margin-top: 0.25rem;
@@ -851,26 +795,20 @@ ol {
       border: none;
       text-transform: none;
       color: $gray;
-      // font-style: italic;
     }
     span.score,
     span.votes {
       position: absolute;
       top: 0;
-      right: $li-h * 0.25;
-      line-height: $li-h;
+      display: block;
       text-align: right;
     }
     span.user {
-      line-height: $li-h;
-      height: $li-h;
       width: 100%;
       position: relative;
-      padding-left: $li-h + 0.25rem;
       display: block;
       box-sizing: border-box;
       color: white;
-      // background: $offblack;
       &.you {
         font-weight: 500;
         ~ * {
@@ -879,21 +817,96 @@ ol {
       }
       &.dead {
         text-decoration: $red line-through;
-        // background: $red;
-        // color: white;
-        // ~ * {
-        //   color: white;
-        // }
       }
       img {
-        height: $li-h;
-        width: $li-h;
         position: absolute;
         top: 0;
         left: 0;
       }
       span {
         display: inline-block;
+      }
+    }
+  }
+  &.flex-list {
+    display: flex;
+    flex-wrap: wrap;
+    li + li {
+      margin-top: 0;
+    }
+
+    &.flex-list-small {
+      li {
+        @include li($li-h * 0.75, 0.7rem);
+        @media (min-width: 375px) {
+          @include li($li-h * 0.85, 0.8rem);
+        }
+      }
+    }
+    &.flex-list-selections {
+      li {
+        flex-basis: 100%;
+        margin-top: 0.25rem;
+        &:nth-child(odd) {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        &:nth-child(even) {
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .selection {
+          position: absolute;
+          top: 0;
+          right: 0;
+        }
+        .seconds {
+          color: $gray;
+          padding-left: 0.25rem;
+          padding-right: 0.25rem;
+          border-left: $border solid;
+        }
+      }
+    }
+    &.flex-list-half {
+      li {
+        flex-basis: calc(50% - 0.25rem);
+        &:nth-child(odd) {
+          margin-right: 0.125rem;
+        }
+        &:nth-child(even) {
+          margin-left: 0.125rem;
+        }
+        &:not(:nth-child(1)):not(:nth-child(2)) {
+          margin-top: 0.25rem;
+        }
+      }
+    }
+    &.flex-list-quarter {
+      li {
+        flex-basis: calc(25% - 0.1875rem);
+        &:nth-child(4n + 2),
+        &:nth-child(4n + 3),
+        &:nth-child(4n + 4) {
+          margin-left: 0.25rem;
+        }
+        margin-top: 0.25rem;
+        &:nth-child(1),
+        &:nth-child(2),
+        &:nth-child(3),
+        &:nth-child(4) {
+          margin-top: 0;
+        }
+      }
+    }
+    &:not(.flex-list-half):not(.flex-list-quarter):not(.flex-list-selections) {
+      li {
+        flex-basis: calc(33.33% - 0.166666667rem);
+        &:nth-child(3n + 2) {
+          margin-right: 0.25rem;
+          margin-left: 0.25rem;
+        }
+        &:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) {
+          margin-top: 0.25rem;
+        }
       }
     }
   }

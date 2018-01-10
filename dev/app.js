@@ -121,6 +121,18 @@ var Renderer = function () {
       this._activeSection = this._name;
     }
   }, {
+    key: 'handleConfirmEnd',
+    value: function handleConfirmEnd() {
+      if (window.confirm('Are you sure you want to end the game?')) this.events.dispatchEnd();
+    }
+  }, {
+    key: 'renderTime',
+    value: function renderTime(seconds) {
+      seconds = Math.round(seconds * 100) / 100;
+      seconds = seconds > 9 ? seconds.toFixed(2) : '0' + seconds.toFixed(2);
+      return seconds + 's';
+    }
+  }, {
     key: 'remove',
     value: function remove() {
       this.$section.remove();
@@ -293,8 +305,10 @@ var List = function (_Module) {
 
   _createClass(List, [{
     key: 'add',
-    value: function add(liContent) {
-      this.$ul.appendChild(this.el('li', liContent));
+    value: function add(liContent, classname) {
+      var $li = this.el('li', liContent);
+      if (classname) $li.className = classname;
+      this.$ul.appendChild($li);
     }
   }, {
     key: 'title',
@@ -722,6 +736,11 @@ var Game = function () {
       return [agents, imposters];
     }
   }, {
+    key: 'actions',
+    get: function get() {
+      return this._.actions;
+    }
+  }, {
     key: 'imposterCount',
     get: function get() {
       return this._.imposterCount;
@@ -762,9 +781,9 @@ var Game = function () {
       return this._.topics;
     }
   }, {
-    key: 'actions',
+    key: 'selectionStart',
     get: function get() {
-      return this._.actions;
+      return this._.selectionStart;
     }
   }, {
     key: 'isActions',
@@ -1090,20 +1109,20 @@ var Games = function (_Adapter) {
     }
   }, {
     key: 'globalAction',
-    value: function globalAction(gameId, actingPlayerId, playerId) {
+    value: function globalAction(gameId, actingPlayerId, playerIds) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        _this3.db.ref(_this3.r(gameId)).child('actions').update(_defineProperty({}, actingPlayerId, playerId)).then(resolve).catch(reject);
+        _this3.db.ref(_this3.r(gameId)).child('actions').update(_defineProperty({}, actingPlayerId, playerIds)).then(resolve).catch(reject);
       });
     }
   }, {
     key: 'globalSelection',
-    value: function globalSelection(gameId, playerId, selection) {
+    value: function globalSelection(gameId, playerId, selection, seconds) {
       var _this4 = this;
 
       return new Promise(function (resolve, reject) {
-        _this4.db.ref(_this4.r(gameId)).child('selections').update(_defineProperty({}, playerId, selection)).then(resolve).catch(reject);
+        _this4.db.ref(_this4.r(gameId)).child('selections').update(_defineProperty({}, playerId, { selection: selection, seconds: seconds })).then(resolve).catch(reject);
       });
     }
   }, {
@@ -1206,6 +1225,15 @@ var Games = function (_Adapter) {
         _this11.db.ref(_this11.r(gameId)).update({ status: status }).then(resolve).catch(reject);
       });
     }
+  }, {
+    key: 'masterUpdate',
+    value: function masterUpdate(gameId, params) {
+      var _this12 = this;
+
+      return new Promise(function (resolve, reject) {
+        _this12.db.ref(_this12.r(gameId)).update(params).then(resolve).catch(reject);
+      });
+    }
 
     // Private
 
@@ -1214,12 +1242,12 @@ var Games = function (_Adapter) {
   }, {
     key: '_generateUniqueId',
     value: function _generateUniqueId() {
-      var _this12 = this;
+      var _this13 = this;
 
       return new Promise(function (resolve, reject) {
         var slug = new _Slugs2.default().loadSlug();
-        _this12.db.ref(_this12.r('games/' + slug)).once('value').then(function (snap) {
-          if (snap.val() === null) resolve(slug);else resolve(_this12._generateUniqueId());
+        _this13.db.ref(_this13.r('games/' + slug)).once('value').then(function (snap) {
+          if (snap.val() === null) resolve(slug);else resolve(_this13._generateUniqueId());
         }).catch(reject);
       });
     }
@@ -2006,11 +2034,17 @@ var State = function () {
         reveal: new _Renderers2.default.Reveal(this.player, {
           dispatchActions: function dispatchActions() {
             return _this9.dispatchActions();
+          },
+          dispatchEnd: function dispatchEnd() {
+            return _this9.dispatchEnd();
           }
         }),
         actions: new _Renderers2.default.Actions(this.player, {
           dispatchAction: function dispatchAction(ids) {
             return _this9.dispatchAction(ids);
+          },
+          dispatchEnd: function dispatchEnd() {
+            return _this9.dispatchEnd();
           }
         }),
         results: new _Renderers2.default.Results(this.player, {
@@ -2062,7 +2096,12 @@ var State = function () {
       var roundData = this.game.generateRoundData();
       _Adapters2.default.Games.masterUpdateRoundData(this.game.id, roundData.game).then(function () {
         _Adapters2.default.Players.masterUpdateRoundData(_this11.players, roundData.players).then(function () {
-          _Adapters2.default.Games.masterUpdateStatus(_this11.game.id, 'selections');
+          var selectionStart = new Date().getTime(),
+              status = 'selections';
+          _Adapters2.default.Games.masterUpdate(_this11.game.id, {
+            status: status,
+            selectionStart: selectionStart
+          });
         });
       });
     }
@@ -2094,7 +2133,8 @@ var State = function () {
   }, {
     key: 'dispatchSelection',
     value: function dispatchSelection(selection) {
-      _Adapters2.default.Games.globalSelection(this.game.id, this.user.id, selection);
+      var secs = this.timeSinceSelection();
+      _Adapters2.default.Games.globalSelection(this.game.id, this.user.id, selection, secs);
       if (STUB) this.devDispatchSelection();
     }
   }, {
@@ -2103,11 +2143,18 @@ var State = function () {
       if (this.player.isMaster) {
         var topics = new _Topics2.default().topics;
         for (var i = 0; i < STUB_COUNT; i++) {
+          var secs = this.timeSinceSelection();
           var id = '' + STUB_PREFIX + (i + 1);
-          var topic = topics[Math.floor(Math.random() * topics.length)][1];
-          _Adapters2.default.Games.globalSelection(this.game.id, id, topic);
+          var topic = topics[Math.floor(Math.random() * topics.length)][1].toLowerCase();
+          _Adapters2.default.Games.globalSelection(this.game.id, id, topic, secs);
         }
       }
+    }
+  }, {
+    key: 'timeSinceSelection',
+    value: function timeSinceSelection() {
+      var ms = new Date().getTime() - this.game.selectionStart;
+      return Math.round(ms / 1000 * 100) / 100;
     }
   }, {
     key: 'dispatchAction',
@@ -2726,7 +2773,7 @@ var Selections = function (_Renderer) {
       });
       if (this.player.isMaster) {
         var cancel = new _Button2.default({
-          content: '◀',
+          content: 'End',
           clickEvent: this.handleConfirmEnd.bind(this),
           classname: 'warning'
         });
@@ -2739,21 +2786,34 @@ var Selections = function (_Renderer) {
     key: 'handleSubmit',
     value: function handleSubmit() {
       var selection = this.$input.value;
-      this.$input.blur();
-      if (selection.replace(/ /g, '').length > 0) {
+      selection = selection.replace(/[^\w ]/g, '').toLowerCase();
+      if (selection.match(/\d/)) {
+        alert('Letters only.');
+      } else if (this.matchesTopic(selection)) {
+        alert("You can't submit one of the Topics, dummy. This is a game. Play it.");
+      } else if (selection.replace(/ /g, '').length > 0) {
+        this.$input.blur();
         this.events.dispatchSelection(selection);
         this.$input.classList.add('hide');
         this.submit.disable();
       } else {
-        alert('"' + selection + '" is not valid. Try again.');
+        alert("C'mon. You gotta submit something.");
       }
+    }
+  }, {
+    key: 'matchesTopic',
+    value: function matchesTopic(selection) {
+      var topics = this.player.isImposter ? this.topics : [this.topics[0], this.topics[1]];
+      var clean = selection.replace(/[^\w]/g, ''),
+          arr = topics.map(function (t) {
+        return t[1].toLowerCase().replace(/[^\w]/g, '');
+      });
+      return arr.includes(clean);
     }
   }, {
     key: 'render',
     value: function render(game, players) {
-      this.topics = game.topics.map(function (t) {
-        return t[1];
-      });
+      this.topics = game.topics;
       this.$input.value = '';
       var topics = game.topics,
           selections = game.selections,
@@ -2795,11 +2855,6 @@ var Selections = function (_Renderer) {
       for (var playerId in players) {
         if (!selections || !selections[playerId]) if (players[playerId].isAlive) this.waiting.add(this.userSpan(players[playerId]));
       }
-    }
-  }, {
-    key: 'handleConfirmEnd',
-    value: function handleConfirmEnd() {
-      if (window.confirm('Are you sure you want to end the game?')) this.events.dispatchEnd();
     }
   }, {
     key: '_shuffledHtml',
@@ -2898,14 +2953,21 @@ var Reveal = function (_Renderer) {
           content: 'Proceed',
           clickEvent: this.events.dispatchActions.bind(this),
           classname: 'flex'
+        }),
+            cancel = new _Button2.default({
+          content: 'End',
+          clickEvent: this.handleConfirmEnd.bind(this),
+          classname: 'warning'
         });
-        this.append($grp, [proceed.$el]);
+        this.append($grp, [cancel.$el, proceed.$el]);
         this.append(this.$footer, [$inst, $grp]);
       }
     }
   }, {
     key: 'render',
     value: function render(game, players) {
+      var _this2 = this;
+
       var topics = game.topics,
           playerCount = game.playerCount,
           imposterCount = game.imposterCount,
@@ -2913,12 +2975,29 @@ var Reveal = function (_Renderer) {
 
 
       this.selections.reset();
-      for (var playerId in selections) {
-        this.selections.add('\n        ' + this.userSpan(players[playerId]) + '\n        <span class="selection">' + selections[playerId] + '</span>\n      ');
-      }this.$h1.innerHTML = this.roleHeader('Reveal');
+      var playerIds = Object.keys(selections).sort(function (a, b) {
+        var sa = selections[a].seconds,
+            sb = selections[b].seconds;
+        if (sa < sb) return 1;
+        if (sa > sb) return -1;
+        sa = selections[a].selection.toLowerCase();
+        sb = selections[b].selection.toLowerCase();
+        if (sa < sb) return -1;
+        if (sa > sb) return 1;
+        return 0;
+      });
+      playerIds.forEach(function (playerId) {
+        var _selections$playerId = selections[playerId],
+            selection = _selections$playerId.selection,
+            seconds = _selections$playerId.seconds;
+
+        _this2.selections.add('\n        ' + _this2.userSpan(players[playerId]) + '\n        <span class="selection">\n          ' + selection + '\n          <span class="seconds">' + _this2.renderTime(seconds) + '</span>\n        </span>\n      ');
+      });
+
+      this.$h1.innerHTML = this.roleHeader('Reveal');
       this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
-      var playerS = imposterCount === 1 ? '1 Player' : imposterCount + ' Players';
-      this.$desc.innerHTML = '\n      These were the two Topics. Explain and argue your case.\n      You\'ll need to vote to kill ' + playerS + '.\n    ';
+      var playerS = imposterCount === 1 ? 'Player' : 'Players';
+      this.$desc.innerHTML = '\n      These were the two Topics. Explain and argue your choice.\n      You\'ll need to vote to kill <strong>' + imposterCount + '</strong> ' + playerS + '.\n    ';
       this.toggleSections();
     }
   }, {
@@ -2929,7 +3008,7 @@ var Reveal = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchActions'];
+      return ['dispatchActions', 'dispatchEnd'];
     }
   }]);
 
@@ -3009,9 +3088,14 @@ var Actions = function (_Renderer) {
         }
       });
       if (this.player.isMaster) {
-        var $inst = this.el('p', 'Play will proceed after every Player submits an Action.', 'instruction');
+        var $inst = this.el('p', 'Play will proceed after everyone submits a Vote.', 'instruction'),
+            cancel = new _Button2.default({
+          content: 'End',
+          clickEvent: this.handleConfirmEnd.bind(this),
+          classname: 'warning'
+        });
         var $grp = this.el('div', null, 'item-group');
-        this.append($grp, [this.act.$el]);
+        this.append($grp, [cancel.$el, this.act.$el]);
         this.act.$el.classList.add('flex');
         this.append(this.$footer, [$inst, $grp]);
       } else {
@@ -3049,23 +3133,36 @@ var Actions = function (_Renderer) {
 
         this.act.content('Submit ' + voteS);
         this.$desc.innerHTML = ' Select ' + playerS + ' to <strong>Kill</strong>. There are ' + agentS + '.';
-        for (var playerId in players) {
-          if (playerId !== this.player.id) {
+        var playerIds = Object.keys(selections).sort(function (a, b) {
+          var sa = selections[a].seconds,
+              sb = selections[b].seconds;
+          if (sa < sb) return 1;
+          if (sa > sb) return -1;
+          sa = selections[a].selection.toLowerCase();
+          sb = selections[b].selection.toLowerCase();
+          if (sa < sb) return -1;
+          if (sa > sb) return 1;
+          return 0;
+        });
+        playerIds.forEach(function (playerId) {
+          if (playerId !== _this3.player.id) {
             var player = players[playerId];
-            var $input = this.el('input');
+            var $input = _this3.el('input');
             $input.setAttribute('type', 'checkbox');
             $input.setAttribute('value', playerId);
             $input.addEventListener('change', function () {
               _this3.handleChangedInput(imposterCount);
             });
             $input.setAttribute('id', playerId);
-            var $label = this.el('label', '\n            ' + this.userSpan(player) + '\n            <span class="selection">' + selections[playerId] + '</span>\n            ');
+            var selection = selections[playerId].selection,
+                $label = _this3.el('label', '\n            ' + _this3.userSpan(player) + '\n            <span class="selection">' + selection + '</span>\n            ');
+
             $label.setAttribute('for', playerId);
-            var $li = this.el('li');
-            this.append($li, [$input, $label]);
-            this.actions.$ul.appendChild($li);
+            var $li = _this3.el('li');
+            _this3.append($li, [$input, $label]);
+            _this3.actions.$ul.appendChild($li);
           }
-        }
+        });
       }
 
       this.renderWaiting({ players: players, actions: actions });
@@ -3105,7 +3202,7 @@ var Actions = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return ['dispatchAction'];
+      return ['dispatchAction', 'dispatchEnd'];
     }
   }]);
 
@@ -3172,8 +3269,10 @@ var Results = function (_Renderer) {
       this.killed = new _List2.default('flex-list flex-list-small');
       this.append(this.$main, this.killed.elements);
 
-      this.imposters = new _List2.default('flex-list flex-list-small flex-list-quarter');
+      this.imposters = new _List2.default('flex-list flex-list-small');
       this.append(this.$main, this.imposters.elements);
+
+      this.$main.appendChild(document.createElement('hr'));
 
       this.standings = new _List2.default('flex-list flex-list-small');
       this.append(this.$main, this.standings.elements);
@@ -3193,7 +3292,7 @@ var Results = function (_Renderer) {
         classname: 'flex'
       }),
           end = new _Button2.default({
-        content: '◀',
+        content: 'End',
         clickEvent: this.confirmEnd.bind(this),
         classname: 'warning'
       });
@@ -3254,22 +3353,23 @@ var Results = function (_Renderer) {
       if (this.leave) this.leave.enable();
       this.imposters.title('Imposters');
       this.standings.title('Standings');
-      var winClass = this._winLoseClass(),
-          winnerText = this._winnerText();
-      this.$section.classList.add(winClass);
-      this.$desc.innerHTML = '\n      <p class="description">' + winnerText + ' ' + this._playerPoints() + '</p>\n    ';
-      Object.keys(players).sort(function (a, b) {
+      this.$section.classList.add(this._winLoseClass());
+      this.$desc.innerHTML = '\n      <p>' + this._winnerText() + ' ' + this._playerPoints() + '</p>\n    ';
+      var sorted = Object.keys(players).sort(function (a, b) {
         var aScore = players[a].score,
             bScore = players[b].score;
         if (aScore > bScore) return -1;
         if (aScore < bScore) return 1;
         return 0;
-      }).forEach(function (playerId) {
+      });
+      var c = 0;
+      sorted.forEach(function (playerId, i) {
         var player = players[playerId],
             score = '<span class="score">' + player.score + '</span>',
             html = _this3.userSpan(player) + ' ' + score;
         _this3.standings.add(html);
         if (player.isImposter) _this3.imposters.add(_this3.userSpan(player));
+        c++;
       });
 
       if (this.player.isMaster) this.renderMaster();
@@ -3294,7 +3394,7 @@ var Results = function (_Renderer) {
   }, {
     key: '_winnerText',
     value: function _winnerText() {
-      if (this.player.isAlive) return this._success() + ' You stayed Alive.';else return this._failure() + ' You died.';
+      if (this.player.isAlive) return this._success();else return this._failure();
     }
   }, {
     key: '_playerPoints',

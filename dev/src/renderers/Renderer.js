@@ -32,6 +32,17 @@ export default class Renderer {
     this._activeSection = this._name;
   }
 
+  handleConfirmEnd() {
+    if (window.confirm('Are you sure you want to end the game?'))
+      this.events.dispatchEnd();
+  }
+
+  renderTime(seconds) {
+    seconds = Math.round(seconds * 100) / 100;
+    seconds = seconds > 9 ? seconds.toFixed(2) : `0${seconds.toFixed(2)}`;
+    return `${seconds}s`;
+  }
+
   remove() {
     this.$section.remove();
   }

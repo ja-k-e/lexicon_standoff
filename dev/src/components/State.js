@@ -225,10 +225,12 @@ export default class State {
         true
       ),
       reveal: new Renderers.Reveal(this.player, {
-        dispatchActions: () => this.dispatchActions()
+        dispatchActions: () => this.dispatchActions(),
+        dispatchEnd: () => this.dispatchEnd()
       }),
       actions: new Renderers.Actions(this.player, {
-        dispatchAction: ids => this.dispatchAction(ids)
+        dispatchAction: ids => this.dispatchAction(ids),
+        dispatchEnd: () => this.dispatchEnd()
       }),
       results: new Renderers.Results(this.player, {
         dispatchEnd: () => this.dispatchEnd(),
@@ -268,7 +270,12 @@ export default class State {
         Adapters.Players
           .masterUpdateRoundData(this.players, roundData.players)
           .then(() => {
-            Adapters.Games.masterUpdateStatus(this.game.id, 'selections');
+            let selectionStart = new Date().getTime(),
+              status = 'selections';
+            Adapters.Games.masterUpdate(this.game.id, {
+              status,
+              selectionStart
+            });
           });
       });
   }
@@ -295,7 +302,8 @@ export default class State {
   }
 
   dispatchSelection(selection) {
-    Adapters.Games.globalSelection(this.game.id, this.user.id, selection);
+    let secs = this.timeSinceSelection();
+    Adapters.Games.globalSelection(this.game.id, this.user.id, selection, secs);
     if (STUB) this.devDispatchSelection();
   }
 
@@ -303,11 +311,19 @@ export default class State {
     if (this.player.isMaster) {
       let topics = new Topics().topics;
       for (let i = 0; i < STUB_COUNT; i++) {
+        let secs = this.timeSinceSelection();
         let id = `${STUB_PREFIX}${i + 1}`;
-        let topic = topics[Math.floor(Math.random() * topics.length)][1];
-        Adapters.Games.globalSelection(this.game.id, id, topic);
+        let topic = topics[
+          Math.floor(Math.random() * topics.length)
+        ][1].toLowerCase();
+        Adapters.Games.globalSelection(this.game.id, id, topic, secs);
       }
     }
+  }
+
+  timeSinceSelection() {
+    let ms = new Date().getTime() - this.game.selectionStart;
+    return Math.round(ms / 1000 * 100) / 100;
   }
 
   dispatchAction(playerIds) {

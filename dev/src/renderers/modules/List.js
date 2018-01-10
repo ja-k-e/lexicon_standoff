@@ -7,8 +7,10 @@ export default class List extends Module {
     this.$ul = this.el('ul', null, listClass);
   }
 
-  add(liContent) {
-    this.$ul.appendChild(this.el('li', liContent));
+  add(liContent, classname) {
+    let $li = this.el('li', liContent);
+    if (classname) $li.className = classname;
+    this.$ul.appendChild($li);
   }
 
   title(html) {

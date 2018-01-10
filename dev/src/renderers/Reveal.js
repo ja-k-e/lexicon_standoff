@@ -29,8 +29,13 @@ export default class Reveal extends Renderer {
           content: 'Proceed',
           clickEvent: this.events.dispatchActions.bind(this),
           classname: 'flex'
+        }),
+        cancel = new Button({
+          content: 'End',
+          clickEvent: this.handleConfirmEnd.bind(this),
+          classname: 'warning'
         });
-      this.append($grp, [proceed.$el]);
+      this.append($grp, [cancel.$el, proceed.$el]);
       this.append(this.$footer, [$inst, $grp]);
     }
   }
@@ -39,18 +44,34 @@ export default class Reveal extends Renderer {
     let { topics, playerCount, imposterCount, selections } = game;
 
     this.selections.reset();
-    for (let playerId in selections)
+    let playerIds = Object.keys(selections).sort((a, b) => {
+      let sa = selections[a].seconds,
+        sb = selections[b].seconds;
+      if (sa < sb) return 1;
+      if (sa > sb) return -1;
+      sa = selections[a].selection.toLowerCase();
+      sb = selections[b].selection.toLowerCase();
+      if (sa < sb) return -1;
+      if (sa > sb) return 1;
+      return 0;
+    });
+    playerIds.forEach(playerId => {
+      let { selection, seconds } = selections[playerId];
       this.selections.add(`
         ${this.userSpan(players[playerId])}
-        <span class="selection">${selections[playerId]}</span>
+        <span class="selection">
+          ${selection}
+          <span class="seconds">${this.renderTime(seconds)}</span>
+        </span>
       `);
+    });
 
     this.$h1.innerHTML = this.roleHeader('Reveal');
     this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
-    let playerS = imposterCount === 1 ? '1 Player' : `${imposterCount} Players`;
+    let playerS = imposterCount === 1 ? 'Player' : 'Players';
     this.$desc.innerHTML = `
-      These were the two Topics. Explain and argue your case.
-      You'll need to vote to kill ${playerS}.
+      These were the two Topics. Explain and argue your choice.
+      You'll need to vote to kill <strong>${imposterCount}</strong> ${playerS}.
     `;
     this.toggleSections();
   }
@@ -60,6 +81,6 @@ export default class Reveal extends Renderer {
   }
 
   get _eventsList() {
-    return ['dispatchActions'];
+    return ['dispatchActions', 'dispatchEnd'];
   }
 }

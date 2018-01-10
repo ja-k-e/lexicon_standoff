@@ -128,6 +128,9 @@ export default class Game {
   }
 
   // Getters
+  get actions() {
+    return this._.actions;
+  }
   get imposterCount() {
     return this._.imposterCount;
   }
@@ -155,8 +158,8 @@ export default class Game {
   get selections() {
     return this._.selections;
   }
-  get actions() {
-    return this._.actions;
+  get selectionStart() {
+    return this._.selectionStart;
   }
   get isActions() {
     return this.status === 'actions';

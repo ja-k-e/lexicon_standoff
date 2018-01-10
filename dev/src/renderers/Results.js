@@ -14,8 +14,10 @@ export default class Results extends Renderer {
     this.killed = new List('flex-list flex-list-small');
     this.append(this.$main, this.killed.elements);
 
-    this.imposters = new List('flex-list flex-list-small flex-list-quarter');
+    this.imposters = new List('flex-list flex-list-small');
     this.append(this.$main, this.imposters.elements);
+
+    this.$main.appendChild(document.createElement('hr'));
 
     this.standings = new List('flex-list flex-list-small');
     this.append(this.$main, this.standings.elements);
@@ -39,7 +41,7 @@ export default class Results extends Renderer {
         classname: 'flex'
       }),
       end = new Button({
-        content: '◀',
+        content: 'End',
         clickEvent: this.confirmEnd.bind(this),
         classname: 'warning'
       });
@@ -94,27 +96,26 @@ export default class Results extends Renderer {
     if (this.leave) this.leave.enable();
     this.imposters.title('Imposters');
     this.standings.title('Standings');
-    let winClass = this._winLoseClass(),
-      winnerText = this._winnerText();
-    this.$section.classList.add(winClass);
+    this.$section.classList.add(this._winLoseClass());
     this.$desc.innerHTML = `
-      <p class="description">${winnerText} ${this._playerPoints()}</p>
+      <p>${this._winnerText()} ${this._playerPoints()}</p>
     `;
-    Object.keys(players)
-      .sort((a, b) => {
-        let aScore = players[a].score,
-          bScore = players[b].score;
-        if (aScore > bScore) return -1;
-        if (aScore < bScore) return 1;
-        return 0;
-      })
-      .forEach(playerId => {
-        let player = players[playerId],
-          score = `<span class="score">${player.score}</span>`,
-          html = `${this.userSpan(player)} ${score}`;
-        this.standings.add(html);
-        if (player.isImposter) this.imposters.add(this.userSpan(player));
-      });
+    let sorted = Object.keys(players).sort((a, b) => {
+      let aScore = players[a].score,
+        bScore = players[b].score;
+      if (aScore > bScore) return -1;
+      if (aScore < bScore) return 1;
+      return 0;
+    });
+    let c = 0;
+    sorted.forEach((playerId, i) => {
+      let player = players[playerId],
+        score = `<span class="score">${player.score}</span>`,
+        html = `${this.userSpan(player)} ${score}`;
+      this.standings.add(html);
+      if (player.isImposter) this.imposters.add(this.userSpan(player));
+      c++;
+    });
 
     if (this.player.isMaster) this.renderMaster();
   }
@@ -134,8 +135,8 @@ export default class Results extends Renderer {
   }
 
   _winnerText() {
-    if (this.player.isAlive) return `${this._success()} You stayed Alive.`;
-    else return `${this._failure()} You died.`;
+    if (this.player.isAlive) return this._success();
+    else return this._failure();
   }
 
   _playerPoints() {
