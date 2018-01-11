@@ -1,7 +1,7 @@
 import NewVersion from './NewVersion';
 import Auth from './Auth';
 import Launch from './Launch';
-import Start from './Start';
+import Lobby from './Lobby';
 import Selections from './Selections';
 import Reveal from './Reveal';
 import Actions from './Actions';
@@ -11,7 +11,7 @@ const Renderers = {
   NewVersion,
   Auth,
   Launch,
-  Start,
+  Lobby,
   Selections,
   Reveal,
   Actions,

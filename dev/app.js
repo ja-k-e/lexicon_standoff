@@ -353,24 +353,21 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = __webpack_require__(5),
-    ROOT = config.env;
+var config = __webpack_require__(5);
 
 var Adapter = function () {
   function Adapter() {
     _classCallCheck(this, Adapter);
+
+    this.root = config.env;
   }
 
   _createClass(Adapter, [{
-    key: 'r',
-    value: function r(val) {
-      var p = typeof val === 'string' ? val : val.join('/');
-      return ROOT + '/' + this._key + '/' + p;
-    }
-  }, {
-    key: 'db',
-    get: function get() {
-      return firebase.database();
+    key: 'initialize',
+    value: function initialize(_ref) {
+      var db = _ref.db;
+
+      this.db = db;
     }
   }]);
 
@@ -451,9 +448,9 @@ var _Launch = __webpack_require__(22);
 
 var _Launch2 = _interopRequireDefault(_Launch);
 
-var _Start = __webpack_require__(23);
+var _Lobby = __webpack_require__(23);
 
-var _Start2 = _interopRequireDefault(_Start);
+var _Lobby2 = _interopRequireDefault(_Lobby);
 
 var _Selections = __webpack_require__(24);
 
@@ -477,7 +474,7 @@ var Renderers = {
   NewVersion: _NewVersion2.default,
   Auth: _Auth2.default,
   Launch: _Launch2.default,
-  Start: _Start2.default,
+  Lobby: _Lobby2.default,
   Selections: _Selections2.default,
   Reveal: _Reveal2.default,
   Actions: _Actions2.default,
@@ -850,7 +847,7 @@ var Topics = function () {
   _createClass(Topics, [{
     key: 'loadTopic',
     value: function loadTopic() {
-      return this.topics[this.findIndex()];
+      return this.topics[this.findIndex()][1];
     }
   }, {
     key: 'findIndex',
@@ -906,7 +903,7 @@ console.clear();
 
 var //
 AUTH = new _Auth2.default(),
-    VERSION = 0.5;
+    VERSION = 0.6;
 
 console.info('\n%cLexicon Standoff v' + VERSION + '\n%c\xA9 Jake Albaugh ' + new Date().getFullYear() + '\nhttps://twitter.com/jake_albaugh\nhttps://github.com/jakealbaugh/lexicon_standoff\n', 'font-family: sans-serif; font-weight: bold;', 'font-family: sans-serif; font-weight: normal;');
 
@@ -937,12 +934,17 @@ function updateDimensions() {
   }
 }
 
-AUTH.detectExisting().then(initializeUser).catch(handleNoUser);
+// Binding the database to each adapter
+for (var name in _Adapters2.default) {
+  _Adapters2.default[name].initialize(AUTH);
+}AUTH.detectExisting().then(initializeUser).catch(handleNoUser);
 
-function handleNewVersion() {
-  var renderer = new _Renderers2.default.NewVersion(null, {});
-  renderer.renderInitial();
-  renderer.render();
+function initializeUser(existingUser) {
+  _Adapters2.default.App.findVersion(VERSION).then(function (version) {
+    if (version === VERSION) initializeState(existingUser);else if (version < VERSION || !version) _Adapters2.default.App.updateVersion(VERSION).then(function () {
+      initializeState(existingUser);
+    }).catch(handleError);else handleNewVersion();
+  }).catch(handleError);
 }
 
 function handleNoUser() {
@@ -950,6 +952,12 @@ function handleNoUser() {
   renderer.renderInitial();
   renderer.render();
   AUTH.loadUI();
+}
+
+function handleNewVersion() {
+  var renderer = new _Renderers2.default.NewVersion(null, {});
+  renderer.renderInitial();
+  renderer.render();
 }
 
 function initializeState(existingUser) {
@@ -962,14 +970,6 @@ function initializeState(existingUser) {
         return new _State2.default({ user: user, auth: AUTH });
       }).catch(handleError);
     }).catch(handleError);
-  }).catch(handleError);
-}
-
-function initializeUser(existingUser) {
-  _Adapters2.default.App.findVersion().then(function (version) {
-    if (version === VERSION) initializeState(existingUser);else if (version < VERSION || !version) _Adapters2.default.App.updateVersion(VERSION).then(function () {
-      initializeState(existingUser);
-    }).catch(handleError);else handleNewVersion();
   }).catch(handleError);
 }
 
@@ -1011,8 +1011,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var VERSION_REF = '_version';
-
 var App = function (_Adapter) {
   _inherits(App, _Adapter);
 
@@ -1024,12 +1022,12 @@ var App = function (_Adapter) {
 
   _createClass(App, [{
     key: 'findVersion',
-    value: function findVersion() {
+    value: function findVersion(version) {
       var _this2 = this;
 
       return new Promise(function (resolve, reject) {
-        _this2.db.ref(VERSION_REF).once('value').then(function (snap) {
-          resolve(snap.val());
+        _this2.db.collection('app').doc(_this2.root).get().then(function (doc) {
+          if (doc.exists) resolve(doc.data().version);else resolve(_this2.updateVersion(version));
         }).catch(reject);
       });
     }
@@ -1039,7 +1037,7 @@ var App = function (_Adapter) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        _this3.db.ref(VERSION_REF).set(version).then(resolve).catch(reject);
+        _this3.db.collection('app').doc(_this3.root).set({ version: version }).then(resolve).catch(reject);
       });
     }
   }]);
@@ -1095,47 +1093,49 @@ var Games = function (_Adapter) {
 
     // Global Actions
 
-    value: function globalFind(gameId) {
+    value: function globalFind(id) {
       var _this2 = this;
 
       var playerExists = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
       return new Promise(function (resolve, reject) {
-        _this2.db.ref(_this2.r(gameId)).once('value').then(function (snap) {
-          var game = snap.val();
-          if (game === null) reject('No Game Found with name ' + gameId);else if (game.inProgress === true && !playerExists) reject('Game ' + gameId + ' is already in progress');else resolve({ game: game });
-        }).catch(reject);
+        _this2.db.collection('app').doc(_this2.root).collection('games').doc(id).get().then(function (doc) {
+          if (doc.exists) {
+            var game = doc.data();
+            if (game.inProgress === true && !playerExists) reject('Game ' + id + ' is already in progress');else resolve({ game: game });
+          } else reject('No Game Found with name ' + id);
+        });
       });
     }
   }, {
     key: 'globalAction',
-    value: function globalAction(gameId, actingPlayerId, playerIds) {
+    value: function globalAction(id, playerId, playerIds) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        _this3.db.ref(_this3.r(gameId)).child('actions').update(_defineProperty({}, actingPlayerId, playerIds)).then(resolve).catch(reject);
+        _this3.db.collection('app').doc(_this3.root).collection('games').doc(id).update(_defineProperty({}, 'actions.' + playerId, playerIds)).then(resolve).catch(reject);
       });
     }
   }, {
     key: 'globalSelection',
-    value: function globalSelection(gameId, playerId, selection, seconds) {
+    value: function globalSelection(id, playerId, selection, seconds) {
       var _this4 = this;
 
       return new Promise(function (resolve, reject) {
-        _this4.db.ref(_this4.r(gameId)).child('selections').update(_defineProperty({}, playerId, { selection: selection, seconds: seconds })).then(resolve).catch(reject);
+        _this4.db.collection('app').doc(_this4.root).collection('games').doc(id).update(_defineProperty({}, 'selections.' + playerId, { selection: selection, seconds: seconds })).then(resolve).catch(reject);
       });
     }
   }, {
     key: 'globalListener',
-    value: function globalListener(gameId, handler) {
-      this.db.ref(this.r(gameId)).on('value', function (snap) {
-        handler(snap.val());
+    value: function globalListener(id, handler) {
+      this.unsubscribeGameListener = this.db.collection('app').doc(this.root).collection('games').doc(id).onSnapshot(function (doc) {
+        handler(doc.exists ? doc.data() : null);
       });
     }
   }, {
     key: 'globalKill',
-    value: function globalKill(gameId) {
-      this.db.ref(this.r(gameId)).off();
+    value: function globalKill() {
+      this.unsubscribeGameListener();
     }
 
     // Master Actions
@@ -1147,91 +1147,28 @@ var Games = function (_Adapter) {
 
       return new Promise(function (resolve, reject) {
         _this5._generateUniqueId().then(function (id) {
-          // Set listener
-          _this5.db.ref(_this5.r(id)).on('value', function (snap) {
-            var game = snap.val();
-            if (game && game.id === id) {
-              // Kill listener
-              _this5.db.ref(_this5.r(id)).off();
-              // Return the Game
-              resolve({ game: game });
-            }
-          });
-          // Create Game
-          _this5.db.ref(_this5.r(id)).set({ id: id, status: 'start', inProgress: false, masterId: userId }).catch(reject);
+          _this5.db.collection('app').doc(_this5.root).collection('games').doc(id).set({ id: id, status: 'start', inProgress: false, masterId: userId }).then(function () {
+            return resolve(_this5.globalFind(id));
+          }).catch(reject);
         }).catch(reject);
       });
     }
   }, {
     key: 'masterDelete',
-    value: function masterDelete(gameId) {
+    value: function masterDelete(id) {
       var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        _this6.db.ref(_this6.r(gameId)).set(null).then(resolve).catch(reject);
-      });
-    }
-  }, {
-    key: 'masterUpdateActionIds',
-    value: function masterUpdateActionIds(gameId, killVotesByPlayer, killVotes, killedIds) {
-      var _this7 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this7.db.ref(_this7.r(gameId)).update({
-          killVotesByPlayer: killVotesByPlayer,
-          killedIds: killedIds,
-          killVotes: killVotes
-        }).then(resolve).catch(reject);
-      });
-    }
-  }, {
-    key: 'masterUpdateResults',
-    value: function masterUpdateResults(gameId, params) {
-      var _this8 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this8.db.ref(_this8.r(gameId)).update(params).then(resolve).catch(reject);
-      });
-    }
-  }, {
-    key: 'masterResetSelections',
-    value: function masterResetSelections(gameId, topics, selections) {
-      var _this9 = this;
-
-      return new Promise(function (resolve, reject) {
-        var _this9$db$ref$update;
-
-        _this9.db.ref(_this9.r(gameId)).update((_this9$db$ref$update = {
-          actions: {},
-          selections: {}
-        }, _defineProperty(_this9$db$ref$update, 'selections', selections), _defineProperty(_this9$db$ref$update, 'topics', topics), _this9$db$ref$update)).then(resolve).catch(reject);
-      });
-    }
-  }, {
-    key: 'masterUpdateRoundData',
-    value: function masterUpdateRoundData(gameId, gameData) {
-      var _this10 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this10.db.ref(_this10.r(gameId)).update(gameData).then(resolve).catch(reject);
-      });
-    }
-  }, {
-    key: 'masterUpdateStatus',
-    value: function masterUpdateStatus(gameId, status) {
-      var _this11 = this;
-
-      return new Promise(function (resolve, reject) {
-        _this11.db.ref(_this11.r(gameId)).update({ status: status }).then(resolve).catch(reject);
+        _this6.db.collection('app').doc(_this6.root).collection('games').doc(id).delete().then(resolve).catch(reject);
       });
     }
   }, {
     key: 'masterUpdate',
-    value: function masterUpdate(gameId, params) {
-      var _this12 = this;
+    value: function masterUpdate(id, params) {
+      var _this7 = this;
 
       return new Promise(function (resolve, reject) {
-        _this12.db.ref(_this12.r(gameId)).update(params).then(resolve).catch(reject);
+        _this7.db.collection('app').doc(_this7.root).collection('games').doc(id).update(params).then(resolve).catch(reject);
       });
     }
 
@@ -1242,12 +1179,12 @@ var Games = function (_Adapter) {
   }, {
     key: '_generateUniqueId',
     value: function _generateUniqueId() {
-      var _this13 = this;
+      var _this8 = this;
 
       return new Promise(function (resolve, reject) {
         var slug = new _Slugs2.default().loadSlug();
-        _this13.db.ref(_this13.r('games/' + slug)).once('value').then(function (snap) {
-          if (snap.val() === null) resolve(slug);else resolve(_this13._generateUniqueId());
+        _this8.db.collection('app').doc(_this8.root).collection('games').doc(slug).get().then(function (doc) {
+          if (doc.exists) resolve(_this8._generateUniqueId());else resolve(slug);
         }).catch(reject);
       });
     }
@@ -1359,13 +1296,13 @@ var Players = function (_Adapter) {
       var _this2 = this;
 
       return new Promise(function (resolve, reject) {
-        _this2.globalFind(gameId, user.id).then(function (_ref) {
+        _this2.globalFind(user.id).then(function (_ref) {
           var player = _ref.player;
 
           resolve({ player: player });
         }).catch(function () {
           _this2.globalCreate(gameId, user, master).then(function () {
-            _this2.globalFind(gameId, user.id).then(function (_ref2) {
+            _this2.globalFind(user.id).then(function (_ref2) {
               var player = _ref2.player;
 
               resolve({ player: player });
@@ -1382,152 +1319,129 @@ var Players = function (_Adapter) {
       return new Promise(function (resolve, reject) {
         var id = user.id,
             name = user.name,
-            avatar = user.avatar,
-            params = {
-          id: id,
-          gameId: gameId,
-          name: name,
-          avatar: avatar,
-          master: master,
-          score: 0
-        };
+            avatar = user.avatar;
 
-        _this3.db.ref(_this3.r([gameId, id])).set(params).then(resolve).catch(reject);
+        _this3.db.collection('app').doc(_this3.root).collection('players').doc(id).set({ id: id, gameId: gameId, name: name, avatar: avatar, master: master, role: 'joined', score: 0 }).then(resolve).catch(reject);
       });
     }
   }, {
-    key: 'globalLeave',
-    value: function globalLeave(gameId, playerId) {
+    key: 'globalDelete',
+    value: function globalDelete(id) {
       var _this4 = this;
 
       return new Promise(function (resolve, reject) {
-        _this4.db.ref(_this4.r([gameId, playerId])).set(null).then(resolve).catch(reject);
+        _this4.db.collection('app').doc(_this4.root).collection('players').doc(id).delete().then(resolve).catch(reject);
       });
     }
   }, {
     key: 'globalFind',
-    value: function globalFind(gameId, userId) {
+    value: function globalFind(id) {
       var _this5 = this;
 
       return new Promise(function (resolve, reject) {
-        _this5.db.ref(_this5.r([gameId, userId])).once('value').then(function (snap) {
-          var value = snap.val();
-          if (value !== null) resolve({ player: value });else reject();
+        _this5.db.collection('app').doc(_this5.root).collection('players').doc(id).get().then(function (doc) {
+          if (doc.exists) resolve({ player: doc.data() });else reject();
         }).catch(reject);
       });
     }
   }, {
-    key: 'globalListenerAdded',
-    value: function globalListenerAdded(gameId, handler) {
-      this.db.ref(this.r(gameId)).on('child_added', function (snap) {
-        handler(snap.val());
-      });
-    }
-  }, {
-    key: 'globalListenerRemoved',
-    value: function globalListenerRemoved(gameId, handler) {
-      var _this6 = this;
-
-      this.db.ref(this.r(gameId)).on('child_removed', function (snap) {
-        var player = snap.val();
-        _this6.db.ref(_this6.r([gameId, player.id])).off();
-        handler(player);
+    key: 'globalListenerPlayerEvents',
+    value: function globalListenerPlayerEvents(gameId, handleAdded, handleRemoved) {
+      this.db.collection('app').doc(this.root).collection('players').where('gameId', '==', gameId).onSnapshot(function (querySnapshot) {
+        querySnapshot.docChanges.forEach(function (change) {
+          if (change.type === 'added') handleAdded(change.doc.data());
+          if (change.type === 'removed') handleRemoved(change.doc.data());
+        });
       });
     }
   }, {
     key: 'globalListenerPlayer',
-    value: function globalListenerPlayer(gameId, playerId, handler) {
-      this.db.ref(this.r([gameId, playerId])).on('value', function (snap) {
-        handler(snap.val());
+    value: function globalListenerPlayer(id, handler) {
+      this.db.collection('app').doc(this.root).collection('players').doc(id).onSnapshot(function (doc) {
+        handler(doc.exists ? doc.data() : null);
       });
     }
 
     // Master Actions
 
   }, {
-    key: 'masterDelete',
-    value: function masterDelete(gameId) {
-      var _this7 = this;
+    key: 'masterDeleteAll',
+    value: function masterDeleteAll(gameId) {
+      var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        _this7.db.ref(_this7.r(gameId)).set(null).then(resolve).catch(reject);
+        _this6.db.collection('app').doc(_this6.root).collection('players').where('gameId', '==', gameId).get().then(function (querySnapshot) {
+          var batch = _this6.db.batch();
+          querySnapshot.forEach(function (doc) {
+            batch.delete(doc.ref);
+          });
+          batch.commit().then(resolve).catch(reject);
+        }).catch(reject);
       });
     }
   }, {
     key: 'masterActOnPlayers',
     value: function masterActOnPlayers(gameId, players, killedIds) {
-      var _this8 = this;
+      var _this7 = this;
 
       return new Promise(function (resolve, reject) {
-        var playerCount = Object.keys(players).length;
+        var batch = _this7.db.batch();
         for (var playerId in players) {
-          var params = { alive: !killedIds.includes(playerId) };
-          _this8.db.ref(_this8.r([gameId, playerId])).update(params).then(function () {
-            playerCount--;
-            if (playerCount <= 0) resolve();
-          }).catch(reject);
+          var ref = _this7.db.collection('app').doc(_this7.root).collection('players').doc(playerId);
+          batch.update(ref, { alive: !killedIds.includes(playerId) });
         }
+        batch.commit().then(resolve).catch(reject);
       });
     }
   }, {
     key: 'masterResetStart',
     value: function masterResetStart(players) {
-      var _this9 = this;
+      var _this8 = this;
 
       return new Promise(function (resolve, reject) {
-        var playerCount = Object.keys(players).length;
+        var batch = _this8.db.batch();
         for (var playerId in players) {
-          var params = { score: 0 };
-          _this9.db.ref(_this9.r([players[playerId].gameId, playerId])).update(params).then(function () {
-            playerCount--;
-            if (playerCount <= 0) resolve();
-          }).catch(reject);
+          var ref = _this8.db.collection('app').doc(_this8.root).collection('players').doc(playerId);
+          batch.update(ref, { score: 0 });
         }
+        batch.commit().then(resolve).catch(reject);
       });
     }
   }, {
     key: 'masterTallyScores',
     value: function masterTallyScores(players, points) {
-      var _this10 = this;
+      var _this9 = this;
 
       return new Promise(function (resolve, reject) {
-        var playerCount = Object.keys(players).length;
+        var batch = _this9.db.batch();
         for (var playerId in players) {
           var pointsVal = points[playerId],
-              player = players[playerId];
+              score = players[playerId].score + pointsVal;
           if (pointsVal) {
-            var score = player.score + pointsVal;
-            _this10.db.ref(_this10.r([player.gameId, playerId])).update({ score: score }).then(function () {
-              playerCount--;
-              if (playerCount <= 0) resolve();
-            }).catch(reject);
-          } else {
-            playerCount--;
-            if (playerCount <= 0) resolve();
+            var ref = _this9.db.collection('app').doc(_this9.root).collection('players').doc(playerId);
+            batch.update(ref, { score: score });
           }
         }
+        batch.commit().then(resolve).catch(reject);
       });
     }
   }, {
     key: 'masterUpdateRoundData',
     value: function masterUpdateRoundData(players, _ref3) {
-      var _this11 = this;
+      var _this10 = this;
 
       var playerIdsImposters = _ref3.playerIdsImposters,
           playerIdsAgents = _ref3.playerIdsAgents;
 
       return new Promise(function (resolve, reject) {
-        var playerCount = Object.keys(players).length;
+        var batch = _this10.db.batch();
         for (var playerId in players) {
-          var player = players[playerId];
-          var role = void 0,
-              alive = true;
+          var role = void 0;
           if (playerIdsImposters.includes(playerId)) role = 'imposter';else if (playerIdsAgents.includes(playerId)) role = 'agent';else role = 'agent';
-          _this11.db.ref(_this11.r([player.gameId, playerId])).update({ role: role, alive: alive }).then(function () {
-            playerCount--;
-            if (playerCount <= 0) resolve();
-          }).catch(reject);
+          var ref = _this10.db.collection('app').doc(_this10.root).collection('players').doc(playerId);
+          batch.update(ref, { alive: true, role: role });
         }
+        batch.commit().then(resolve).catch(reject);
       });
     }
 
@@ -1606,7 +1520,7 @@ var Users = function (_Adapter) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        _this3.db.ref(_this3.r(params.id)).set(params).then(resolve).catch(reject);
+        _this3.db.collection('app').doc(_this3.root).collection('users').doc(params.id).set(params).then(resolve).catch(reject);
       });
     }
   }, {
@@ -1615,28 +1529,27 @@ var Users = function (_Adapter) {
       var _this4 = this;
 
       return new Promise(function (resolve, reject) {
-        _this4.db.ref(_this4.r(id)).set(null).then(resolve).catch(reject);
+        _this4.db.collection('app').doc(_this4.root).collection('users').doc(id).delete().then(resolve).catch(reject);
       });
     }
   }, {
     key: 'globalFind',
-    value: function globalFind(userId) {
+    value: function globalFind(id) {
       var _this5 = this;
 
       return new Promise(function (resolve, reject) {
-        _this5.db.ref(_this5.r(userId)).once('value').then(function (snap) {
-          var value = snap.val();
-          if (value !== null) resolve(value);else reject();
+        _this5.db.collection('app').doc(_this5.root).collection('users').doc(id).get().then(function (doc) {
+          if (doc.exists) resolve(doc.data());else reject();
         }).catch(reject);
       });
     }
   }, {
     key: 'globalUpdate',
-    value: function globalUpdate(userId, params) {
+    value: function globalUpdate(id, params) {
       var _this6 = this;
 
       return new Promise(function (resolve, reject) {
-        _this6.db.ref(_this6.r(userId)).update(params).then(resolve).catch(reject);
+        _this6.db.collection('app').doc(_this6.root).collection('users').doc(id).update(params).then(resolve).catch(reject);
       });
     }
 
@@ -1656,11 +1569,6 @@ var Users = function (_Adapter) {
     value: function _safeName(name) {
       if (name) return name.replace(/ .+$/, '').substring(0, 12);
       return this._names[Math.floor(Math.random() * this._names.length)];
-    }
-  }, {
-    key: '_key',
-    get: function get() {
-      return 'users';
     }
   }, {
     key: '_names',
@@ -1695,7 +1603,7 @@ var Auth = function () {
   function Auth() {
     _classCallCheck(this, Auth);
 
-    firebase.initializeApp(firebaseKeys);
+    this.db = firebase.firestore(firebase.initializeApp(firebaseKeys));
   }
 
   _createClass(Auth, [{
@@ -1875,7 +1783,7 @@ var State = function () {
       if (this.game.changes.actions) this.handleActionsChange();
       if (this.game.changes.selections) this.handleSelectionsChange();
       if (this.master) {
-        if (this.game.isActions && this.game.changes.killedIds) this.handleKilledIdsChange();
+        if (this.game.isActions && this.game.changes.killedIds && this.game.killedIds.length > 0) this.handleKilledIdsChange();
       }
     }
   }, {
@@ -1891,8 +1799,10 @@ var State = function () {
       var points = this.game.calculatePoints(this.players);
       // Add player points then update results
       _Adapters2.default.Players.masterTallyScores(this.players, points).then(function () {
-        var params = { status: 'results' };
-        _Adapters2.default.Games.masterUpdateResults(_this5.game.id, params);
+        _Adapters2.default.Games.masterUpdate(_this5.game.id, {
+          status: 'results',
+          inProgress: false
+        });
       });
     }
   }, {
@@ -1911,7 +1821,11 @@ var State = function () {
                 killedIds = _game$generateActionI.killedIds;
 
             _Adapters2.default.Players.masterActOnPlayers(this.game.id, this.players, killedIds).then(function () {
-              _Adapters2.default.Games.masterUpdateActionIds(_this6.game.id, killVotesByPlayer, killVotes, killedIds).then(function () {
+              _Adapters2.default.Games.masterUpdate(_this6.game.id, {
+                killVotesByPlayer: killVotesByPlayer,
+                killVotes: killVotes,
+                killedIds: killedIds
+              }).then(function () {
                 _this6.actionLock = false;
               });
             });
@@ -1959,12 +1873,7 @@ var State = function () {
       this.gameId = game.id;
       this.master = game.masterId === this.playerId;
       this.players = {};
-      _Adapters2.default.Players.globalListenerAdded(this.gameId, function (player) {
-        _this7.initializePlayer(player);
-      });
-      _Adapters2.default.Players.globalListenerRemoved(this.gameId, function (player) {
-        _this7.removePlayer(player);
-      });
+      _Adapters2.default.Players.globalListenerPlayerEvents(this.gameId, this.initializePlayer.bind(this), this.removePlayer.bind(this));
       _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: this.gameId });
       _Adapters2.default.Players.globalFindOrCreate(this.user, this.gameId, this.master).then(function (player) {
         _this7.game = new _Game2.default({ state: _this7 });
@@ -1985,15 +1894,16 @@ var State = function () {
     value: function initializePlayer(player) {
       var _this8 = this;
 
-      this.players[player.id] = new _Player2.default(this, player);
-      _Adapters2.default.Players.globalListenerPlayer(this.gameId, player.id, function (player) {
+      if (!this.players[player.id]) this.players[player.id] = new _Player2.default(this, player);
+      _Adapters2.default.Players.globalListenerPlayer(player.id, function (player) {
         if (player && _this8.players[player.id]) _this8.players[player.id].update(player);
       });
-      if (!this.rendered && this.player) this.initializeRenderers();
+      // If we have this Player's data
       if (this.player) {
-        // We dont have it on initial render
-        this.renderers.start.player = this.player;
-        this.renderers.start.render({
+        // Initial Render
+        if (!this.rendered) this.initializeRenderers();
+        this.touchPlayers();
+        this.renderers.lobby.render({
           players: this.players,
           gameId: this.gameId
         });
@@ -2003,19 +1913,30 @@ var State = function () {
     key: 'removePlayer',
     value: function removePlayer(player) {
       delete this.players[player.id];
+      this.touchPlayers();
+    }
+  }, {
+    key: 'touchPlayers',
+    value: function touchPlayers() {
+      // If results, we remove the player there
+      if (this.game && this.game.status === 'results') this.renderers.results.render(this.game, this.players);else if (this.game && this.game.status === 'lobby')
+        // If not results, we're at Lobby
+        // Render joining Players
+        this.renderers.lobby.render({
+          players: this.players,
+          gameId: this.gameId
+        });
     }
   }, {
     key: 'initializeRenderers',
     value: function initializeRenderers() {
       var _this9 = this;
 
-      if (this.renderers) {
-        for (var key in this.renderers) {
-          this.renderers[key].remove();
-        }
-      }
-      this.renderers = {
-        start: new _Renderers2.default.Start(this.player, {
+      // Cleaning renders from last game
+      if (this.renderers) for (var key in this.renderers) {
+        this.renderers[key].remove();
+      }this.renderers = {
+        lobby: new _Renderers2.default.Lobby(this.player, {
           dispatchStart: function dispatchStart() {
             return _this9.dispatchStart();
           },
@@ -2059,7 +1980,7 @@ var State = function () {
           }
         })
       };
-      this.renderers.start.renderInitial();
+      this.renderers.lobby.renderInitial();
       this.renderers.selections.renderInitial();
       this.renderers.reveal.renderInitial();
       this.renderers.actions.renderInitial();
@@ -2081,12 +2002,12 @@ var State = function () {
   }, {
     key: 'dispatchReveal',
     value: function dispatchReveal() {
-      _Adapters2.default.Games.masterUpdateStatus(this.game.id, 'reveal');
+      _Adapters2.default.Games.masterUpdate(this.game.id, { status: 'reveal' });
     }
   }, {
     key: 'dispatchActions',
     value: function dispatchActions() {
-      _Adapters2.default.Games.masterUpdateStatus(this.game.id, 'actions');
+      _Adapters2.default.Games.masterUpdate(this.game.id, { status: 'actions' });
     }
   }, {
     key: 'dispatchNewRound',
@@ -2094,7 +2015,7 @@ var State = function () {
       var _this11 = this;
 
       var roundData = this.game.generateRoundData();
-      _Adapters2.default.Games.masterUpdateRoundData(this.game.id, roundData.game).then(function () {
+      _Adapters2.default.Games.masterUpdate(this.game.id, roundData.game).then(function () {
         _Adapters2.default.Players.masterUpdateRoundData(_this11.players, roundData.players).then(function () {
           var selectionStart = new Date().getTime(),
               status = 'selections';
@@ -2110,7 +2031,7 @@ var State = function () {
     value: function dispatchEnd() {
       var _this12 = this;
 
-      _Adapters2.default.Players.masterDelete(this.game.id).then(function () {
+      _Adapters2.default.Players.masterDeleteAll(this.game.id).then(function () {
         _Adapters2.default.Games.masterDelete(_this12.game.id);
       });
     }
@@ -2122,9 +2043,9 @@ var State = function () {
       if (this.game.playerCount <= 3) {
         this.dispatchEnd();
       } else {
-        _Adapters2.default.Games.globalKill(this.game.id);
+        _Adapters2.default.Games.globalKill();
         _Adapters2.default.Users.globalUpdate(this.playerId, { currentGameId: null }).then(function () {
-          _Adapters2.default.Players.globalLeave(_this13.game.id, _this13.user.id).then(function () {
+          _Adapters2.default.Players.globalDelete(_this13.user.id).then(function () {
             _this13.launch.render({ user: _this13.user });
           });
         });
@@ -2412,12 +2333,15 @@ var Launch = function (_Renderer) {
       this.$editor = this.el('div', null, 'editor');
       this.new = new _Button2.default({
         content: 'Create Game',
-        clickEvent: this.events.createGame.bind(this)
+        clickEvent: function clickEvent() {
+          _this2.$main.classList.add('inactive');
+          _this2.events.createGame();
+        }
       });
       this.join = new _Button2.default({
         content: 'Join',
         clickEvent: function clickEvent() {
-          return _this2.events.findGame(_this2.$slug.value.replace(/ /g, '').toLowerCase());
+          _this2.events.findGame(_this2.$slug.value.replace(/ /g, '').toLowerCase());
         },
         submit: true
       });
@@ -2437,6 +2361,7 @@ var Launch = function (_Renderer) {
 
       var user = _ref.user;
 
+      this.$main.classList.remove('inactive');
       this.$slug.value = '';
       this.renderEditor(user);
       this.toggleSections();
@@ -2598,16 +2523,16 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var Start = function (_Renderer) {
-  _inherits(Start, _Renderer);
+var Lobby = function (_Renderer) {
+  _inherits(Lobby, _Renderer);
 
-  function Start() {
-    _classCallCheck(this, Start);
+  function Lobby() {
+    _classCallCheck(this, Lobby);
 
-    return _possibleConstructorReturn(this, (Start.__proto__ || Object.getPrototypeOf(Start)).apply(this, arguments));
+    return _possibleConstructorReturn(this, (Lobby.__proto__ || Object.getPrototypeOf(Lobby)).apply(this, arguments));
   }
 
-  _createClass(Start, [{
+  _createClass(Lobby, [{
     key: 'renderInitial',
     value: function renderInitial() {
       this.$h1 = this.el('h1', 'Waiting for Players...');
@@ -2695,10 +2620,10 @@ var Start = function (_Renderer) {
     }
   }]);
 
-  return Start;
+  return Lobby;
 }(_Renderer3.default);
 
-exports.default = Start;
+exports.default = Lobby;
 
 /***/ }),
 /* 24 */
@@ -2820,7 +2745,7 @@ var Selections = function (_Renderer) {
           playerCount = game.playerCount;
 
       topics = topics.map(function (i) {
-        return [i[0], i[1].split(' ').join('&nbsp;')];
+        return i.split(' ').join('&nbsp;');
       });
       this.$h1.innerHTML = this.roleHeader('Selections');
 
@@ -2851,19 +2776,21 @@ var Selections = function (_Renderer) {
           selections = _ref.selections;
 
       this.waiting.reset();
-      this.waiting.title('Waiting on...');
       for (var playerId in players) {
-        if (!selections || !selections[playerId]) if (players[playerId].isAlive) this.waiting.add(this.userSpan(players[playerId]));
+        if (!selections || !selections[playerId]) if (players[playerId].isAlive) {
+          this.waiting.title('Waiting on...');
+          this.waiting.add(this.userSpan(players[playerId]));
+        }
       }
     }
   }, {
     key: '_shuffledHtml',
     value: function _shuffledHtml(arr, topics) {
       if (arr.length === 2) {
-        return '\u201C' + topics[arr[0]][1] + '\u201D &amp; \u201C' + topics[arr[1]][1] + '\u201D';
+        return '\u201C' + topics[arr[0]] + '\u201D &amp; \u201C' + topics[arr[1]] + '\u201D';
       } else {
         var shuffled = (0, _shuffle2.default)(arr).map(function (idx) {
-          return topics[idx][1];
+          return topics[idx];
         });
         var html = '';
         shuffled.forEach(function (topic, i) {
@@ -2995,7 +2922,7 @@ var Reveal = function (_Renderer) {
       });
 
       this.$h1.innerHTML = this.roleHeader('Reveal');
-      this.$topics.innerHTML = '\u201C' + topics[0][1] + '\u201D &amp; \u201C' + topics[1][1] + '\u201D';
+      this.$topics.innerHTML = '\u201C' + topics[0] + '\u201D &amp; \u201C' + topics[1] + '\u201D';
       var playerS = imposterCount === 1 ? 'Player' : 'Players';
       this.$desc.innerHTML = '\n      These were the two Topics. Explain and argue your choice.\n      You\'ll need to vote to kill <strong>' + imposterCount + '</strong> ' + playerS + '.\n    ';
       this.toggleSections();
@@ -3180,9 +3107,11 @@ var Actions = function (_Renderer) {
           actions = _ref.actions;
 
       this.waiting.reset();
-      this.waiting.title('Waiting on...');
       for (var playerId in players) {
-        if (!actions || !actions[playerId]) this.waiting.add(this.userSpan(players[playerId]));
+        if (!actions || !actions[playerId]) {
+          this.waiting.title('Waiting on...');
+          this.waiting.add(this.userSpan(players[playerId]));
+        }
       }
     }
   }, {
@@ -3277,16 +3206,16 @@ var Results = function (_Renderer) {
       this.standings = new _List2.default('flex-list flex-list-small');
       this.append(this.$main, this.standings.elements);
 
-      this.$score = this.el('p', null, 'description');
-      this.$main.appendChild(this.$score);
+      this.joined = new _List2.default('list-joined flex-list flex-list-small');
+      this.append(this.$main, this.joined.elements);
 
       if (this.player.isMaster) this.renderInitialMaster();else this.renderInitialLeave();
     }
   }, {
     key: 'renderInitialMaster',
     value: function renderInitialMaster() {
-      var $inst = this.el('p', 'Once everyone is ready, proceed below.', 'instruction'),
-          round = new _Button2.default({
+      this.$inst = this.el('p', null, 'instruction');
+      var round = new _Button2.default({
         content: 'Continue',
         clickEvent: this.events.dispatchNewRound.bind(this),
         classname: 'flex'
@@ -3298,7 +3227,7 @@ var Results = function (_Renderer) {
       });
       this.$group = this.el('div', null, 'item-group');
       this.append(this.$group, [end.$el, round.$el]);
-      this.append(this.$footer, [$inst, this.$group]);
+      this.append(this.$footer, [this.$inst, this.$group]);
     }
   }, {
     key: 'renderInitialLeave',
@@ -3327,9 +3256,10 @@ var Results = function (_Renderer) {
     }
   }, {
     key: 'render',
-    value: function render(game, players) {
+    value: function render(game, players, joined) {
       var _this3 = this;
 
+      if (this.player.isMaster) this.$inst.innerHTML = '\n        Once everyone is ready, proceed below.\n        More Players can join using the code \u201C' + game.id + '\u201D\n      ';
       var killVotesByPlayer = game.killVotesByPlayer,
           killVotes = game.killVotes,
           killedIds = game.killedIds;
@@ -3337,8 +3267,19 @@ var Results = function (_Renderer) {
       this.killed.reset();
       this.imposters.reset();
       this.standings.reset();
-      this.$score.innerHTML = '';
+      this.joined.reset();
       this.$section.className = this.$section.className.replace(/(win-\d+)|(lose-\d+)/g, '');
+
+      if (this.detectJoined(players)) {
+        this.joined.title('Joined Players');
+        for (var playerId in players) {
+          var player = players[playerId];
+          if (player.isJoined) {
+            this.joined.title('Joined Players');
+            this.joined.add(this.userSpan(player));
+          }
+        }
+      }
 
       this.toggleSections();
 
@@ -3362,14 +3303,14 @@ var Results = function (_Renderer) {
         if (aScore < bScore) return 1;
         return 0;
       });
-      var c = 0;
       sorted.forEach(function (playerId, i) {
         var player = players[playerId],
             score = '<span class="score">' + player.score + '</span>',
             html = _this3.userSpan(player) + ' ' + score;
-        _this3.standings.add(html);
-        if (player.isImposter) _this3.imposters.add(_this3.userSpan(player));
-        c++;
+        if (!player.isJoined) {
+          _this3.standings.add(html);
+          if (player.isImposter) _this3.imposters.add(_this3.userSpan(player));
+        }
       });
 
       if (this.player.isMaster) this.renderMaster();
@@ -3378,6 +3319,18 @@ var Results = function (_Renderer) {
     key: 'renderMaster',
     value: function renderMaster() {
       this.$group.classList.remove('hide');
+    }
+  }, {
+    key: 'detectJoined',
+    value: function detectJoined(players) {
+      var i = 0,
+          ids = Object.keys(players),
+          joined = false;
+      while (i < ids.length && !joined) {
+        joined = players[ids[i]].isJoined;
+        i++;
+      }
+      return joined;
     }
   }, {
     key: '_points',
@@ -3452,21 +3405,11 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Player = function () {
-  function Player(state, _ref) {
-    var id = _ref.id,
-        gameId = _ref.gameId,
-        name = _ref.name,
-        avatar = _ref.avatar,
-        master = _ref.master;
-
+  function Player(state, player) {
     _classCallCheck(this, Player);
 
-    this.id = id;
-    this.name = name;
-    this.avatar = avatar;
-    this.gameId = gameId;
     this.state = state;
-    this._ = {};
+    this._ = player;
   }
 
   _createClass(Player, [{
@@ -3475,14 +3418,34 @@ var Player = function () {
       this._ = values;
     }
   }, {
-    key: 'score',
+    key: 'avatar',
     get: function get() {
-      return this._.score;
+      return this._.avatar;
+    }
+  }, {
+    key: 'gameId',
+    get: function get() {
+      return this._.gameId;
+    }
+  }, {
+    key: 'id',
+    get: function get() {
+      return this._.id;
+    }
+  }, {
+    key: 'name',
+    get: function get() {
+      return this._.name;
     }
   }, {
     key: 'role',
     get: function get() {
       return this._.role;
+    }
+  }, {
+    key: 'score',
+    get: function get() {
+      return this._.score;
     }
   }, {
     key: 'isAgent',
@@ -3492,7 +3455,12 @@ var Player = function () {
   }, {
     key: 'isImposter',
     get: function get() {
-      return !this.isAgent;
+      return this.role === 'imposter';
+    }
+  }, {
+    key: 'isJoined',
+    get: function get() {
+      return this.role === 'joined';
     }
   }, {
     key: 'isAlive',
@@ -3512,7 +3480,8 @@ var Player = function () {
   }, {
     key: 'capitalizedRole',
     get: function get() {
-      return this._.role.charAt(0).toUpperCase() + this._.role.slice(1);
+      var safeRole = this._.role || '';
+      return safeRole.charAt(0).toUpperCase() + safeRole.slice(1);
     }
   }, {
     key: 'key',

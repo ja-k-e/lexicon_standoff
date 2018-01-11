@@ -4,7 +4,7 @@ export default class Topics {
   }
 
   loadTopic() {
-    return this.topics[this.findIndex()];
+    return this.topics[this.findIndex()][1];
   }
 
   findIndex() {

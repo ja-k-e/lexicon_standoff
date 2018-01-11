@@ -67,7 +67,7 @@ export default class Reveal extends Renderer {
     });
 
     this.$h1.innerHTML = this.roleHeader('Reveal');
-    this.$topics.innerHTML = `“${topics[0][1]}” &amp; “${topics[1][1]}”`;
+    this.$topics.innerHTML = `“${topics[0]}” &amp; “${topics[1]}”`;
     let playerS = imposterCount === 1 ? 'Player' : 'Players';
     this.$desc.innerHTML = `
       These were the two Topics. Explain and argue your choice.

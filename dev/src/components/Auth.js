@@ -2,7 +2,7 @@ const firebaseKeys = require('firebase-settings');
 
 export default class Auth {
   constructor() {
-    firebase.initializeApp(firebaseKeys);
+    this.db = firebase.firestore(firebase.initializeApp(firebaseKeys));
   }
 
   signOut() {

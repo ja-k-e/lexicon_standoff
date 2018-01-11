@@ -244,6 +244,11 @@ section {
   }
   header {
   }
+  &.launch main.inactive {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+  }
   main {
     flex: 1;
     padding: 0.5rem 0;

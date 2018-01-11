@@ -27,7 +27,10 @@ export default class Users extends Adapter {
   globalCreate(params) {
     return new Promise((resolve, reject) => {
       this.db
-        .ref(this.r(params.id))
+        .collection('app')
+        .doc(this.root)
+        .collection('users')
+        .doc(params.id)
         .set(params)
         .then(resolve)
         .catch(reject);
@@ -37,31 +40,39 @@ export default class Users extends Adapter {
   globalDelete(id) {
     return new Promise((resolve, reject) => {
       this.db
-        .ref(this.r(id))
-        .set(null)
+        .collection('app')
+        .doc(this.root)
+        .collection('users')
+        .doc(id)
+        .delete()
         .then(resolve)
         .catch(reject);
     });
   }
 
-  globalFind(userId) {
+  globalFind(id) {
     return new Promise((resolve, reject) => {
       this.db
-        .ref(this.r(userId))
-        .once('value')
-        .then(snap => {
-          let value = snap.val();
-          if (value !== null) resolve(value);
+        .collection('app')
+        .doc(this.root)
+        .collection('users')
+        .doc(id)
+        .get()
+        .then(doc => {
+          if (doc.exists) resolve(doc.data());
           else reject();
         })
         .catch(reject);
     });
   }
 
-  globalUpdate(userId, params) {
+  globalUpdate(id, params) {
     return new Promise((resolve, reject) => {
       this.db
-        .ref(this.r(userId))
+        .collection('app')
+        .doc(this.root)
+        .collection('users')
+        .doc(id)
         .update(params)
         .then(resolve)
         .catch(reject);
@@ -69,10 +80,6 @@ export default class Users extends Adapter {
   }
 
   // Private
-
-  get _key() {
-    return 'users';
-  }
 
   _userDataFromParams(params) {
     let id = params.uid,

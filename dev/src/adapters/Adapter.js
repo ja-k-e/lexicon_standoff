@@ -1,15 +1,11 @@
-const config = require('config'),
-  ROOT = config.env;
+const config = require('config');
 
 export default class Adapter {
-  constructor() {}
-
-  r(val) {
-    let p = typeof val === 'string' ? val : val.join('/');
-    return `${ROOT}/${this._key}/${p}`;
+  constructor() {
+    this.root = config.env;
   }
 
-  get db() {
-    return firebase.database();
+  initialize({ db }) {
+    this.db = db;
   }
 }

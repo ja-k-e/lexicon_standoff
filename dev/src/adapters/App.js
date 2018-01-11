@@ -1,15 +1,15 @@
 import Adapter from './Adapter';
 
-const VERSION_REF = '_version';
-
 export default class App extends Adapter {
-  findVersion() {
+  findVersion(version) {
     return new Promise((resolve, reject) => {
       this.db
-        .ref(VERSION_REF)
-        .once('value')
-        .then(snap => {
-          resolve(snap.val());
+        .collection('app')
+        .doc(this.root)
+        .get()
+        .then(doc => {
+          if (doc.exists) resolve(doc.data().version);
+          else resolve(this.updateVersion(version));
         })
         .catch(reject);
     });
@@ -18,8 +18,9 @@ export default class App extends Adapter {
   updateVersion(version) {
     return new Promise((resolve, reject) => {
       this.db
-        .ref(VERSION_REF)
-        .set(version)
+        .collection('app')
+        .doc(this.root)
+        .set({ version })
         .then(resolve)
         .catch(reject);
     });

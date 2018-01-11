@@ -75,7 +75,7 @@ export default class Selections extends Renderer {
     this.topics = game.topics;
     this.$input.value = '';
     let { topics, selections, playerCount } = game;
-    topics = topics.map(i => [i[0], i[1].split(' ').join('&nbsp;')]);
+    topics = topics.map(i => i.split(' ').join('&nbsp;'));
     this.$h1.innerHTML = this.roleHeader('Selections');
 
     if (selections[this.player.id]) {
@@ -103,18 +103,19 @@ export default class Selections extends Renderer {
 
   renderWaiting({ players, selections }) {
     this.waiting.reset();
-    this.waiting.title('Waiting on...');
     for (let playerId in players)
       if (!selections || !selections[playerId])
-        if (players[playerId].isAlive)
+        if (players[playerId].isAlive) {
+          this.waiting.title('Waiting on...');
           this.waiting.add(this.userSpan(players[playerId]));
+        }
   }
 
   _shuffledHtml(arr, topics) {
     if (arr.length === 2) {
-      return `“${topics[arr[0]][1]}” &amp; “${topics[arr[1]][1]}”`;
+      return `“${topics[arr[0]]}” &amp; “${topics[arr[1]]}”`;
     } else {
-      let shuffled = shuffle(arr).map(idx => topics[idx][1]);
+      let shuffled = shuffle(arr).map(idx => topics[idx]);
       let html = '';
       shuffled.forEach((topic, i) => {
         if (i < shuffled.length - 1) html += `“${topic}”, `;

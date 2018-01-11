@@ -118,10 +118,11 @@ export default class Actions extends Renderer {
 
   renderWaiting({ players, actions }) {
     this.waiting.reset();
-    this.waiting.title('Waiting on...');
     for (let playerId in players)
-      if (!actions || !actions[playerId])
+      if (!actions || !actions[playerId]) {
+        this.waiting.title('Waiting on...');
         this.waiting.add(this.userSpan(players[playerId]));
+      }
   }
 
   _pluralize(count, word) {

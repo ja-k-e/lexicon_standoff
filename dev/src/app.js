@@ -9,7 +9,7 @@ import Renderers from './renderers/Renderers';
 
 const //
   AUTH = new Auth(),
-  VERSION = 0.5;
+  VERSION = 0.6;
 
 console.info(
   `
@@ -47,14 +47,28 @@ function updateDimensions() {
   }
 }
 
+// Binding the database to each adapter
+for (let name in Adapters) Adapters[name].initialize(AUTH);
+
 AUTH.detectExisting()
   .then(initializeUser)
   .catch(handleNoUser);
 
-function handleNewVersion() {
-  let renderer = new Renderers.NewVersion(null, {});
-  renderer.renderInitial();
-  renderer.render();
+function initializeUser(existingUser) {
+  Adapters.App
+    .findVersion(VERSION)
+    .then(version => {
+      if (version === VERSION) initializeState(existingUser);
+      else if (version < VERSION || !version)
+        Adapters.App
+          .updateVersion(VERSION)
+          .then(() => {
+            initializeState(existingUser);
+          })
+          .catch(handleError);
+      else handleNewVersion();
+    })
+    .catch(handleError);
 }
 
 function handleNoUser() {
@@ -62,6 +76,12 @@ function handleNoUser() {
   renderer.renderInitial();
   renderer.render();
   AUTH.loadUI();
+}
+
+function handleNewVersion() {
+  let renderer = new Renderers.NewVersion(null, {});
+  renderer.renderInitial();
+  renderer.render();
 }
 
 function initializeState(existingUser) {
@@ -78,23 +98,6 @@ function initializeState(existingUser) {
             .catch(handleError);
         })
         .catch(handleError);
-    })
-    .catch(handleError);
-}
-
-function initializeUser(existingUser) {
-  Adapters.App
-    .findVersion()
-    .then(version => {
-      if (version === VERSION) initializeState(existingUser);
-      else if (version < VERSION || !version)
-        Adapters.App
-          .updateVersion(VERSION)
-          .then(() => {
-            initializeState(existingUser);
-          })
-          .catch(handleError);
-      else handleNewVersion();
     })
     .catch(handleError);
 }

@@ -26,12 +26,16 @@ export default class Launch extends Renderer {
     this.$editor = this.el('div', null, 'editor');
     this.new = new Button({
       content: 'Create Game',
-      clickEvent: this.events.createGame.bind(this)
+      clickEvent: () => {
+        this.$main.classList.add('inactive');
+        this.events.createGame();
+      }
     });
     this.join = new Button({
       content: 'Join',
-      clickEvent: () =>
-        this.events.findGame(this.$slug.value.replace(/ /g, '').toLowerCase()),
+      clickEvent: () => {
+        this.events.findGame(this.$slug.value.replace(/ /g, '').toLowerCase());
+      },
       submit: true
     });
 
@@ -53,6 +57,7 @@ export default class Launch extends Renderer {
   }
 
   render({ user }) {
+    this.$main.classList.remove('inactive');
     this.$slug.value = '';
     this.renderEditor(user);
     this.toggleSections();

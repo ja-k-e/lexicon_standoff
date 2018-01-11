@@ -84,7 +84,11 @@ export default class State {
     if (this.game.changes.actions) this.handleActionsChange();
     if (this.game.changes.selections) this.handleSelectionsChange();
     if (this.master) {
-      if (this.game.isActions && this.game.changes.killedIds)
+      if (
+        this.game.isActions &&
+        this.game.changes.killedIds &&
+        this.game.killedIds.length > 0
+      )
         this.handleKilledIdsChange();
     }
   }
@@ -97,8 +101,10 @@ export default class State {
     let points = this.game.calculatePoints(this.players);
     // Add player points then update results
     Adapters.Players.masterTallyScores(this.players, points).then(() => {
-      let params = { status: 'results' };
-      Adapters.Games.masterUpdateResults(this.game.id, params);
+      Adapters.Games.masterUpdate(this.game.id, {
+        status: 'results',
+        inProgress: false
+      });
     });
   }
 
@@ -116,12 +122,11 @@ export default class State {
             .masterActOnPlayers(this.game.id, this.players, killedIds)
             .then(() => {
               Adapters.Games
-                .masterUpdateActionIds(
-                  this.game.id,
+                .masterUpdate(this.game.id, {
                   killVotesByPlayer,
                   killVotes,
                   killedIds
-                )
+                })
                 .then(() => {
                   this.actionLock = false;
                 });
@@ -162,12 +167,11 @@ export default class State {
     this.gameId = game.id;
     this.master = game.masterId === this.playerId;
     this.players = {};
-    Adapters.Players.globalListenerAdded(this.gameId, player => {
-      this.initializePlayer(player);
-    });
-    Adapters.Players.globalListenerRemoved(this.gameId, player => {
-      this.removePlayer(player);
-    });
+    Adapters.Players.globalListenerPlayerEvents(
+      this.gameId,
+      this.initializePlayer.bind(this),
+      this.removePlayer.bind(this)
+    );
     Adapters.Users.globalUpdate(this.playerId, { currentGameId: this.gameId });
     Adapters.Players
       .globalFindOrCreate(this.user, this.gameId, this.master)
@@ -187,16 +191,18 @@ export default class State {
   }
 
   initializePlayer(player) {
-    this.players[player.id] = new Player(this, player);
-    Adapters.Players.globalListenerPlayer(this.gameId, player.id, player => {
+    if (!this.players[player.id])
+      this.players[player.id] = new Player(this, player);
+    Adapters.Players.globalListenerPlayer(player.id, player => {
       if (player && this.players[player.id])
         this.players[player.id].update(player);
     });
-    if (!this.rendered && this.player) this.initializeRenderers();
+    // If we have this Player's data
     if (this.player) {
-      // We dont have it on initial render
-      this.renderers.start.player = this.player;
-      this.renderers.start.render({
+      // Initial Render
+      if (!this.rendered) this.initializeRenderers();
+      this.touchPlayers();
+      this.renderers.lobby.render({
         players: this.players,
         gameId: this.gameId
       });
@@ -205,14 +211,29 @@ export default class State {
 
   removePlayer(player) {
     delete this.players[player.id];
+    this.touchPlayers();
+  }
+
+  touchPlayers() {
+    // If results, we remove the player there
+    if (this.game && this.game.status === 'results')
+      this.renderers.results.render(this.game, this.players);
+    else if (this.game && this.game.status === 'lobby')
+      // If not results, we're at Lobby
+      // Render joining Players
+      this.renderers.lobby.render({
+        players: this.players,
+        gameId: this.gameId
+      });
   }
 
   initializeRenderers() {
-    if (this.renderers) {
+    // Cleaning renders from last game
+    if (this.renderers)
       for (let key in this.renderers) this.renderers[key].remove();
-    }
+
     this.renderers = {
-      start: new Renderers.Start(this.player, {
+      lobby: new Renderers.Lobby(this.player, {
         dispatchStart: () => this.dispatchStart(),
         dispatchEnd: () => this.dispatchEnd()
       }),
@@ -238,7 +259,7 @@ export default class State {
         dispatchNewRound: () => this.dispatchNewRound()
       })
     };
-    this.renderers.start.renderInitial();
+    this.renderers.lobby.renderInitial();
     this.renderers.selections.renderInitial();
     this.renderers.reveal.renderInitial();
     this.renderers.actions.renderInitial();
@@ -255,33 +276,31 @@ export default class State {
   }
 
   dispatchReveal() {
-    Adapters.Games.masterUpdateStatus(this.game.id, 'reveal');
+    Adapters.Games.masterUpdate(this.game.id, { status: 'reveal' });
   }
 
   dispatchActions() {
-    Adapters.Games.masterUpdateStatus(this.game.id, 'actions');
+    Adapters.Games.masterUpdate(this.game.id, { status: 'actions' });
   }
 
   dispatchNewRound() {
     let roundData = this.game.generateRoundData();
-    Adapters.Games
-      .masterUpdateRoundData(this.game.id, roundData.game)
-      .then(() => {
-        Adapters.Players
-          .masterUpdateRoundData(this.players, roundData.players)
-          .then(() => {
-            let selectionStart = new Date().getTime(),
-              status = 'selections';
-            Adapters.Games.masterUpdate(this.game.id, {
-              status,
-              selectionStart
-            });
+    Adapters.Games.masterUpdate(this.game.id, roundData.game).then(() => {
+      Adapters.Players
+        .masterUpdateRoundData(this.players, roundData.players)
+        .then(() => {
+          let selectionStart = new Date().getTime(),
+            status = 'selections';
+          Adapters.Games.masterUpdate(this.game.id, {
+            status,
+            selectionStart
           });
-      });
+        });
+    });
   }
 
   dispatchEnd() {
-    Adapters.Players.masterDelete(this.game.id).then(() => {
+    Adapters.Players.masterDeleteAll(this.game.id).then(() => {
       Adapters.Games.masterDelete(this.game.id);
     });
   }
@@ -290,11 +309,11 @@ export default class State {
     if (this.game.playerCount <= 3) {
       this.dispatchEnd();
     } else {
-      Adapters.Games.globalKill(this.game.id);
+      Adapters.Games.globalKill();
       Adapters.Users
         .globalUpdate(this.playerId, { currentGameId: null })
         .then(() => {
-          Adapters.Players.globalLeave(this.game.id, this.user.id).then(() => {
+          Adapters.Players.globalDelete(this.user.id).then(() => {
             this.launch.render({ user: this.user });
           });
         });

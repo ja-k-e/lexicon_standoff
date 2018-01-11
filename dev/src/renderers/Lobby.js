@@ -2,7 +2,7 @@ import Renderer from './Renderer';
 import Button from './modules/Button';
 import List from './modules/List';
 
-export default class Start extends Renderer {
+export default class Lobby extends Renderer {
   renderInitial() {
     this.$h1 = this.el('h1', 'Waiting for Players...');
     this.$header.appendChild(this.$h1);

@@ -22,20 +22,16 @@ export default class Results extends Renderer {
     this.standings = new List('flex-list flex-list-small');
     this.append(this.$main, this.standings.elements);
 
-    this.$score = this.el('p', null, 'description');
-    this.$main.appendChild(this.$score);
+    this.joined = new List('list-joined flex-list flex-list-small');
+    this.append(this.$main, this.joined.elements);
 
     if (this.player.isMaster) this.renderInitialMaster();
     else this.renderInitialLeave();
   }
 
   renderInitialMaster() {
-    let $inst = this.el(
-        'p',
-        'Once everyone is ready, proceed below.',
-        'instruction'
-      ),
-      round = new Button({
+    this.$inst = this.el('p', null, 'instruction');
+    let round = new Button({
         content: 'Continue',
         clickEvent: this.events.dispatchNewRound.bind(this),
         classname: 'flex'
@@ -47,7 +43,7 @@ export default class Results extends Renderer {
       });
     this.$group = this.el('div', null, 'item-group');
     this.append(this.$group, [end.$el, round.$el]);
-    this.append(this.$footer, [$inst, this.$group]);
+    this.append(this.$footer, [this.$inst, this.$group]);
   }
 
   renderInitialLeave() {
@@ -70,16 +66,32 @@ export default class Results extends Renderer {
       this.events.dispatchLeave();
   }
 
-  render(game, players) {
+  render(game, players, joined) {
+    if (this.player.isMaster)
+      this.$inst.innerHTML = `
+        Once everyone is ready, proceed below.
+        More Players can join using the code “${game.id}”
+      `;
     let { killVotesByPlayer, killVotes, killedIds } = game;
     this.killed.reset();
     this.imposters.reset();
     this.standings.reset();
-    this.$score.innerHTML = '';
+    this.joined.reset();
     this.$section.className = this.$section.className.replace(
       /(win-\d+)|(lose-\d+)/g,
       ''
     );
+
+    if (this.detectJoined(players)) {
+      this.joined.title('Joined Players');
+      for (let playerId in players) {
+        let player = players[playerId];
+        if (player.isJoined) {
+          this.joined.title('Joined Players');
+          this.joined.add(this.userSpan(player));
+        }
+      }
+    }
 
     this.toggleSections();
 
@@ -107,14 +119,14 @@ export default class Results extends Renderer {
       if (aScore < bScore) return 1;
       return 0;
     });
-    let c = 0;
     sorted.forEach((playerId, i) => {
       let player = players[playerId],
         score = `<span class="score">${player.score}</span>`,
         html = `${this.userSpan(player)} ${score}`;
-      this.standings.add(html);
-      if (player.isImposter) this.imposters.add(this.userSpan(player));
-      c++;
+      if (!player.isJoined) {
+        this.standings.add(html);
+        if (player.isImposter) this.imposters.add(this.userSpan(player));
+      }
     });
 
     if (this.player.isMaster) this.renderMaster();
@@ -122,6 +134,17 @@ export default class Results extends Renderer {
 
   renderMaster() {
     this.$group.classList.remove('hide');
+  }
+
+  detectJoined(players) {
+    let i = 0,
+      ids = Object.keys(players),
+      joined = false;
+    while (i < ids.length && !joined) {
+      joined = players[ids[i]].isJoined;
+      i++;
+    }
+    return joined;
   }
 
   _points(count) {

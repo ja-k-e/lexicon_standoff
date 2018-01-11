@@ -1,28 +1,39 @@
 export default class Player {
-  constructor(state, { id, gameId, name, avatar, master }) {
-    this.id = id;
-    this.name = name;
-    this.avatar = avatar;
-    this.gameId = gameId;
+  constructor(state, player) {
     this.state = state;
-    this._ = {};
+    this._ = player;
   }
 
   update(values) {
     this._ = values;
   }
 
-  get score() {
-    return this._.score;
+  get avatar() {
+    return this._.avatar;
+  }
+  get gameId() {
+    return this._.gameId;
+  }
+  get id() {
+    return this._.id;
+  }
+  get name() {
+    return this._.name;
   }
   get role() {
     return this._.role;
+  }
+  get score() {
+    return this._.score;
   }
   get isAgent() {
     return this.role === 'agent';
   }
   get isImposter() {
-    return !this.isAgent;
+    return this.role === 'imposter';
+  }
+  get isJoined() {
+    return this.role === 'joined';
   }
   get isAlive() {
     return this._.alive;
@@ -35,7 +46,8 @@ export default class Player {
   }
 
   get capitalizedRole() {
-    return this._.role.charAt(0).toUpperCase() + this._.role.slice(1);
+    let safeRole = this._.role || '';
+    return safeRole.charAt(0).toUpperCase() + safeRole.slice(1);
   }
 
   get key() {
