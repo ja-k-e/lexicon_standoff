@@ -48,6 +48,7 @@ export default class Renderer {
   }
 
   userSpan(player, extraClassname) {
+    if (!player) return '';
     let classname = player.id === this.player.id ? 'you' : '',
       name = player.id === this.player.id ? 'You' : player.name;
     if (extraClassname) classname += ` ${extraClassname}`;

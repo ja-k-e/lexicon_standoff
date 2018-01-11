@@ -140,6 +140,7 @@ var Renderer = function () {
   }, {
     key: 'userSpan',
     value: function userSpan(player, extraClassname) {
+      if (!player) return '';
       var classname = player.id === this.player.id ? 'you' : '',
           name = player.id === this.player.id ? 'You' : player.name;
       if (extraClassname) classname += ' ' + extraClassname;
