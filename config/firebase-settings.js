@@ -3,6 +3,6 @@ module.exports = {
   authDomain: 'lexicon-standoff.firebaseapp.com',
   databaseURL: 'https://lexicon-standoff.firebaseio.com',
   projectId: 'lexicon-standoff',
-  storageBucket: '',
+  storageBucket: 'lexicon-standoff.appspot.com',
   messagingSenderId: '856454410862'
 };

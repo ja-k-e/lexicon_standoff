@@ -30,7 +30,8 @@ window.addEventListener('resize', () => updateDimensions());
 document.addEventListener('visibilitychange', () => {
   let state = document.visibilityState;
   if (state !== VISIBLE) {
-    if (state === 'visible') window.location.reload();
+    // if (state === 'visible') window.location.reload();
+    if (state === 'visible') window.location = '/?t=' + new Date().getTime();
     VISIBLE = state;
   }
 });

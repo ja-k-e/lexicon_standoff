@@ -84,10 +84,10 @@ body .container {
     overflow: hidden;
     height: 100%;
     width: 100%;
-    max-width: 480px;
     // max-width: 380px;
-    max-height: 800px;
     // max-height: 600px;
+    max-width: 480px;
+    max-height: 800px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
