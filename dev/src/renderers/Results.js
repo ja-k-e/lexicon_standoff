@@ -69,10 +69,10 @@ export default class Results extends Renderer {
   render(game, players, joined) {
     if (this.player.isMaster)
       this.$inst.innerHTML = `
+        More Players can join using the code “${game.id}”.
         Once everyone is ready, proceed below.
-        More Players can join using the code “${game.id}”
       `;
-    let { killVotesByPlayer, killVotes, killedIds } = game;
+    let { killVotesByPlayer, killVotes, killedIds, topics } = game;
     this.killed.reset();
     this.imposters.reset();
     this.standings.reset();
@@ -110,7 +110,8 @@ export default class Results extends Renderer {
     this.standings.title('Standings');
     this.$section.classList.add(this._winLoseClass());
     this.$desc.innerHTML = `
-      <p>${this._winnerText()} ${this._playerPoints()}</p>
+      <p>${this._winnerText()} ${this._playerPoints()}<br>
+      The Imposter Topic was “${topics[2].replace(/ /g, '&nbsp;')}”.</p>
     `;
     let sorted = Object.keys(players).sort((a, b) => {
       let aScore = players[a].score,

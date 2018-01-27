@@ -55,13 +55,25 @@ strong {
   font-weight: 500;
 }
 
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
 body {
   background-color: black;
-  background-image: url(/icon.png);
-  background-size: 96px 96px;
-  background-repeat: no-repeat;
-  background-position: center;
   margin: 0;
+  .loading {
+    position: absolute;
+    top: calc(50% - 48px);
+    left: calc(50% - 48px);
+    animation: pulse 250ms ease-in-out infinite alternate;
+    width: 96px;
+    height: 96px;
+  }
 }
 body .container {
   position: relative;

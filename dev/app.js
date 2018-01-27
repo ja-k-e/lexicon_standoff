@@ -900,8 +900,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var config = __webpack_require__(5);
 
-console.clear();
-
 var //
 AUTH = new _Auth2.default(),
     VERSION = 0.6;
@@ -2680,6 +2678,7 @@ var Selections = function (_Renderer) {
       this.$desc = this.el('p', null, 'description');
       this.$input = this.el('input', null, 'full margin');
       this.$input.setAttribute('type', 'text');
+      this.$input.setAttribute('autocomplete', 'off');
       this.$input.setAttribute('placeholder', 'Word or Name');
       this.$input.setAttribute('maxlength', '16');
 
@@ -3260,10 +3259,11 @@ var Results = function (_Renderer) {
     value: function render(game, players, joined) {
       var _this3 = this;
 
-      if (this.player.isMaster) this.$inst.innerHTML = '\n        Once everyone is ready, proceed below.\n        More Players can join using the code \u201C' + game.id + '\u201D\n      ';
+      if (this.player.isMaster) this.$inst.innerHTML = '\n        More Players can join using the code \u201C' + game.id + '\u201D.\n        Once everyone is ready, proceed below.\n      ';
       var killVotesByPlayer = game.killVotesByPlayer,
           killVotes = game.killVotes,
-          killedIds = game.killedIds;
+          killedIds = game.killedIds,
+          topics = game.topics;
 
       this.killed.reset();
       this.imposters.reset();
@@ -3296,7 +3296,7 @@ var Results = function (_Renderer) {
       this.imposters.title('Imposters');
       this.standings.title('Standings');
       this.$section.classList.add(this._winLoseClass());
-      this.$desc.innerHTML = '\n      <p>' + this._winnerText() + ' ' + this._playerPoints() + '</p>\n    ';
+      this.$desc.innerHTML = '\n      <p>' + this._winnerText() + ' ' + this._playerPoints() + '<br>\n      The Imposter Topic was \u201C' + topics[2].replace(/ /g, '&nbsp;') + '\u201D.</p>\n    ';
       var sorted = Object.keys(players).sort(function (a, b) {
         var aScore = players[a].score,
             bScore = players[b].score;

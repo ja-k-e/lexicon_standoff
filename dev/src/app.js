@@ -1,7 +1,5 @@
 const config = require('config');
 
-console.clear();
-
 import Adapters from './adapters/Adapters';
 import Auth from './components/Auth';
 import State from './components/State';

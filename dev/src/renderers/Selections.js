@@ -10,6 +10,7 @@ export default class Selections extends Renderer {
     this.$desc = this.el('p', null, 'description');
     this.$input = this.el('input', null, 'full margin');
     this.$input.setAttribute('type', 'text');
+    this.$input.setAttribute('autocomplete', 'off');
     this.$input.setAttribute('placeholder', 'Word or Name');
     this.$input.setAttribute('maxlength', '16');
 
