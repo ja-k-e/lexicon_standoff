@@ -354,7 +354,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = __webpack_require__(5);
+var config = __webpack_require__(4);
 
 var Adapter = function () {
   function Adapter() {
@@ -379,6 +379,17 @@ exports.default = Adapter;
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  env: 'development'
+};
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -414,17 +425,6 @@ var Adapters = {
 };
 
 exports.default = Adapters;
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = {
-  env: 'development'
-};
 
 /***/ }),
 /* 6 */
@@ -554,7 +554,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Adapters = __webpack_require__(4);
+var _Adapters = __webpack_require__(5);
 
 var _Adapters2 = _interopRequireDefault(_Adapters);
 
@@ -880,7 +880,7 @@ exports.default = Topics;
 "use strict";
 
 
-var _Adapters = __webpack_require__(4);
+var _Adapters = __webpack_require__(5);
 
 var _Adapters2 = _interopRequireDefault(_Adapters);
 
@@ -898,7 +898,7 @@ var _Renderers2 = _interopRequireDefault(_Renderers);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var config = __webpack_require__(5);
+var config = __webpack_require__(4);
 
 var //
 AUTH = new _Auth2.default(),
@@ -1597,6 +1597,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var firebaseKeys = __webpack_require__(18);
+var config = __webpack_require__(4);
+var redirect = config.env === 'development' ? 'http://localhost:8000' : 'https://lexiconstandoff.com';
 
 var Auth = function () {
   function Auth() {
@@ -1626,7 +1628,7 @@ var Auth = function () {
     value: function loadUI() {
       var ui = new firebaseui.auth.AuthUI(firebase.auth());
       ui.start('.firebaseui-auth', {
-        signInSuccessUrl: '/',
+        signInSuccessUrl: redirect,
         signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID, firebase.auth.TwitterAuthProvider.PROVIDER_ID, firebase.auth.PhoneAuthProvider.PROVIDER_ID],
         tosUrl: '/toc'
       });
@@ -1667,7 +1669,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Adapters = __webpack_require__(4);
+var _Adapters = __webpack_require__(5);
 
 var _Adapters2 = _interopRequireDefault(_Adapters);
 
@@ -1691,7 +1693,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var config = __webpack_require__(5);
+var config = __webpack_require__(4);
 
 var //
 STUB = config.env === 'development',
