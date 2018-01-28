@@ -2377,7 +2377,7 @@ var Launch = function (_Renderer) {
     value: function renderInitial() {
       var _this2 = this;
 
-      var $inst = this.el('p', 'If you are on a mobile device, add this site to your home screen to get full screen.\n          iOS can only do this through Safari.', 'instruction'),
+      var $inst = this.el('p', 'WARNING: If you have problems on mobile, open the page again in a new tab.', 'instruction'),
           $or = this.el('p', 'OR', 'instruction'),
           $instructions = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
           $signOut = this.el('div', null, 'instructions'),

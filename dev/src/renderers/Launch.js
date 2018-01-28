@@ -5,8 +5,7 @@ export default class Launch extends Renderer {
   renderInitial() {
     let $inst = this.el(
         'p',
-        `If you are on a mobile device, add this site to your home screen to get full screen.
-          iOS can only do this through Safari.`,
+        `WARNING: If you have problems on mobile, open the page again in a new tab.`,
         'instruction'
       ),
       $or = this.el('p', 'OR', 'instruction'),
