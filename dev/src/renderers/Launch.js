@@ -64,15 +64,15 @@ export default class Launch extends Renderer {
     this.$avatar = this.el('img');
     this.$avatar.src = user.avatar;
     this.$name = this.el('span', user.name);
-    let edit = new Button({
+    this.edit = new Button({
       content: '',
       clickEvent: () => this.$editor.classList.add('active')
     });
-    edit.$el.appendChild(this.$avatar);
-    edit.$el.appendChild(this.$name);
+    this.edit.$el.appendChild(this.$avatar);
+    this.edit.$el.appendChild(this.$name);
 
     this.$user.innerHTML = '';
-    this.$user.appendChild(edit.$el);
+    this.$user.appendChild(this.edit.$el);
   }
 
   renderEditor(user) {

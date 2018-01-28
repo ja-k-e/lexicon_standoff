@@ -937,7 +937,21 @@ function updateDimensions() {
 // Binding the database to each adapter
 for (var name in _Adapters2.default) {
   _Adapters2.default[name].initialize(AUTH);
-}AUTH.detectExisting().then(initializeUser).catch(handleNoUser);
+}AUTH.detectExisting().then(initializeUser).catch(function () {
+  AUTH.detectRedirectResult().then(initializeUser).catch(handleNoUser);
+});
+
+function authGoogle() {
+  AUTH.authenticate('GoogleAuthProvider');
+}
+
+function authTwitter() {
+  AUTH.authenticate('TwitterAuthProvider');
+}
+
+function authAnon() {
+  AUTH.authenticateAnon();
+}
 
 function initializeUser(existingUser) {
   _Adapters2.default.App.findVersion(VERSION).then(function (version) {
@@ -948,10 +962,14 @@ function initializeUser(existingUser) {
 }
 
 function handleNoUser() {
-  var renderer = new _Renderers2.default.Auth(null, {});
+  var renderer = new _Renderers2.default.Auth(null, {
+    authTwitter: authTwitter,
+    authGoogle: authGoogle,
+    authAnon: authAnon
+  });
   renderer.renderInitial();
   renderer.render();
-  AUTH.loadUI();
+  // AUTH.loadUI();
 }
 
 function handleNewVersion() {
@@ -967,7 +985,7 @@ function initializeState(existingUser) {
     var avatar = validAvatar(user);
     _Adapters2.default.Users.globalUpdate(user.id, { avatar: avatar }).then(function () {
       _Adapters2.default.Users.globalFind(user.id).then(function (user) {
-        return new _State2.default({ user: user, auth: AUTH });
+        return new _State2.default({ user: user, auth: AUTH, anon: existingUser.isAnonymous });
       }).catch(handleError);
     }).catch(handleError);
   }).catch(handleError);
@@ -1625,6 +1643,30 @@ var Auth = function () {
       });
     }
   }, {
+    key: 'detectRedirectResult',
+    value: function detectRedirectResult() {
+      return new Promise(function (resolve, reject) {
+        firebase.auth().getRedirectResult(function (result) {
+          if (result) resolve(result.user);else reject();
+        });
+      });
+    }
+  }, {
+    key: 'authenticate',
+    value: function authenticate(type) {
+      var provider = new firebase.auth[type]();
+      firebase.auth().signInWithRedirect(provider);
+    }
+  }, {
+    key: 'authenticateAnon',
+    value: function authenticateAnon() {
+      firebase.auth().signInAnonymously().then(function () {
+        return window.location.reload();
+      }).catch(function (error) {
+        console.error(error);
+      });
+    }
+  }, {
     key: 'loadUI',
     value: function loadUI() {
       var ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -1704,7 +1746,8 @@ STUB = config.env === 'development',
 var State = function () {
   function State(_ref) {
     var user = _ref.user,
-        auth = _ref.auth;
+        auth = _ref.auth,
+        anon = _ref.anon;
 
     _classCallCheck(this, State);
 
@@ -2251,10 +2294,23 @@ var Auth = function (_Renderer) {
   _createClass(Auth, [{
     key: 'renderInitial',
     value: function renderInitial() {
+      var _this2 = this;
+
       var $h1 = this.el('h1', 'Lexicon Standoff'),
-          $desc = this.el('p', 'Please Sign In', 'description');
-      this.$auth = this.el('div', null, 'firebaseui-auth');
-      this.append(this.$main, [$h1, this.$auth]);
+          $desc = this.el('p', 'Please Sign In', 'description'),
+          $google = this.el('button', 'Google'),
+          $twitter = this.el('button', 'Twitter'),
+          $anon = this.el('button', 'Anonymously');
+      this.append(this.$main, [$h1, $desc, $google, $twitter, $anon]);
+      $google.addEventListener('click', function () {
+        _this2.events.authGoogle();
+      });
+      $twitter.addEventListener('click', function () {
+        _this2.events.authTwitter();
+      });
+      $anon.addEventListener('click', function () {
+        _this2.events.authAnon();
+      });
     }
   }, {
     key: 'render',
@@ -2269,7 +2325,7 @@ var Auth = function (_Renderer) {
   }, {
     key: '_eventsList',
     get: function get() {
-      return [];
+      return ['authTwitter', 'authGoogle', 'authAnon'];
     }
   }]);
 
@@ -2370,17 +2426,17 @@ var Launch = function (_Renderer) {
       this.$avatar = this.el('img');
       this.$avatar.src = user.avatar;
       this.$name = this.el('span', user.name);
-      var edit = new _Button2.default({
+      this.edit = new _Button2.default({
         content: '',
         clickEvent: function clickEvent() {
           return _this3.$editor.classList.add('active');
         }
       });
-      edit.$el.appendChild(this.$avatar);
-      edit.$el.appendChild(this.$name);
+      this.edit.$el.appendChild(this.$avatar);
+      this.edit.$el.appendChild(this.$name);
 
       this.$user.innerHTML = '';
-      this.$user.appendChild(edit.$el);
+      this.$user.appendChild(this.edit.$el);
     }
   }, {
     key: 'renderEditor',

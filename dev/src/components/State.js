@@ -12,7 +12,7 @@ const //
   STUB_PREFIX = 'TEST_USER_';
 
 export default class State {
-  constructor({ user, auth }) {
+  constructor({ user, auth, anon }) {
     this.auth = auth;
     this.user = user;
     this.initializeLaunch();

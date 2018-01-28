@@ -29,6 +29,30 @@ export default class Auth {
     });
   }
 
+  detectRedirectResult() {
+    return new Promise((resolve, reject) => {
+      firebase.auth().getRedirectResult(result => {
+        if (result) resolve(result.user);
+        else reject();
+      });
+    });
+  }
+
+  authenticate(type) {
+    let provider = new firebase.auth[type]();
+    firebase.auth().signInWithRedirect(provider);
+  }
+
+  authenticateAnon() {
+    firebase
+      .auth()
+      .signInAnonymously()
+      .then(() => window.location.reload())
+      .catch(error => {
+        console.error(error);
+      });
+  }
+
   loadUI() {
     let ui = new firebaseui.auth.AuthUI(firebase.auth());
     ui.start('.firebaseui-auth', {

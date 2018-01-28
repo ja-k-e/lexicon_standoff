@@ -51,7 +51,23 @@ for (let name in Adapters) Adapters[name].initialize(AUTH);
 
 AUTH.detectExisting()
   .then(initializeUser)
-  .catch(handleNoUser);
+  .catch(() => {
+    AUTH.detectRedirectResult()
+      .then(initializeUser)
+      .catch(handleNoUser);
+  });
+
+function authGoogle() {
+  AUTH.authenticate('GoogleAuthProvider');
+}
+
+function authTwitter() {
+  AUTH.authenticate('TwitterAuthProvider');
+}
+
+function authAnon() {
+  AUTH.authenticateAnon();
+}
 
 function initializeUser(existingUser) {
   Adapters.App
@@ -71,10 +87,14 @@ function initializeUser(existingUser) {
 }
 
 function handleNoUser() {
-  let renderer = new Renderers.Auth(null, {});
+  let renderer = new Renderers.Auth(null, {
+    authTwitter,
+    authGoogle,
+    authAnon
+  });
   renderer.renderInitial();
   renderer.render();
-  AUTH.loadUI();
+  // AUTH.loadUI();
 }
 
 function handleNewVersion() {
@@ -93,7 +113,10 @@ function initializeState(existingUser) {
         .then(() => {
           Adapters.Users
             .globalFind(user.id)
-            .then(user => new State({ user, auth: AUTH }))
+            .then(
+              user =>
+                new State({ user, auth: AUTH, anon: existingUser.isAnonymous })
+            )
             .catch(handleError);
         })
         .catch(handleError);

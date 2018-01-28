@@ -398,52 +398,52 @@ section.auth {
   }
 }
 section.auth {
-  color: black;
-  background: white;
-  .firebaseui-auth {
-    margin-top: 0;
-    .mdl-shadow--2dp {
-      box-shadow: none;
-    }
-    .firebaseui-container {
-      max-width: 310px;
-      .firebaseui-recaptcha-wrapper {
-        width: 100%;
-        .firebaseui-recaptcha-container > div > div {
-          transform-origin: 25% 0;
-        }
-      }
-    }
-    .firebaseui-title {
-      @include font-size(lg);
-      font-weight: 300;
-      color: black;
-      padding: 0;
-      margin: 0;
-    }
-    .firebaseui-card-header {
-      padding: 0 !important;
-      border: none;
-      margin-bottom: 0;
-    }
-    .firebaseui-card-content {
-      padding: 0;
-    }
-    .firebaseui-card-actions {
-      padding: 0 0 24px;
-    }
-    .firebaseui-card-footer {
-      padding: 0;
-    }
-    button {
-      width: auto;
-    }
-    ul li.firebaseui-list-item {
-      height: auto;
-      line-height: auto;
-      overflow: visible;
-    }
-  }
+  // color: black;
+  // background: white;
+  // .firebaseui-auth {
+  //   margin-top: 0;
+  //   .mdl-shadow--2dp {
+  //     box-shadow: none;
+  //   }
+  //   .firebaseui-container {
+  //     max-width: 310px;
+  //     .firebaseui-recaptcha-wrapper {
+  //       width: 100%;
+  //       .firebaseui-recaptcha-container > div > div {
+  //         transform-origin: 25% 0;
+  //       }
+  //     }
+  //   }
+  //   .firebaseui-title {
+  //     @include font-size(lg);
+  //     font-weight: 300;
+  //     color: black;
+  //     padding: 0;
+  //     margin: 0;
+  //   }
+  //   .firebaseui-card-header {
+  //     padding: 0 !important;
+  //     border: none;
+  //     margin-bottom: 0;
+  //   }
+  //   .firebaseui-card-content {
+  //     padding: 0;
+  //   }
+  //   .firebaseui-card-actions {
+  //     padding: 0 0 24px;
+  //   }
+  //   .firebaseui-card-footer {
+  //     padding: 0;
+  //   }
+  //   button {
+  //     width: auto;
+  //   }
+  //   ul li.firebaseui-list-item {
+  //     height: auto;
+  //     line-height: auto;
+  //     overflow: visible;
+  //   }
+  // }
 }
 section.launch {
   text-align: center;
@@ -520,6 +520,7 @@ section.launch {
     }
     img {
       vertical-align: middle;
+      width: 100%;
     }
     .item-group {
       margin-top: 2rem;
