@@ -1579,6 +1579,7 @@ var Users = function (_Adapter) {
           image = params.photoURL,
           avatar = image,
           name = this._safeName(params.displayName);
+      if (image && image.match(/pbs\.twimg\.com/)) image = image.replace(/normal\.jpg$/, '400x400.jpg');
       return { id: id, avatar: avatar, image: image, name: name };
     }
   }, {
@@ -1668,12 +1669,16 @@ var Auth = function () {
   }, {
     key: 'loadUI',
     value: function loadUI() {
-      var ui = new firebaseui.auth.AuthUI(firebase.auth());
-      ui.start('.firebaseui-auth', {
-        signInSuccessUrl: redirect,
-        signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID, firebase.auth.TwitterAuthProvider.PROVIDER_ID, firebase.auth.PhoneAuthProvider.PROVIDER_ID],
-        tosUrl: '/toc'
-      });
+      // let ui = new firebaseui.auth.AuthUI(firebase.auth());
+      // ui.start('.firebaseui-auth', {
+      //   signInSuccessUrl: redirect,
+      //   signInOptions: [
+      //     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+      //     firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+      //     firebase.auth.PhoneAuthProvider.PROVIDER_ID
+      //   ],
+      //   tosUrl: '/toc'
+      // });
     }
   }]);
 

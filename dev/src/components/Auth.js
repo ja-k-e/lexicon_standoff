@@ -54,15 +54,15 @@ export default class Auth {
   }
 
   loadUI() {
-    let ui = new firebaseui.auth.AuthUI(firebase.auth());
-    ui.start('.firebaseui-auth', {
-      signInSuccessUrl: redirect,
-      signInOptions: [
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-        firebase.auth.PhoneAuthProvider.PROVIDER_ID
-      ],
-      tosUrl: '/toc'
-    });
+    // let ui = new firebaseui.auth.AuthUI(firebase.auth());
+    // ui.start('.firebaseui-auth', {
+    //   signInSuccessUrl: redirect,
+    //   signInOptions: [
+    //     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    //     firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+    //     firebase.auth.PhoneAuthProvider.PROVIDER_ID
+    //   ],
+    //   tosUrl: '/toc'
+    // });
   }
 }

@@ -86,6 +86,8 @@ export default class Users extends Adapter {
       image = params.photoURL,
       avatar = image,
       name = this._safeName(params.displayName);
+    if (image && image.match(/pbs\.twimg\.com/))
+      image = image.replace(/normal\.jpg$/, '400x400.jpg');
     return { id, avatar, image, name };
   }
 
