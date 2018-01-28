@@ -60,8 +60,10 @@ export default class Actions extends Renderer {
     // If this player has already voted (refreshed the vote page after voting)
     if (actions && actions[this.player.id]) {
       this.actions.title('You have already voted!');
-      this.$footer.classList.add('hide');
+      this.act.content('You have voted');
+      this.act.disable();
     } else {
+      this.act.enable();
       this.$footer.classList.remove('hide');
       let agentCount = Object.keys(players).length - imposterCount,
         agentS = this._pluralize(agentCount, 'Agent'),

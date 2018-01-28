@@ -915,14 +915,13 @@ updateDimensions();
 window.addEventListener('resize', function () {
   return updateDimensions();
 });
-document.addEventListener('visibilitychange', function () {
-  var state = document.visibilityState;
-  if (state !== VISIBLE) {
-    // if (state === 'visible') window.location.reload();
-    if (state === 'visible') window.location = '/?t=' + new Date().getTime();
-    VISIBLE = state;
-  }
-});
+// document.addEventListener('visibilitychange', () => {
+//   let state = document.visibilityState;
+//   if (state !== VISIBLE) {
+//     if (state === 'visible') window.location.reload();
+//     VISIBLE = state;
+//   }
+// });
 function updateDimensions() {
   var h = window.innerHeight,
       w = window.innerWidth;
@@ -2377,7 +2376,7 @@ var Launch = function (_Renderer) {
     value: function renderInitial() {
       var _this2 = this;
 
-      var $inst = this.el('p', 'WARNING: If you have problems on mobile, open the page again in a new tab.', 'instruction'),
+      var $inst = this.el('p', 'WARNING: If you let your phone go to sleep, you may have problems.\n        Try refreshing the page. If that doesn\'t work,\n        don\'t fret, just open the site again in a new tab.\n        I know it is incredibly annoying. Workin\' on it.', 'instruction'),
           $or = this.el('p', 'OR', 'instruction'),
           $instructions = this.el('p', '<br><a href="/instructions/">Instructions</a>', 'instruction'),
           $signOut = this.el('div', null, 'instructions'),
@@ -2388,6 +2387,10 @@ var Launch = function (_Renderer) {
       }),
           $grp = this.el('div', null, 'item-group');
       this.$slug = this.el('input');
+      this.$slug.setAttribute('autocomplete', 'off');
+      this.$slug.setAttribute('autocorrect', 'off');
+      this.$slug.setAttribute('autocapitalize', 'off');
+      this.$slug.setAttribute('spellcheck', 'false');
       this.$editor = this.el('div', null, 'editor');
       this.new = new _Button2.default({
         content: 'Create Game',
@@ -3112,8 +3115,10 @@ var Actions = function (_Renderer) {
       // If this player has already voted (refreshed the vote page after voting)
       if (actions && actions[this.player.id]) {
         this.actions.title('You have already voted!');
-        this.$footer.classList.add('hide');
+        this.act.content('You have voted');
+        this.act.disable();
       } else {
+        this.act.enable();
         this.$footer.classList.remove('hide');
         var agentCount = Object.keys(players).length - imposterCount,
             agentS = this._pluralize(agentCount, 'Agent'),

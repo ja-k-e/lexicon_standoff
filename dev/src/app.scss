@@ -256,6 +256,9 @@ section {
   }
   header {
   }
+  &.launch footer p.instruction {
+    color: tomato;
+  }
   &.launch main.inactive {
     opacity: 0.5;
     pointer-events: none;

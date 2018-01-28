@@ -5,7 +5,10 @@ export default class Launch extends Renderer {
   renderInitial() {
     let $inst = this.el(
         'p',
-        `WARNING: If you have problems on mobile, open the page again in a new tab.`,
+        `WARNING: If you let your phone go to sleep, you may have problems.
+        Try refreshing the page. If that doesn't work,
+        don't fret, just open the site again in a new tab.
+        I know it is incredibly annoying. Workin' on it.`,
         'instruction'
       ),
       $or = this.el('p', 'OR', 'instruction'),
@@ -22,6 +25,10 @@ export default class Launch extends Renderer {
       }),
       $grp = this.el('div', null, 'item-group');
     this.$slug = this.el('input');
+    this.$slug.setAttribute('autocomplete', 'off');
+    this.$slug.setAttribute('autocorrect', 'off');
+    this.$slug.setAttribute('autocapitalize', 'off');
+    this.$slug.setAttribute('spellcheck', 'false');
     this.$editor = this.el('div', null, 'editor');
     this.new = new Button({
       content: 'Create Game',
