@@ -321,8 +321,12 @@ export default class State {
   }
 
   dispatchSelection(selection) {
-    let secs = this.timeSinceSelection();
-    Adapters.Games.globalSelection(this.game.id, this.user.id, selection, secs);
+    Adapters.Games.globalSelection(
+      this.game.id,
+      this.user.id,
+      selection,
+      new Date().getTime()
+    );
     if (STUB) this.devDispatchSelection();
   }
 
@@ -330,19 +334,18 @@ export default class State {
     if (this.player.isMaster) {
       let topics = new Topics().topics;
       for (let i = 0; i < STUB_COUNT; i++) {
-        let secs = this.timeSinceSelection();
         let id = `${STUB_PREFIX}${i + 1}`;
         let topic = topics[
           Math.floor(Math.random() * topics.length)
         ][1].toLowerCase();
-        Adapters.Games.globalSelection(this.game.id, id, topic, secs);
+        Adapters.Games.globalSelection(
+          this.game.id,
+          id,
+          topic,
+          new Date().getTime()
+        );
       }
     }
-  }
-
-  timeSinceSelection() {
-    let ms = new Date().getTime() - this.game.selectionStart;
-    return Math.round(ms / 1000 * 100) / 100;
   }
 
   dispatchAction(playerIds) {

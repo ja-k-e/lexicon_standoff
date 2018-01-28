@@ -37,14 +37,14 @@ export default class Games extends Adapter {
     });
   }
 
-  globalSelection(id, playerId, selection, seconds) {
+  globalSelection(id, playerId, selection, time) {
     return new Promise((resolve, reject) => {
       this.db
         .collection('app')
         .doc(this.root)
         .collection('games')
         .doc(id)
-        .update({ [`selections.${playerId}`]: { selection, seconds } })
+        .update({ [`selections.${playerId}`]: { selection, time } })
         .then(resolve)
         .catch(reject);
     });

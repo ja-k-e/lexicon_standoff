@@ -63,7 +63,6 @@ export default class Actions extends Renderer {
       this.act.content('You have voted');
       this.act.disable();
     } else {
-      this.act.enable();
       this.$footer.classList.remove('hide');
       let agentCount = Object.keys(players).length - imposterCount,
         agentS = this._pluralize(agentCount, 'Agent'),
@@ -73,8 +72,8 @@ export default class Actions extends Renderer {
       this.act.content(`Submit ${voteS}`);
       this.$desc.innerHTML = ` Select ${playerS} to <strong>Kill</strong>. There are ${agentS}.`;
       let playerIds = Object.keys(selections).sort((a, b) => {
-        let sa = selections[a].seconds,
-          sb = selections[b].seconds;
+        let sa = selections[a].time,
+          sb = selections[b].time;
         if (sa < sb) return 1;
         if (sa > sb) return -1;
         sa = selections[a].selection.toLowerCase();

@@ -37,10 +37,14 @@ export default class Renderer {
       this.events.dispatchEnd();
   }
 
+  timeSinceSelection(selection, start) {
+    let ms = selection - start;
+    return Math.round(ms / 1000 * 100) / 100;
+  }
+
   renderTime(seconds) {
     seconds = Math.round(seconds * 100) / 100;
-    seconds = seconds > 9 ? seconds.toFixed(2) : `0${seconds.toFixed(2)}`;
-    return `${seconds}s`;
+    return `${seconds.toFixed(2)}s`;
   }
 
   remove() {

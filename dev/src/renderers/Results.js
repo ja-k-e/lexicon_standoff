@@ -51,7 +51,7 @@ export default class Results extends Renderer {
     this.leave = new Button({
       content: 'Leave Game',
       clickEvent: () => this.confirmLeave(),
-      classname: 'full'
+      classname: 'full warning'
     });
     this.append(this.$footer, [this.leave.$el]);
   }

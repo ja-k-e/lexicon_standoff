@@ -41,12 +41,18 @@ export default class Reveal extends Renderer {
   }
 
   render(game, players) {
-    let { topics, playerCount, imposterCount, selections } = game;
+    let {
+      topics,
+      playerCount,
+      imposterCount,
+      selections,
+      selectionStart
+    } = game;
 
     this.selections.reset();
     let playerIds = Object.keys(selections).sort((a, b) => {
-      let sa = selections[a].seconds,
-        sb = selections[b].seconds;
+      let sa = selections[a].time,
+        sb = selections[b].time;
       if (sa < sb) return 1;
       if (sa > sb) return -1;
       sa = selections[a].selection.toLowerCase();
@@ -56,12 +62,14 @@ export default class Reveal extends Renderer {
       return 0;
     });
     playerIds.forEach(playerId => {
-      let { selection, seconds } = selections[playerId];
+      let { selection, time } = selections[playerId];
       this.selections.add(`
         ${this.userSpan(players[playerId])}
         <span class="selection">
           ${selection}
-          <span class="seconds">${this.renderTime(seconds)}</span>
+          <span class="seconds">${this.renderTime(
+            (time - selectionStart) / 1000
+          )}</span>
         </span>
       `);
     });

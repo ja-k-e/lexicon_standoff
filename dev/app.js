@@ -126,11 +126,16 @@ var Renderer = function () {
       if (window.confirm('Are you sure you want to end the game?')) this.events.dispatchEnd();
     }
   }, {
+    key: 'timeSinceSelection',
+    value: function timeSinceSelection(selection, start) {
+      var ms = selection - start;
+      return Math.round(ms / 1000 * 100) / 100;
+    }
+  }, {
     key: 'renderTime',
     value: function renderTime(seconds) {
       seconds = Math.round(seconds * 100) / 100;
-      seconds = seconds > 9 ? seconds.toFixed(2) : '0' + seconds.toFixed(2);
-      return seconds + 's';
+      return seconds.toFixed(2) + 's';
     }
   }, {
     key: 'remove',
@@ -1135,11 +1140,11 @@ var Games = function (_Adapter) {
     }
   }, {
     key: 'globalSelection',
-    value: function globalSelection(id, playerId, selection, seconds) {
+    value: function globalSelection(id, playerId, selection, time) {
       var _this4 = this;
 
       return new Promise(function (resolve, reject) {
-        _this4.db.collection('app').doc(_this4.root).collection('games').doc(id).update(_defineProperty({}, 'selections.' + playerId, { selection: selection, seconds: seconds })).then(resolve).catch(reject);
+        _this4.db.collection('app').doc(_this4.root).collection('games').doc(id).update(_defineProperty({}, 'selections.' + playerId, { selection: selection, time: time })).then(resolve).catch(reject);
       });
     }
   }, {
@@ -2103,8 +2108,7 @@ var State = function () {
   }, {
     key: 'dispatchSelection',
     value: function dispatchSelection(selection) {
-      var secs = this.timeSinceSelection();
-      _Adapters2.default.Games.globalSelection(this.game.id, this.user.id, selection, secs);
+      _Adapters2.default.Games.globalSelection(this.game.id, this.user.id, selection, new Date().getTime());
       if (STUB) this.devDispatchSelection();
     }
   }, {
@@ -2113,18 +2117,11 @@ var State = function () {
       if (this.player.isMaster) {
         var topics = new _Topics2.default().topics;
         for (var i = 0; i < STUB_COUNT; i++) {
-          var secs = this.timeSinceSelection();
           var id = '' + STUB_PREFIX + (i + 1);
           var topic = topics[Math.floor(Math.random() * topics.length)][1].toLowerCase();
-          _Adapters2.default.Games.globalSelection(this.game.id, id, topic, secs);
+          _Adapters2.default.Games.globalSelection(this.game.id, id, topic, new Date().getTime());
         }
       }
-    }
-  }, {
-    key: 'timeSinceSelection',
-    value: function timeSinceSelection() {
-      var ms = new Date().getTime() - this.game.selectionStart;
-      return Math.round(ms / 1000 * 100) / 100;
     }
   }, {
     key: 'dispatchAction',
@@ -2968,13 +2965,14 @@ var Reveal = function (_Renderer) {
       var topics = game.topics,
           playerCount = game.playerCount,
           imposterCount = game.imposterCount,
-          selections = game.selections;
+          selections = game.selections,
+          selectionStart = game.selectionStart;
 
 
       this.selections.reset();
       var playerIds = Object.keys(selections).sort(function (a, b) {
-        var sa = selections[a].seconds,
-            sb = selections[b].seconds;
+        var sa = selections[a].time,
+            sb = selections[b].time;
         if (sa < sb) return 1;
         if (sa > sb) return -1;
         sa = selections[a].selection.toLowerCase();
@@ -2986,9 +2984,9 @@ var Reveal = function (_Renderer) {
       playerIds.forEach(function (playerId) {
         var _selections$playerId = selections[playerId],
             selection = _selections$playerId.selection,
-            seconds = _selections$playerId.seconds;
+            time = _selections$playerId.time;
 
-        _this2.selections.add('\n        ' + _this2.userSpan(players[playerId]) + '\n        <span class="selection">\n          ' + selection + '\n          <span class="seconds">' + _this2.renderTime(seconds) + '</span>\n        </span>\n      ');
+        _this2.selections.add('\n        ' + _this2.userSpan(players[playerId]) + '\n        <span class="selection">\n          ' + selection + '\n          <span class="seconds">' + _this2.renderTime((time - selectionStart) / 1000) + '</span>\n        </span>\n      ');
       });
 
       this.$h1.innerHTML = this.roleHeader('Reveal');
@@ -3123,7 +3121,6 @@ var Actions = function (_Renderer) {
         this.act.content('You have voted');
         this.act.disable();
       } else {
-        this.act.enable();
         this.$footer.classList.remove('hide');
         var agentCount = Object.keys(players).length - imposterCount,
             agentS = this._pluralize(agentCount, 'Agent'),
@@ -3133,8 +3130,8 @@ var Actions = function (_Renderer) {
         this.act.content('Submit ' + voteS);
         this.$desc.innerHTML = ' Select ' + playerS + ' to <strong>Kill</strong>. There are ' + agentS + '.';
         var playerIds = Object.keys(selections).sort(function (a, b) {
-          var sa = selections[a].seconds,
-              sb = selections[b].seconds;
+          var sa = selections[a].time,
+              sb = selections[b].time;
           if (sa < sb) return 1;
           if (sa > sb) return -1;
           sa = selections[a].selection.toLowerCase();
@@ -3312,7 +3309,7 @@ var Results = function (_Renderer) {
         clickEvent: function clickEvent() {
           return _this2.confirmLeave();
         },
-        classname: 'full'
+        classname: 'full warning'
       });
       this.append(this.$footer, [this.leave.$el]);
     }
