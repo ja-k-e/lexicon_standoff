@@ -335,9 +335,8 @@ export default class State {
       let topics = new Topics().topics;
       for (let i = 0; i < STUB_COUNT; i++) {
         let id = `${STUB_PREFIX}${i + 1}`;
-        let topic = topics[
-          Math.floor(Math.random() * topics.length)
-        ][1].toLowerCase();
+        let topic = topics[Math.floor(Math.random() * topics.length)];
+        topic = topic[Math.floor(Math.random() * topic.length)].toLowerCase();
         Adapters.Games.globalSelection(
           this.game.id,
           id,

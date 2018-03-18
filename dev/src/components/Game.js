@@ -47,7 +47,7 @@ export default class Game {
       imposterCount
     } = this._generateRoles(playerIds);
     let playerCount = playerIds.length,
-      topics = this.generateTopics();
+      topics = this.topicGenerator.loadTopics();
     return {
       game: {
         playerCount,
@@ -63,10 +63,6 @@ export default class Game {
       },
       players: { playerIdsImposters, playerIdsAgents }
     };
-  }
-
-  generateTopics() {
-    return [1, 2, 3].map(_ => this.topicGenerator.loadTopic());
   }
 
   generateActionIds() {
